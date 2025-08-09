@@ -618,27 +618,6 @@ export default function UPSCQuestionGenerator() {
                 `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
               )}
             </button>
-
-            {/* Enhanced Debug Info */}
-            {process.env.NODE_ENV === 'development' && (
-              <div style={{ 
-                marginTop: '15px',
-                padding: '10px', 
-                backgroundColor: '#f0f0f0', 
-                borderRadius: '4px',
-                fontSize: '11px',
-                color: '#666',
-                fontFamily: 'monospace'
-              }}>
-                <p style={{ margin: '2px 0', fontWeight: 'bold' }}>🔧 Debug Info:</p>
-                <p style={{ margin: '2px 0' }}>Mode: {mode}</p>
-                <p style={{ margin: '2px 0' }}>Subject: {selectedSubject}</p>
-                <p style={{ margin: '2px 0' }}>Topic: {selectedTopic ? 'Selected ✓' : 'None ❌'}</p>
-                <p style={{ margin: '2px 0' }}>Current Affairs: {useCurrentAffairs ? 'ON' : 'OFF'}</p>
-                <p style={{ margin: '2px 0' }}>Button disabled: {isGenerateDisabled ? 'Yes' : 'No'}</p>
-                <p style={{ margin: '2px 0' }}>Subjects loaded: {Object.keys(subjects).length}</p>
-              </div>
-            )}
           </div>
 
           {/* Results */}

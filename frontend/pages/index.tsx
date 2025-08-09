@@ -630,6 +630,22 @@ export default function UPSCQuestionGenerator() {
                 `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
               )}
             </button>
+              onMouseLeave={() => setButtonHover(null)}
+              onClick={handleGenerateQuestions}
+              disabled={isGenerateDisabled}
+            >
+              {loading ? (
+                '🔄 Generating...'
+              ) : subjectsLoading ? (
+                '⏳ Loading subjects...'
+              ) : (
+                `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
+              )}
+            </button>
+          </div>
+
+          {/* Results */}
+          <div style={{ marginTop: window.innerWidth <= 768 ? '30px' : '0' }}>
 
           </div>
 

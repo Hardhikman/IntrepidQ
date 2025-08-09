@@ -309,36 +309,48 @@ export default function UPSCQuestionGenerator() {
 
   const copyToClipboard = async () => {
     if (!questions.trim()) {
-      toast({ title: "Warning", description: '⚠️ No questions to copy', variant: "destructive" })
-      return
+      toast({ title: "Warning", description: '⚠️ No questions to copy', variant: "destructive" });
+      return;
     }
-    
-    try {
-      await navigator.clipboard.writeText(questions)
-      toast({ title: "Success", description: '📋 Questions copied to clipboard!' })
-      
-      // Analytics log
-      console.log('Questions copied:', {
-        mode,
-        questionCount: questions.split('\n\n').filter(q => q.trim()).length,
-        withCurrentAffairs: useCurrentAffairs
-      })
-    } catch (error) {
-      console.error('Copy failed:', error)
-      // Fallback for older browsers
+
+    // Modern method: Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
       try {
-        const textArea = document.createElement('textarea')
-        textArea.value = questions
-        document.body.appendChild(textArea)
-        textArea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textArea)
-        toast({ title: "Success", description: '📋 Questions copied to clipboard!' })
-      } catch (fallbackError) {
-        toast({ title: "Error", description: '❌ Failed to copy to clipboard', variant: "destructive" })
+        await navigator.clipboard.writeText(questions);
+        toast({ title: "Success", description: '📋 Questions copied to clipboard!' });
+        console.log('Questions copied using Clipboard API');
+        return;
+      } catch (error) {
+        console.error('Clipboard API copy failed:', error);
+        // Fallback to legacy method if modern one fails
       }
     }
-  }
+
+    // Legacy method: execCommand
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = questions;
+      // Make the textarea invisible
+      textArea.style.position = 'fixed';
+      textArea.style.top = '-9999px';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+
+      if (successful) {
+        toast({ title: "Success", description: '📋 Questions copied to clipboard! (Legacy method)' });
+        console.log('Questions copied using legacy execCommand');
+      } else {
+        throw new Error('execCommand was unsuccessful');
+      }
+    } catch (error) {
+      console.error('Legacy copy failed:', error);
+      toast({ title: "Error", description: '❌ Failed to copy to clipboard. Please copy manually.', variant: "destructive" });
+    }
+  };
 
   // Loading state for authentication
   if (authLoading) {
@@ -618,6 +630,23 @@ export default function UPSCQuestionGenerator() {
                 `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
               )}
             </button>
+              onMouseLeave={() => setButtonHover(null)}
+              onClick={handleGenerateQuestions}
+              disabled={isGenerateDisabled}
+            >
+              {loading ? (
+                '🔄 Generating...'
+              ) : subjectsLoading ? (
+                '⏳ Loading subjects...'
+              ) : (
+                `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
+              )}
+            </button>
+          </div>
+
+          {/* Results */}
+          <div style={{ marginTop: window.innerWidth <= 768 ? '30px' : '0' }}>
+
           </div>
 
           {/* Results */}

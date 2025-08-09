@@ -2,7 +2,7 @@ import type { AppProps } from 'next/app'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Session } from '@supabase/supabase-js'
-import { Toaster } from 'react-hot-toast'  // ✅ Add this import
+import { Toaster } from "@/components/ui/toaster"
 import '../styles/globals.css'
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -38,7 +38,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <Component {...pageProps} session={session} />
-      <Toaster position="top-right" />  {/* ✅ Add this line */}
+      <Toaster />
     </div>
   )
 }

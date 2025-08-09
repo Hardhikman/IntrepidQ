@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import AuthForm from '@/components/AuthForm'
-import toast from 'react-hot-toast'
+import { useToast } from "@/hooks/use-toast"
 
 // Enhanced styles with proper button interactions
 const styles = {
@@ -138,6 +138,7 @@ interface Subject {
 
 export default function UPSCQuestionGenerator() {
   const { user, loading: authLoading, signOut } = useAuth()
+  const { toast } = useToast()
   
   const [subjects, setSubjects] = useState<Record<string, Subject>>({})
   const [selectedSubject, setSelectedSubject] = useState<string>('GS1')
@@ -178,11 +179,11 @@ export default function UPSCQuestionGenerator() {
         console.log('Auto-selected first topic:', data.subjects.GS1.topics[0])
       }
       
-      toast.success(`✅ Loaded ${Object.keys(data.subjects).length} subjects successfully`)
+      toast({ title: "Success", description: `✅ Loaded ${Object.keys(data.subjects).length} subjects successfully` })
       
     } catch (error: any) {
       console.error('Error fetching subjects:', error)
-      toast.error(`❌ Failed to load subjects: ${error.message}`)
+      toast({ title: "Error", description: `❌ Failed to load subjects: ${error.message}`, variant: "destructive" })
     } finally {
       setSubjectsLoading(false) // End loading
     }
@@ -215,7 +216,7 @@ export default function UPSCQuestionGenerator() {
     })
     
     if (mode === 'topic' && !selectedTopic) {
-      toast.error('⚠️ Please select a topic first')
+      toast({ title: "Warning", description: '⚠️ Please select a topic first', variant: "destructive" })
       return
     }
 
@@ -239,8 +240,7 @@ export default function UPSCQuestionGenerator() {
 
       console.log('API Request:', { endpoint, payload })
       
-      // Show loading toast
-      const loadingToast = toast.loading('🤖 AI is generating questions...')
+      toast({ title: "Generating", description: '🤖 AI is generating questions...' })
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -249,9 +249,6 @@ export default function UPSCQuestionGenerator() {
         },
         body: JSON.stringify(payload)
       })
-
-      // Dismiss loading toast
-      toast.dismiss(loadingToast)
 
       if (!response.ok) {
         let errorMessage = `HTTP ${response.status}`
@@ -276,7 +273,7 @@ export default function UPSCQuestionGenerator() {
       const duration = ((endTime - startTime) / 1000).toFixed(1)
       
       const successMessage = `✅ Generated ${mode === 'paper' ? 'whole paper (10 questions)' : `${numQuestions} questions`} in ${duration}s${useCurrentAffairs ? ' with current affairs' : ''}!`
-      toast.success(successMessage, { duration: 4000 })
+      toast({ title: "Success", description: successMessage })
       
       console.log('Questions generated successfully:', {
         mode,
@@ -288,7 +285,7 @@ export default function UPSCQuestionGenerator() {
     } catch (error: any) {
       console.error('Error generating questions:', error)
       const errorMessage = error.message || 'Unknown error occurred'
-      toast.error(`❌ Generation failed: ${errorMessage}`, { duration: 6000 })
+      toast({ title: "Error", description: `❌ Generation failed: ${errorMessage}`, variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -301,25 +298,24 @@ export default function UPSCQuestionGenerator() {
     console.log('Sign out button clicked!')
     
     try {
-      const signOutToast = toast.loading('Signing out...')
+      toast({ title: "Signing out", description: "Please wait..." })
       await signOut()
-      toast.dismiss(signOutToast)
-      toast.success('👋 Signed out successfully!')
+      toast({ title: "Success", description: '👋 Signed out successfully!' })
     } catch (error) {
       console.error('Sign out error:', error)
-      toast.error('❌ Failed to sign out')
+      toast({ title: "Error", description: '❌ Failed to sign out', variant: "destructive" })
     }
   }
 
   const copyToClipboard = async () => {
     if (!questions.trim()) {
-      toast.error('⚠️ No questions to copy')
+      toast({ title: "Warning", description: '⚠️ No questions to copy', variant: "destructive" })
       return
     }
     
     try {
       await navigator.clipboard.writeText(questions)
-      toast.success('📋 Questions copied to clipboard!')
+      toast({ title: "Success", description: '📋 Questions copied to clipboard!' })
       
       // Analytics log
       console.log('Questions copied:', {
@@ -337,9 +333,9 @@ export default function UPSCQuestionGenerator() {
         textArea.select()
         document.execCommand('copy')
         document.body.removeChild(textArea)
-        toast.success('📋 Questions copied to clipboard!')
+        toast({ title: "Success", description: '📋 Questions copied to clipboard!' })
       } catch (fallbackError) {
-        toast.error('❌ Failed to copy to clipboard')
+        toast({ title: "Error", description: '❌ Failed to copy to clipboard', variant: "destructive" })
       }
     }
   }
@@ -413,7 +409,7 @@ export default function UPSCQuestionGenerator() {
               e.preventDefault()
               console.log('Topic mode selected')
               setMode('topic')
-              toast.success('📚 Switched to Topic-wise mode')
+              toast({ title: "Mode Switched", description: '📚 Switched to Topic-wise mode' })
             }}
           >
             📚 Topic-wise Questions
@@ -431,7 +427,7 @@ export default function UPSCQuestionGenerator() {
               e.preventDefault()
               console.log('Paper mode selected')
               setMode('paper')
-              toast.success('📄 Switched to Whole Paper mode')
+              toast({ title: "Mode Switched", description: '📄 Switched to Whole Paper mode' })
             }}
           >
             📄 Whole Paper (10 Questions)
@@ -571,7 +567,7 @@ export default function UPSCQuestionGenerator() {
                   onChange={(e) => {
                     console.log('Current affairs toggled:', e.target.checked)
                     setUseCurrentAffairs(e.target.checked)
-                    toast.success(e.target.checked ? '📰 Current Affairs enabled' : '📚 Regular mode enabled')
+                    toast({ title: "Setting Changed", description: e.target.checked ? '📰 Current Affairs enabled' : '📚 Regular mode enabled' })
                   }}
                   style={{ 
                     marginRight: '12px',
@@ -694,7 +690,7 @@ export default function UPSCQuestionGenerator() {
                     onClick={() => {
                       console.log('Clear button clicked')
                       setQuestions('')
-                      toast.success('🗑️ Questions cleared!')
+                      toast({ title: "Success", description: '🗑️ Questions cleared!' })
                     }}
                   >
                     🗑️ Clear

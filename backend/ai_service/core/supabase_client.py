@@ -1,0 +1,161 @@
+"""
+Supabase client for database operations
+"""
+import os
+import logging
+from typing import Optional, Dict, Any, List
+from supabase import create_client, Client
+
+logger = logging.getLogger(__name__)
+
+class SupabaseService:
+    def __init__(self):
+        self.url = os.getenv("SUPABASE_URL")
+        self.key = os.getenv("SUPABASE_ANON_KEY")
+        self.service_key = os.getenv("SUPABASE_SERVICE_KEY")
+        self.client: Optional[Client] = None
+        
+    def _ensure_client(self):
+        """Lazy initialization of Supabase client"""
+        if self.client is None:
+            if not self.url or not self.key:
+                raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set")
+            self.client = create_client(self.url, self.key)
+        return self.client
+
+    def verify_user(self, token: str) -> Optional[Dict[str, Any]]:
+        """Verify user token and return user data"""
+        try:
+            client = self._ensure_client()
+            response = client.auth.get_user(token)
+            return response.user.model_dump() if response.user else None
+        except Exception as e:
+            logger.error(f"Token verification failed: {e}")
+            return None
+
+    def get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
+        """Get user profile data"""
+        try:
+            response = self.client.table('user_profiles').select('*').eq('id', user_id).execute()
+            return response.data[0] if response.data else None
+        except Exception as e:
+            logger.error(f"Failed to get user profile: {e}")
+            return None
+
+    def save_generated_questions(self, user_id: str, subject: str, topic: Optional[str], 
+                               mode: str, questions: str, use_ca: bool, 
+                               months: Optional[int], question_count: int) -> bool:
+        """Save generated questions to database"""
+        try:
+            data = {
+                'user_id': user_id,
+                'subject': subject,
+                'topic': topic,
+                'mode': mode,
+                'questions': questions,
+                'use_current_affairs': use_ca,
+                'months': months,
+                'question_count': question_count
+            }
+            
+            response = self.client.table('generated_questions').insert(data).execute()
+            logger.info(f"Questions saved for user {user_id}")
+            return len(response.data) > 0
+        except Exception as e:
+            logger.error(f"Failed to save questions: {e}")
+            return False
+
+    def get_user_question_history(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
+        """Get user's question generation history"""
+        try:
+            response = (self.client.table('generated_questions')
+                       .select('*')
+                       .eq('user_id', user_id)
+                       .order('created_at', desc=True)
+                       .limit(limit)
+                       .execute())
+            return response.data or []
+        except Exception as e:
+            logger.error(f"Failed to get question history: {e}")
+            return []
+
+    def update_user_stats(self, user_id: str, questions_generated: int = 0, papers_generated: int = 0):
+        """Update user statistics"""
+        try:
+            current_profile = self.get_user_profile(user_id)
+            if current_profile:
+                new_questions = current_profile.get('total_questions_generated', 0) + questions_generated
+                new_papers = current_profile.get('total_papers_generated', 0) + papers_generated
+                
+                self._ensure_client().table('user_profiles').update({
+                    'total_questions_generated': new_questions,
+                    'total_papers_generated': new_papers
+                }).eq('id', user_id).execute()
+                
+                logger.info(f"Updated stats for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to update user stats: {e}")
+
+    def log_analytics(self, user_id: Optional[str], action: str, subject: Optional[str] = None, 
+                     topic: Optional[str] = None, success: bool = True, error_message: Optional[str] = None):
+        """Log usage analytics"""
+        try:
+            data = {
+                'user_id': user_id,
+                'action': action,
+                'subject': subject,
+                'topic': topic,
+                'success': success,
+                'error_message': error_message
+            }
+            self._ensure_client().table('usage_analytics').insert(data).execute()
+        except Exception as e:
+            logger.error(f"Failed to log analytics: {e}")
+
+    def delete_question(self, user_id: str, question_id: str) -> bool:
+        """Delete a generated question"""
+        try:
+            response = (self.client.table('generated_questions')
+                       .delete()
+                       .eq('id', question_id)
+                       .eq('user_id', user_id)
+                       .execute())
+            return len(response.data) > 0
+        except Exception as e:
+            logger.error(f"Failed to delete question: {e}")
+            return False
+
+    def get_user_stats(self, user_id: str) -> Dict[str, Any]:
+        """Get comprehensive user statistics"""
+        try:
+            profile = self.get_user_profile(user_id)
+            
+            # Get recent activity
+            recent_questions = (self.client.table('generated_questions')
+                              .select('created_at, subject, mode')
+                              .eq('user_id', user_id)
+                              .order('created_at', desc=True)
+                              .limit(10)
+                              .execute())
+            
+            return {
+                'profile': profile,
+                'recent_activity': recent_questions.data or []
+            }
+        except Exception as e:
+            logger.error(f"Failed to get user stats: {e}")
+            return {'profile': None, 'recent_activity': []}
+
+# Global instance - lazy initialization
+_supabase_service = None
+
+def get_supabase_service() -> SupabaseService:
+    """Get or create the global Supabase service instance"""
+    global _supabase_service
+    if _supabase_service is None:
+        _supabase_service = SupabaseService()
+    return _supabase_service
+
+# For backward compatibility
+def supabase_service():
+    return get_supabase_service()

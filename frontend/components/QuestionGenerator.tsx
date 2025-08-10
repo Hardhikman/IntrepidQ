@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Button } from './button';
-import { Input } from './input';
-import { Textarea } from './textarea';
-import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Loader2 } from 'lucide-react';
 
 interface QuestionGeneratorProps {

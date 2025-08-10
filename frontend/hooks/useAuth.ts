@@ -4,26 +4,46 @@ import { supabase } from '@/lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    const fetchSessionAndProfile = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth event:', event)
-        setUser(session?.user ?? null)
-        setLoading(false)
+      if (session?.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        setProfile(profileData);
       }
-    )
+      setLoading(false);
+    };
 
-    return () => subscription.unsubscribe()
-  }, [])
+    fetchSessionAndProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          setProfile(profileData);
+        } else {
+          setProfile(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Add the missing authentication functions
   const signInWithEmail = async (email: string, password: string) => {
@@ -75,6 +95,7 @@ export function useAuth() {
 
   return {
     user,
+    profile,
     loading,
     signInWithEmail,
     signUpWithEmail,

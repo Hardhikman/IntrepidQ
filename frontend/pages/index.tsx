@@ -137,7 +137,7 @@ interface Subject {
 }
 
 export default function UPSCQuestionGenerator() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, profile, loading: authLoading, signOut } = useAuth()
   const { toast } = useToast()
   
   const [subjects, setSubjects] = useState<Record<string, Subject>>({})
@@ -253,6 +253,10 @@ export default function UPSCQuestionGenerator() {
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          toast({ title: "Error", description: "You have reached your daily generation limit.", variant: "destructive" });
+          return;
+        }
         let errorMessage = `HTTP ${response.status}`
         try {
           const errorData = await response.json()
@@ -349,7 +353,9 @@ export default function UPSCQuestionGenerator() {
     return <AuthForm />
   }
 
-  const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading
+  const generationCount = profile?.generation_count_today || 0;
+  const remainingGenerations = 3 - generationCount;
+  const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading || remainingGenerations <= 0;
   const totalTopics = Object.values(subjects).reduce((total, subject) => total + subject.topics.length, 0)
 
   return (
@@ -365,7 +371,7 @@ export default function UPSCQuestionGenerator() {
             {subjectsLoading ? (
               <span>📊 Loading subjects...</span>
             ) : (
-              <span>📊 {Object.keys(subjects).length} subjects loaded with {totalTopics} topics</span>
+              <span>📊 {Object.keys(subjects).length} subjects loaded with {totalTopics} topics. Generations left today: {remainingGenerations}</span>
             )}
           </p>
           <button 

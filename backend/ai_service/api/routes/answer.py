@@ -49,7 +49,7 @@ async def generate_answer(request: AnswerRequest):
         """
 
         # Use Google's Gemini or PaLM model
-        model = genai.GenerativeModel("gemini-pro")  # for text
+        model = genai.GenerativeModel("gemini-1.5-pro-latest")# for text
         response = model.generate_content(prompt)
 
         # Parse model output

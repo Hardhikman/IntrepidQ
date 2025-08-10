@@ -1,9 +1,0 @@
-.cache/
-**/.cache/
-root/.cache/
-data/faiss_db/
-*.pdf
-node_modules/
-frontend/.next/
-venv/
-.venv/

@@ -429,7 +429,7 @@ export default function UPSCQuestionGenerator() {
               toast({ title: "Mode Switched", description: '📄 Switched to Whole Paper mode' })
             }}
           >
-            📄 Whole Paper (10 Questions)
+            📄 Whole GS Paper (10 Questions)
           </button>
         </div>
 

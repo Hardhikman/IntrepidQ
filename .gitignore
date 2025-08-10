@@ -208,8 +208,6 @@ Thumbs.db
 *~
 
 # Project specific
-/backend/ai_service/data/faiss_db/*
-!/backend/ai_service/data/faiss_db/.gitkeep
 /backend/ai_service/pyq_data/*.pdf
 !/backend/ai_service/pyq_data/.gitkeep
 

@@ -17,7 +17,7 @@ if not GOOGLE_API_KEY:
     raise RuntimeError("GOOGLE_API_KEY not set in env variables.")
 
 genai.configure(api_key=GOOGLE_API_KEY)
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-pro-latest")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
 
 class AnswerRequest(BaseModel):
     question: str

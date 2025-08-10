@@ -33,6 +33,10 @@ async def generate_questions(
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """Generate UPSC questions for a topic"""
+    if user:
+        if not supabase_service().check_and_update_generation_limit(user['id']):
+            raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+
     try:
         question_generator = get_question_generator()
         
@@ -97,6 +101,10 @@ async def generate_whole_paper(
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """Generate a whole UPSC paper"""
+    if user:
+        if not supabase_service().check_and_update_generation_limit(user['id']):
+            raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+
     try:
         question_generator = get_question_generator()
         

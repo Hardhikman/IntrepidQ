@@ -137,7 +137,7 @@ interface Subject {
 }
 
 export default function UPSCQuestionGenerator() {
-  const { user, loading: authLoading, signOut } = useAuth()
+  const { user, profile, loading: authLoading, signOut } = useAuth()
   const { toast } = useToast()
   
   const [subjects, setSubjects] = useState<Record<string, Subject>>({})
@@ -148,6 +148,8 @@ export default function UPSCQuestionGenerator() {
   const [mode, setMode] = useState<'topic' | 'paper'>('topic')
   const [loading, setLoading] = useState<boolean>(false)
   const [questions, setQuestions] = useState<string>('')
+  const [answers, setAnswers] = useState<Record<number, any>>({})
+  const [generatingAnswers, setGeneratingAnswers] = useState<Record<number, boolean>>({})
   const [buttonHover, setButtonHover] = useState<string | null>(null)
   const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true) // Added state
 
@@ -251,6 +253,10 @@ export default function UPSCQuestionGenerator() {
       })
 
       if (!response.ok) {
+        if (response.status === 429) {
+          toast({ title: "Error", description: "You have reached your daily generation limit.", variant: "destructive" });
+          return;
+        }
         let errorMessage = `HTTP ${response.status}`
         try {
           const errorData = await response.json()
@@ -307,48 +313,26 @@ export default function UPSCQuestionGenerator() {
     }
   }
 
-  const copyToClipboard = async () => {
-    if (!questions.trim()) {
-      toast({ title: "Warning", description: '⚠️ No questions to copy', variant: "destructive" });
-      return;
-    }
-
-    // Modern method: Clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      try {
-        await navigator.clipboard.writeText(questions);
-        toast({ title: "Success", description: '📋 Questions copied to clipboard!' });
-        console.log('Questions copied using Clipboard API');
-        return;
-      } catch (error) {
-        console.error('Clipboard API copy failed:', error);
-        // Fallback to legacy method if modern one fails
-      }
-    }
-
-    // Legacy method: execCommand
+  const handleGenerateAnswer = async (question: string, index: number) => {
+    setGeneratingAnswers((prev) => ({ ...prev, [index]: true }));
+    toast({ title: "Generating Answer", description: "Please wait..." });
     try {
-      const textArea = document.createElement('textarea');
-      textArea.value = questions;
-      // Make the textarea invisible
-      textArea.style.position = 'fixed';
-      textArea.style.top = '-9999px';
-      textArea.style.left = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-      const successful = document.execCommand('copy');
-      document.body.removeChild(textArea);
-
-      if (successful) {
-        toast({ title: "Success", description: '📋 Questions copied to clipboard! (Legacy method)' });
-        console.log('Questions copied using legacy execCommand');
-      } else {
-        throw new Error('execCommand was unsuccessful');
+      const response = await fetch('/api/generate_answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to generate answer');
       }
+      const data = await response.json();
+      setAnswers((prev) => ({ ...prev, [index]: data }));
+      toast({ title: "Success", description: `Answer generated for question ${index + 1}!` });
     } catch (error) {
-      console.error('Legacy copy failed:', error);
-      toast({ title: "Error", description: '❌ Failed to copy to clipboard. Please copy manually.', variant: "destructive" });
+      console.error('Error generating answer:', error);
+      toast({ title: "Error", description: `Failed to generate answer for question ${index + 1}.`, variant: "destructive" });
+    } finally {
+      setGeneratingAnswers((prev) => ({ ...prev, [index]: false }));
     }
   };
 
@@ -369,7 +353,9 @@ export default function UPSCQuestionGenerator() {
     return <AuthForm />
   }
 
-  const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading
+  const generationCount = profile?.generation_count_today || 0;
+  const remainingGenerations = 3 - generationCount;
+  const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading || remainingGenerations <= 0;
   const totalTopics = Object.values(subjects).reduce((total, subject) => total + subject.topics.length, 0)
 
   return (
@@ -385,7 +371,7 @@ export default function UPSCQuestionGenerator() {
             {subjectsLoading ? (
               <span>📊 Loading subjects...</span>
             ) : (
-              <span>📊 {Object.keys(subjects).length} subjects loaded with {totalTopics} topics</span>
+              <span>📊 {Object.keys(subjects).length} subjects loaded with {totalTopics} topics. Generations left today: {remainingGenerations}</span>
             )}
           </p>
           <button 
@@ -646,65 +632,33 @@ export default function UPSCQuestionGenerator() {
             
             {questions ? (
               <div>
-                <textarea
-                  style={{
-                    ...styles.textarea,
-                    borderColor: '#4CAF50',
-                    backgroundColor: '#fafafa'
-                  }}
-                  value={questions}
-                  readOnly
-                  placeholder="Generated questions will appear here..."
-                />
-                <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.button,
-                      backgroundColor: buttonHover === 'copy' ? '#5a67d8' : '#667eea',
-                      transform: buttonHover === 'copy' ? 'translateY(-1px)' : 'none'
-                    }}
-                    onMouseEnter={() => setButtonHover('copy')}
-                    onMouseLeave={() => setButtonHover(null)}
-                    onClick={copyToClipboard}
-                  >
-                    📋 Copy to Clipboard
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.button,
-                      backgroundColor: buttonHover === 'clear' ? '#e74c3c' : '#dc3545',
-                      transform: buttonHover === 'clear' ? 'translateY(-1px)' : 'none'
-                    }}
-                    onMouseEnter={() => setButtonHover('clear')}
-                    onMouseLeave={() => setButtonHover(null)}
-                    onClick={() => {
-                      console.log('Clear button clicked')
-                      setQuestions('')
-                      toast({ title: "Success", description: '🗑️ Questions cleared!' })
-                    }}
-                  >
-                    🗑️ Clear
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      ...styles.button,
-                      backgroundColor: buttonHover === 'refresh' ? '#28a745' : '#6c757d',
-                      transform: buttonHover === 'refresh' ? 'translateY(-1px)' : 'none'
-                    }}
-                    onMouseEnter={() => setButtonHover('refresh')}
-                    onMouseLeave={() => setButtonHover(null)}
-                    onClick={() => {
-                      console.log('Regenerate button clicked')
-                      handleGenerateQuestions()
-                    }}
-                    disabled={isGenerateDisabled}
-                  >
-                    🔄 Regenerate
-                  </button>
-                </div>
+                {questions.split('\n\n').map((question, index) => (
+                  <div key={index} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                    <p style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{question}</p>
+                    <button
+                      type="button"
+                      style={{ ...styles.button, marginTop: '10px' }}
+                      onClick={() => handleGenerateAnswer(question, index)}
+                      disabled={generatingAnswers[index]}
+                    >
+                      {generatingAnswers[index] ? 'Generating Answer...' : 'Generate Answer'}
+                    </button>
+                    {answers[index] && (
+                      <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                        <h4>Answer:</h4>
+                        <p><strong>Introduction:</strong> {answers[index].introduction}</p>
+                        <div><strong>Body:</strong>
+                          <ul>
+                            {answers[index].body.map((keyword: string, i: number) => (
+                              <li key={i}>{keyword}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             ) : (
               <div style={styles.loading}>

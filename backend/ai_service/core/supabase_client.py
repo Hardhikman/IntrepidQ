@@ -146,6 +146,36 @@ class SupabaseService:
             logger.error(f"Failed to get user stats: {e}")
             return {'profile': None, 'recent_activity': []}
 
+    def check_and_update_generation_limit(self, user_id: str) -> bool:
+        """Check and update the user's daily generation limit."""
+        from datetime import date
+
+        profile = self.get_user_profile(user_id)
+        if not profile:
+            logger.warning(f"No profile found for user {user_id} when checking generation limit.")
+            return False
+
+        today = str(date.today())
+        last_generation_date = profile.get('last_generation_date')
+        generation_count = profile.get('generation_count_today', 0)
+
+        if last_generation_date != today:
+            generation_count = 0
+
+        if generation_count >= 3:
+            return False
+
+        # Update the profile
+        try:
+            self._ensure_client().table('user_profiles').update({
+                'generation_count_today': generation_count + 1,
+                'last_generation_date': today
+            }).eq('id', user_id).execute()
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update generation limit for user {user_id}: {e}")
+            return False
+
 # Global instance - lazy initialization
 _supabase_service = None
 

@@ -19,6 +19,7 @@ from core.question_generator import create_question_generator
 from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
+from api.routes.answer import router as answer_router
 
 # Load environment
 load_dotenv()
@@ -110,6 +111,7 @@ app.add_middleware(
 # Include routers
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
+app.include_router(answer_router, prefix="/api", tags=["answer"])
 
 @app.get("/")
 def root():

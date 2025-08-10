@@ -161,7 +161,7 @@ export default function UPSCQuestionGenerator() {
     setSubjectsLoading(true) // Start loading
     try {
       console.log('Fetching subjects...')
-      const response = await fetch('/api/subjects')
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/subjects`)
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }

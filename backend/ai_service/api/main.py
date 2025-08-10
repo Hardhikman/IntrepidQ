@@ -1,11 +1,8 @@
 """
-Main FastAPI application - Railway/Vercel Production Ready with CORS Fix,
-FAISS fallback, and RAM usage logging
+Main FastAPI application - Render + Vercel Production Ready with CORS Fix & FAISS fallback
 """
 import os
-import sys
 import logging
-import psutil
 from contextlib import asynccontextmanager
 from datetime import datetime
 
@@ -14,11 +11,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
-# Allow imports from project root
+import sys
 sys.path.append('.')
 
 from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
+
 from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
@@ -37,32 +35,20 @@ logger = logging.getLogger(__name__)
 # Global state
 app_state = {}
 
-# ✅ RAM usage helper
-def print_ram(step: str):
-    process = psutil.Process(os.getpid())
-    mem_mb = process.memory_info().rss / 1024**2
-    logger.info(f"[MEM] After {step}: {mem_mb:.2f} MB")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan management with FAISS fallback + RAM logging"""
+    """Application lifespan management with FAISS fallback"""
     try:
         logger.info("Initializing AI services...")
-        print_ram("startup (initial)")
 
         # Load FAISS — allow startup even if missing
         persist_dir = os.getenv("FAISS_DIR", "data/faiss_db")
         try:
-            import faiss
-            print_ram("after faiss import")
-
             if not os.path.exists(persist_dir):
                 logger.warning(f"FAISS directory {persist_dir} not found. Starting without it.")
                 vectorstore = None
             else:
                 vectorstore = load_index(persist_dir)
-                print_ram("after loading FAISS index")
                 logger.info("FAISS vectorstore loaded successfully")
         except Exception as e:
             logger.error(f"FAISS load failed: {e}")
@@ -74,10 +60,8 @@ async def lifespan(app: FastAPI):
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
-
         qg = create_question_generator(groq_api_key, vectorstore)
         app_state["question_generator"] = qg
-        print_ram("after question generator init")
         logger.info("Question generator initialized")
 
         logger.info("🚀 AI services ready")
@@ -90,7 +74,6 @@ async def lifespan(app: FastAPI):
     # Shutdown
     app_state.clear()
     logger.info("🛑 AI services shut down")
-
 
 # Allowed origins — include localhost & Vercel in production
 ALLOWED_ORIGINS = [
@@ -106,7 +89,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Manual CORS handling
+# Manual CORS handling — ensures OPTIONS + all responses have headers
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
     origin = request.headers.get("origin")
@@ -137,7 +120,6 @@ app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
 
-
 @app.get("/")
 def root():
     return {
@@ -163,7 +145,7 @@ def health_check():
 def test_cors():
     return {"message": "CORS is working!", "status": "success"}
 
-# Error handlers
+# Error handlers — add CORS headers here too
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
@@ -178,7 +160,6 @@ async def general_exception_handler(request, exc):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
-
 
 if __name__ == "__main__":
     import uvicorn

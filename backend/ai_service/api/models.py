@@ -86,6 +86,12 @@ class DeleteQuestionRequest(BaseModel):
     """Request model for deleting a question"""
     question_id: str = Field(..., description="ID of question to delete")
 
+class FeedbackCreate(BaseModel):
+    """Request model for submitting feedback"""
+    question_id: str = Field(..., description="ID of the question being reviewed")
+    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    comment: Optional[str] = Field(None, description="Optional free-text comment")
+
 # Error response models
 class ErrorResponse(BaseModel):
     """Standard error response"""

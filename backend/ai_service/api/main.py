@@ -21,6 +21,8 @@ from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
 from api.routes.answer import router as answer_router
+from api.routes.feedback import router as feedback_router
+from api.routes.analytics import router as analytics_router
 
 # Load environment variables
 load_dotenv()
@@ -119,6 +121,8 @@ app.add_middleware(
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
+app.include_router(feedback_router, prefix="/api/feedback", tags=["feedback"])
+app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 
 @app.get("/")
 def root():

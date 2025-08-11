@@ -13,6 +13,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
+import { GeneratedQuestion } from '@/lib/supabase'
+import { QuestionDisplay } from '@/components/QuestionDisplay'
+
 
 interface Subject {
   name: string
@@ -30,7 +33,7 @@ export default function UPSCQuestionGenerator() {
   const [useCurrentAffairs, setUseCurrentAffairs] = useState<boolean>(false)
   const [mode, setMode] = useState<'topic' | 'paper'>('topic')
   const [loading, setLoading] = useState<boolean>(false)
-  const [questions, setQuestions] = useState<string>('')
+  const [questions, setQuestions] = useState<GeneratedQuestion[]>([])
   const [answers, setAnswers] = useState<Record<number, any>>({})
   const [generatingAllAnswers, setGeneratingAllAnswers] = useState<boolean>(false)
   const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true)
@@ -171,11 +174,11 @@ export default function UPSCQuestionGenerator() {
 
       const data = await response.json()
       
-      if (!data.result) {
+      if (!data.questions || data.questions.length === 0) {
         throw new Error('No questions generated - empty response')
       }
       
-      setQuestions(data.result)
+      setQuestions(data.questions)
       
       const endTime = Date.now()
       const duration = ((endTime - startTime) / 1000).toFixed(1)
@@ -230,15 +233,45 @@ export default function UPSCQuestionGenerator() {
     }
   }
 
+  const handleFeedbackSubmit = async (questionId: string, rating: number, comment: string) => {
+    try {
+      const sessionResponse = await supabase.auth.getSession();
+      const token = sessionResponse.data.session?.access_token;
+
+      if (!token) {
+        toast({ title: "Error", description: "You must be logged in to submit feedback.", variant: "destructive" });
+        return;
+      }
+
+      const response = await fetch('/api/feedback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          question_id: questionId,
+          rating,
+          comment,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback.');
+      }
+
+      toast({ title: "Success", description: "Thank you for your feedback!" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "An unknown error occurred.", variant: "destructive" });
+    }
+  };
+
   const handleGenerateAllAnswers = async () => {
-    if (!questions) return
+    if (questions.length === 0) return
     setGeneratingAllAnswers(true)
     toast({ title: 'Generating Answers', description: 'Generating answers for all questions...' })
     try {
-      const questionList = questions
-        .split('\n\n')
-        .map(q => q.trim())
-        .filter(q => q.length > 0)
+      const questionList = questions.map(q => q.questions);
 
       const sessionResponse = await supabase.auth.getSession()
       const token = sessionResponse.data.session?.access_token
@@ -509,14 +542,14 @@ export default function UPSCQuestionGenerator() {
             <div>
               <h3 className="mb-6 text-xl font-semibold">
                 📄 Generated Questions
-                {questions && (
+                {questions.length > 0 && (
                   <span className="text-sm font-normal text-gray-600 ml-2">
-                    ({questions.match(/^\d+\./gm)?.length || (mode === 'paper' ? 10 : numQuestions)} questions)
+                    ({questions.length} questions)
                   </span>
                 )}
               </h3>
               
-              {questions ? (
+              {questions.length > 0 ? (
                 <div>
                   {/* Single button to generate answers for all questions */}
                   <div className="text-center mb-4">
@@ -531,26 +564,14 @@ export default function UPSCQuestionGenerator() {
 
                   {/* Scrollable Q-A list */}
                   <div className="max-h-[60vh] overflow-y-auto pr-2">
-                    {questions.split('\n\n').map((question, index) => (
-                      <Card key={index} className="mb-5">
-                        <CardContent className="p-4">
-                          <p className="whitespace-pre-wrap font-mono">{question}</p>
-                          {answers[index] && (
-                            <div className="mt-4 p-3 bg-gray-50 rounded">
-                              <h4 className="font-bold">Answer:</h4>
-                              <p><strong>Introduction:</strong> {answers[index].introduction}</p>
-                              <div><strong>Body:</strong>
-                                <ul className="list-disc pl-5">
-                                  {answers[index].body.map((keyword: string, i: number) => (
-                                    <li key={i}>{keyword}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                              <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                    {questions.map((question, index) => (
+                      <QuestionDisplay
+                        key={question.id || index}
+                        question={question}
+                        answer={answers[index]}
+                        index={index}
+                        onFeedbackSubmit={handleFeedbackSubmit}
+                      />
                     ))}
                   </div>
                 </div>

@@ -122,7 +122,7 @@ export default function UPSCQuestionGenerator() {
     }
 
     // Reset previous results before a new generation
-    setQuestions('')
+    setQuestions([])
     setAnswers({})
     setLoading(true)
     const startTime = Date.now()

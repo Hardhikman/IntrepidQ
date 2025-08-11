@@ -68,43 +68,10 @@
   }
 }
 
-/* Aggressive toast positioning fix - Multiple selectors for maximum compatibility */
-[data-radix-toast-viewport] {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 99999 !important;
-  transform: none !important;
-  width: auto !important;
-  height: auto !important;
-}
+/* Toast positioning is handled by Shadcn UI components */
+/* Removed conflicting positioning rules to allow Shadcn's default behavior */
 
-[data-sonner-toaster] {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 99999 !important;
-  transform: none !important;
-}
-
-.Toaster,
-[data-toast-viewport],
-.toast-container,
-.toast-viewport {
-  position: fixed !important;
-  top: 20px !important;
-  right: 20px !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 99999 !important;
-  transform: none !important;
-}
-
-/* Toast and animation components */
+/* Animation components */
 @layer components {
   /* Gradient text animation utility */
   .gradient-text {

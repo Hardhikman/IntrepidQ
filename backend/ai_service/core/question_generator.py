@@ -21,7 +21,8 @@ class QuestionGenerator:
         self.llm = ChatGroq(
             model=os.getenv("GROQ_MODEL", "llama3-70b-8192"),
             groq_api_key=groq_api_key,
-            temperature=float(os.getenv("GROQ_TEMPERATURE", "0.4"))
+            # Slightly higher default temperature for more variety; can be overridden via env
+            temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7"))
         )
         self.vectorstore = vectorstore
         self.cache = Cache(cache_dir)
@@ -265,6 +266,7 @@ Generate the complete 10-question paper now:"""
     def _generate_current_affairs_questions(self, subject: str, topic: str, num: int, months: int) -> str:
         """Generate questions incorporating current affairs"""
         news_context = self.fetch_recent_news(topic, months)
+        diversity_seed = random.randint(100000, 999999)
         ca_prompt = f"""You are a UPSC Mains question paper designer for {subject}.
 Based on the topic: "{topic}" and recent news, generate {num} high-quality questions incorporating current affairs.
 
@@ -278,7 +280,10 @@ IMPORTANT INSTRUCTIONS:
 4. Do NOT add any commentary or explanatory text
 5. Focus on analytical aspects related to current events
 
-Generate exactly {num} questions now:"""
+Generate exactly {num} questions now.
+
+Variation guidance (do not include this line or the number in the output): seed {diversity_seed}
+"""
         
         response = self.llm.invoke(ca_prompt)
         return self.format_questions(response.content.strip())
@@ -290,18 +295,22 @@ Generate exactly {num} questions now:"""
                 doc for doc in self.vectorstore.docstore._dict.values() 
                 if doc.metadata.get("topic") == topic
             ]
-            examples = [doc.page_content for doc in filtered_docs[:max(1, min(num, 8))]]
+            # Shuffle examples for variety across runs
+            random.shuffle(filtered_docs)
+            # Use up to 8 examples, but at least num to provide context diversity
+            examples = [doc.page_content for doc in filtered_docs[:max(1, min(max(num, 3), 8))]]
 
             if not examples:
                 return f"No questions found for topic: {topic}"
 
             example_text = "\n".join([f"{i+1}. {q}" for i, q in enumerate(examples)])
+            diversity_seed = random.randint(100000, 999999)
             final_prompt = self.gs_prompt.format(
                 subject=subject, 
                 topic=topic, 
                 examples=example_text, 
                 num=num
-            )
+            ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
             response = self.llm.invoke(final_prompt)
             return self.format_questions(response.content.strip())
         except Exception as e:
@@ -332,10 +341,11 @@ Generate exactly {num} questions now:"""
                 subject, selected_topics, topic_examples_text, months
             )
         else:
+            diversity_seed = random.randint(100000, 999999)
             final_prompt = self.whole_paper_prompt.format(
                 subject=subject, 
                 topic_examples=topic_examples_text
-            )
+            ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
             response = self.llm.invoke(final_prompt)
             formatted_questions = self.format_questions(response.content.strip())
         

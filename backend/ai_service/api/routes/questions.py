@@ -34,7 +34,7 @@ async def generate_questions(
 ):
     """Generate UPSC questions for a topic"""
     if user:
-        if not supabase_service().check_and_update_generation_limit(user['id']):
+        if not supabase_service().check_and_update_generation_limit(user['id'], daily_limit=5):
             raise HTTPException(status_code=429, detail="Daily generation limit reached.")
 
     try:
@@ -102,7 +102,7 @@ async def generate_whole_paper(
 ):
     """Generate a whole UPSC paper"""
     if user:
-        if not supabase_service().check_and_update_generation_limit(user['id']):
+        if not supabase_service().check_and_update_generation_limit(user['id'], daily_limit=5):
             raise HTTPException(status_code=429, detail="Daily generation limit reached.")
 
     try:

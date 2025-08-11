@@ -43,7 +43,7 @@ from core.supabase_client import supabase_service
 async def generate_answer(request: AnswerRequest, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
     try:
         if user:
-            if not supabase_service().check_and_update_generation_limit(user['id']):
+            if not supabase_service().check_and_update_generation_limit(user['id'], daily_limit=5):
                 raise HTTPException(status_code=429, detail="Daily generation limit reached.")
         logger.info(f"Generating answer for question: {request.question}")
 
@@ -103,7 +103,7 @@ async def generate_answer(request: AnswerRequest, user: Optional[Dict[str, Any]]
 async def generate_answers(request: BatchAnswerRequest, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
     try:
         if user:
-            if not supabase_service().check_and_update_generation_limit(user['id']):
+            if not supabase_service().check_and_update_generation_limit(user['id'], daily_limit=5):
                 raise HTTPException(status_code=429, detail="Daily generation limit reached.")
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")

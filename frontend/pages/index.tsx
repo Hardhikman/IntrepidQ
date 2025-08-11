@@ -1,141 +1,23 @@
+"use client";
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import AuthForm from '@/components/AuthForm'
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from '@/lib/supabase'
 
-// Enhanced styles with proper button interactions
-const styles = {
-  container: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    padding: '20px',
-    fontFamily: 'Arial, sans-serif'
-  },
-  card: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    backgroundColor: 'white',
-    borderRadius: '10px',
-    padding: '30px',
-    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-    marginBottom: '20px'
-  },
-  header: {
-    textAlign: 'center' as const,
-    marginBottom: '30px'
-  },
-  title: {
-    fontSize: '2.5rem',
-    color: '#333',
-    marginBottom: '10px'
-  },
-  button: {
-    backgroundColor: '#667eea',
-    color: 'white',
-    border: 'none',
-    padding: '12px 24px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    margin: '5px',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-    userSelect: 'none' as const,
-    display: 'inline-block',
-    textAlign: 'center' as const,
-    textDecoration: 'none',
-    lineHeight: '1.4',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    position: 'relative' as const
-  },
-  buttonActive: {
-    backgroundColor: '#4c51bf',
-    color: 'white',
-    border: 'none',
-    padding: '12px 24px',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    margin: '5px',
-    transition: 'all 0.2s ease',
-    outline: 'none',
-    userSelect: 'none' as const,
-    display: 'inline-block',
-    textAlign: 'center' as const,
-    textDecoration: 'none',
-    lineHeight: '1.4',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-    position: 'relative' as const
-  },
-  buttonDisabled: {
-    backgroundColor: '#ccc',
-    color: '#666',
-    border: 'none',
-    padding: '12px 24px',
-    borderRadius: '6px',
-    cursor: 'not-allowed',
-    fontSize: '16px',
-    margin: '5px',
-    outline: 'none',
-    userSelect: 'none' as const,
-    display: 'inline-block',
-    textAlign: 'center' as const,
-    textDecoration: 'none',
-    lineHeight: '1.4',
-    opacity: 0.6
-  },
-  select: {
-    width: '100%',
-    padding: '12px',
-    borderRadius: '6px',
-    border: '1px solid #ddd',
-    fontSize: '16px',
-    marginBottom: '15px',
-    outline: 'none',
-    backgroundColor: 'white',
-    transition: 'border-color 0.2s ease',
-    cursor: 'pointer'
-  },
-  textarea: {
-    width: '100%',
-    minHeight: '400px',
-    padding: '15px',
-    borderRadius: '6px',
-    border: '1px solid #ddd',
-    fontSize: '14px',
-    fontFamily: 'monospace',
-    resize: 'vertical' as const,
-    outline: 'none',
-    lineHeight: '1.5'
-  },
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 2fr',
-    gap: '30px',
-    marginTop: '20px'
-  },
-  loading: {
-    textAlign: 'center' as const,
-    padding: '50px',
-    fontSize: '18px',
-    color: '#666'
-  },
-  // Added responsive design
-  '@media (max-width: 768px)': {
-    grid: {
-      display: 'block'
-    },
-    card: {
-      padding: '20px'
-    }
-  }
-}
+// Shadcn components
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Slider } from "@/components/ui/slider"
+import { Label } from "@/components/ui/label"
 
 interface Subject {
   name: string
   topics: string[]
 }
-
 
 export default function UPSCQuestionGenerator() {
   const { user, profile, loading: authLoading, signOut, refreshProfile, applyLocalGenerationIncrement } = useAuth()
@@ -151,35 +33,8 @@ export default function UPSCQuestionGenerator() {
   const [questions, setQuestions] = useState<string>('')
   const [answers, setAnswers] = useState<Record<number, any>>({})
   const [generatingAllAnswers, setGeneratingAllAnswers] = useState<boolean>(false)
-  const [buttonHover, setButtonHover] = useState<string | null>(null)
   const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true)
 
-  // ADD THIS USEEFFECT HERE - Toast positioning fix
-  useEffect(() => {
-    // Function to reposition any toast that appears
-    const repositionToasts = () => {
-      const toastElements = document.querySelectorAll('[data-radix-toast-viewport], [data-sonner-toaster], .Toaster');
-      toastElements.forEach(toast => {
-        if (toast instanceof HTMLElement) {
-          toast.style.position = 'fixed';
-          toast.style.top = '20px';
-          toast.style.right = '20px';
-          toast.style.left = 'auto';
-          toast.style.bottom = 'auto';
-          toast.style.zIndex = '99999';
-          toast.style.transform = 'none';
-        }
-      });
-    };
-
-    // Run immediately and on any DOM changes
-    repositionToasts();
-    
-    const observer = new MutationObserver(repositionToasts);
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     fetchSubjects()
@@ -201,7 +56,7 @@ export default function UPSCQuestionGenerator() {
     setSubjectsLoading(true) // Start loading
     try {
       console.log('Fetching subjects...')
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, "");
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
       const response = await fetch(`${baseUrl}/api/subjects`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -288,10 +143,13 @@ export default function UPSCQuestionGenerator() {
       
       toast({ title: "Generating", description: '🤖 AI is generating questions...' })
 
+      const sessionResponse = await supabase.auth.getSession()
+      const token = sessionResponse.data.session?.access_token
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
         },
         body: JSON.stringify(payload)
       })
@@ -345,64 +203,32 @@ export default function UPSCQuestionGenerator() {
     }
   }
 
-const handleSignOut = async (e?: React.MouseEvent) => {
-  e?.preventDefault()
-  e?.stopPropagation()
-  
-  console.log('Sign out button clicked!')
-  
-  try {
-    await signOut()
+  const handleSignOut = async (e?: React.MouseEvent) => {
+    e?.preventDefault()
+    e?.stopPropagation()
     
-    // Create a custom positioned toast
-    const toastDiv = document.createElement('div');
-    toastDiv.innerHTML = '👋 Signed out successfully!';
-    toastDiv.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #10b981;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      z-index: 99999;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    `;
+    console.log('Sign out button clicked!')
     
-    document.body.appendChild(toastDiv);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-      document.body.removeChild(toastDiv);
-    }, 3000);
-    
-  } catch (error) {
-    console.error('Sign out error:', error)
-    
-    // Custom error toast
-    const errorDiv = document.createElement('div');
-    errorDiv.innerHTML = '❌ Failed to sign out';
-    errorDiv.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ef4444;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      z-index: 99999;
-      font-family: Arial, sans-serif;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    `;
-    
-    document.body.appendChild(errorDiv);
-    
-    setTimeout(() => {
-      document.body.removeChild(errorDiv);
-    }, 3000);
+    try {
+      await signOut()
+      
+      // Use standard toast instead of custom DOM manipulation
+      toast({
+        title: "Success",
+        description: "👋 Signed out successfully!"
+      });
+      
+    } catch (error) {
+      console.error('Sign out error:', error)
+      
+      // Use standard toast for errors
+      toast({
+        title: "Error",
+        description: "❌ Failed to sign out",
+        variant: "destructive"
+      });
+    }
   }
-}
 
   const handleGenerateAllAnswers = async () => {
     if (!questions) return
@@ -414,9 +240,11 @@ const handleSignOut = async (e?: React.MouseEvent) => {
         .map(q => q.trim())
         .filter(q => q.length > 0)
 
+      const sessionResponse = await supabase.auth.getSession()
+      const token = sessionResponse.data.session?.access_token
       const response = await fetch('/api/generate_answers', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ questions: questionList })
       })
       if (!response.ok) {
@@ -444,11 +272,13 @@ const handleSignOut = async (e?: React.MouseEvent) => {
   // Loading state for authentication
   if (authLoading) {
     return (
-      <div style={styles.container}>
-        <div style={styles.loading}>
-          <div style={{ fontSize: '2rem', marginBottom: '20px' }}>🔄</div>
-          <p>Loading authentication...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="text-4xl mb-4">🔄</div>
+            <p className="text-lg">Loading authentication...</p>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -458,414 +288,310 @@ const handleSignOut = async (e?: React.MouseEvent) => {
     return <AuthForm />
   }
 
+  const DAILY_LIMIT = 5
   const generationCount = profile?.generation_count_today || 0;
-  const remainingGenerations = 3 - generationCount;
+  const remainingGenerations = DAILY_LIMIT - generationCount;
   const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading || remainingGenerations <= 0;
   const totalTopics = Object.values(subjects).reduce((total, subject) => total + subject.topics.length, 0)
 
   return (
-    <div style={styles.container}>
+    <div className="min-h-screen p-4">
       {/* Header */}
-      <div style={styles.card}>
-        <div style={styles.header}>
-           <div style={{ textAlign: 'center' }}>
-  <div style={{
-    display: 'inline-block', // This makes the box fit the content width
-    border: '3px solid #CC5500',
-    borderRadius: '12px',
-    padding: '15px 25px',
-    background: 'linear-gradient(135deg, rgba(204, 85, 0, 0.08), rgba(255, 140, 0, 0.08))',
-    boxShadow: '0 4px 12px rgba(204, 85, 0, 0.2)'
-  }}>
-    <h1 style={{
-      ...styles.title,
-      background: 'linear-gradient(45deg, #CC5500, #FF8C00, #CC5500)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundSize: '200% 200%',
-      animation: 'gradient 4s ease infinite',
-      textAlign: 'center',
-      position: 'relative',
-      letterSpacing: '1px',
-      margin: '0' // Remove default margins
-    }}>
-       Introducing IntrepidQ....
-    </h1>
-  </div>
-</div>
-
-
-  
-  <p style={{
-    fontSize: '1.3rem',
-    color: '#666',
-    textAlign: 'center',
-    margin: '0',
-    fontWeight: '500',
-    letterSpacing: '0.5px',
-    background: 'linear-gradient(45deg, #764ba2, #667eea)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    fontStyle: 'bold'
-  }}>
-    AI-RAG Powered Agent for Civil Services Mains Examination
-  </p>
-
-
-          <p style={{ fontSize: '1.1rem', color: '#666', marginBottom: '10px' }}>
+      <Card className="max-w-4xl mx-auto mb-6">
+        <CardHeader className="text-center">
+          <div className="inline-block border-3 border-orange-700 rounded-xl p-4 bg-gradient-to-r from-orange-100 to-orange-200 shadow-lg">
+            <CardTitle className="bg-gradient-to-r from-orange-700 via-orange-500 to-orange-700 bg-200% animate-gradient bg-clip-text text-transparent text-center relative text-4xl font-bold tracking-wide">
+              Introducing IntrepidQ....
+            </CardTitle>
+          </div>
+          <p className="text-xl text-gray-600 text-center font-medium bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent italic">
+            AI-RAG Powered Agent for Civil Services Mains Examination
+          </p>
+          <p className="text-lg">
             Welcome back, <strong>{user.user_metadata?.full_name || user.email}</strong>!
           </p>
-          <div style={{ marginBottom: '20px' }}>
+          <div className="my-5">
             {subjectsLoading ? (
-              <span style={{ fontSize: '0.9rem', color: '#888' }}>📊 Loading subjects...</span>
+              <span className="text-sm text-gray-500">📊 Loading subjects...</span>
             ) : (
               <div>
-                <div style={{ height: 8, background: '#2d2d2d', borderRadius: 8, overflow: 'hidden', marginBottom: 6 }}>
+                <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
                   <div
+                    className="h-full bg-violet-500 transition-all duration-300"
                     style={{
-                      width: `${Math.min(3 - remainingGenerations + 0, 3) / 3 * 100}%`,
-                      height: '100%',
-                      background: '#8b5cf6',
-                      transition: 'width 300ms ease'
+                      width: `${Math.min(DAILY_LIMIT - remainingGenerations, DAILY_LIMIT) / DAILY_LIMIT * 100}%`,
                     }}
                   />
                 </div>
-                <div style={{ fontSize: '0.9rem', color: '#888' }}>
-                  Daily task limit ({3 - remainingGenerations}/{3})
+                <div className="text-sm text-gray-500">
+                  Daily task limit ({DAILY_LIMIT - remainingGenerations}/{DAILY_LIMIT})
                 </div>
               </div>
             )}
           </div>
-          <button 
-            type="button"
-            style={{
-              ...styles.button,
-              backgroundColor: buttonHover === 'signout' ? '#5a67d8' : '#667eea',
-              transform: buttonHover === 'signout' ? 'translateY(-1px)' : 'none',
-              boxShadow: buttonHover === 'signout' ? '0 4px 12px rgba(0,0,0,0.15)' : '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onMouseEnter={() => setButtonHover('signout')}
-            onMouseLeave={() => setButtonHover(null)}
+          <Button 
+            variant="destructive"
             onClick={handleSignOut}
           >
             🚪 Sign Out
-          </button>
-        </div>
-      </div>
+          </Button>
+        </CardHeader>
+      </Card>
 
       {/* Mode Selection */}
-      <div style={styles.card}>
-        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <button
-            type="button"
-            style={mode === 'topic' ? styles.buttonActive : {
-              ...styles.button,
-              backgroundColor: buttonHover === 'topic' ? '#5a67d8' : '#667eea',
-              transform: buttonHover === 'topic' ? 'translateY(-1px)' : 'none'
-            }}
-            onMouseEnter={() => setButtonHover('topic')}
-            onMouseLeave={() => setButtonHover(null)}
-            onClick={(e) => {
-              e.preventDefault()
-              console.log('Topic mode selected')
-              setMode('topic')
-              toast({ title: "Mode Switched", description: '📚 Switched to Topic-wise mode' })
-            }}
-          >
-            📚 Topic-wise Questions
-          </button>
-          <button
-            type="button"
-            style={mode === 'paper' ? styles.buttonActive : {
-              ...styles.button,
-              backgroundColor: buttonHover === 'paper' ? '#5a67d8' : '#667eea',
-              transform: buttonHover === 'paper' ? 'translateY(-1px)' : 'none'
-            }}
-            onMouseEnter={() => setButtonHover('paper')}
-            onMouseLeave={() => setButtonHover(null)}
-            onClick={(e) => {
-              e.preventDefault()
-              console.log('Paper mode selected')
-              setMode('paper')
-              toast({ title: "Mode Switched", description: '📄 Switched to Whole Paper mode' })
-            }}
-          >
-            📄 Whole GS Paper (10 Questions)
-          </button>
-        </div>
-
-        {mode === 'paper' && (
-          <div style={{ 
-            padding: '15px', 
-            backgroundColor: '#e3f2fd', 
-            borderRadius: '8px', 
-            border: '1px solid #2196f3',
-            textAlign: 'center'
-          }}>
-            <p style={{ margin: 0, color: '#1976d2', fontWeight: 'bold' }}>
-              📋 Whole Paper Mode: Generates 10 questions (10 marks each) | 1 Hour | Total: 100 Marks
-            </p>
+      <Card className="max-w-4xl mx-auto mb-6">
+        <CardContent className="text-center py-6">
+          <div className="flex flex-wrap justify-center gap-4 mb-6">
+            <Button
+              variant={mode === 'topic' ? "default" : "outline"}
+              onClick={(e) => {
+                e.preventDefault()
+                console.log('Topic mode selected')
+                setMode('topic')
+                toast({ title: "Mode Switched", description: '📚 Switched to Topic-wise mode' })
+              }}
+            >
+              📚 Topic-wise Questions
+            </Button>
+            <Button
+              variant={mode === 'paper' ? "default" : "outline"}
+              onClick={(e) => {
+                e.preventDefault()
+                console.log('Paper mode selected')
+                setMode('paper')
+                toast({ title: "Mode Switched", description: '📄 Switched to Whole Paper mode' })
+              }}
+            >
+              📄 Whole GS Paper (10 Questions)
+            </Button>
           </div>
-        )}
-      </div>
+
+          {mode === 'paper' && (
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-300 text-center">
+              <p className="m-0 text-blue-800 font-bold">
+                📋 Whole Paper Mode: Generates 10 questions (10 marks each) | 1 Hour | Total: 100 Marks
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Main Content */}
-      <div style={styles.card}>
-        <div style={window.innerWidth <= 768 ? { display: 'block' } : styles.grid}>
-          {/* Controls */}
-          <div>
-            <h3 style={{ marginBottom: '20px', color: '#333' }}>⚙️ Configuration</h3>
-            
-            {/* Subject Selection */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                📚 Subject:
-              </label>
-              <select 
-                style={{
-                  ...styles.select,
-                  borderColor: selectedSubject ? '#4CAF50' : '#ddd'
-                }}
-                value={selectedSubject}
-                onChange={(e) => handleSubjectChange(e.target.value)}
-                disabled={subjectsLoading}
-              >
-                <option value="GS1">📚 General Studies Paper 1 ({subjects.GS1?.topics?.length || 0} topics)</option>
-                <option value="GS2">🏛️ General Studies Paper 2 ({subjects.GS2?.topics?.length || 0} topics)</option>
-                <option value="GS3">🔬 General Studies Paper 3 ({subjects.GS3?.topics?.length || 0} topics)</option>
-                <option value="GS4">⚖️ General Studies Paper 4 ({subjects.GS4?.topics?.length || 0} topics)</option>
-              </select>
-            </div>
-
-            {/* Topic Selection (only for topic mode) */}
-            {mode === 'topic' && (
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                  📖 Topic:
-                </label>
-                <select 
-                  style={{
-                    ...styles.select,
-                    borderColor: selectedTopic ? '#4CAF50' : '#ddd'
-                  }}
-                  value={selectedTopic}
-                  onChange={(e) => {
-                    console.log('Topic changed to:', e.target.value)
-                    setSelectedTopic(e.target.value)
-                  }}
-                  disabled={subjectsLoading || !subjects[selectedSubject]?.topics?.length}
+      <Card className="max-w-4xl mx-auto mb-6">
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Controls */}
+            <div>
+              <h3 className="mb-6 text-xl font-semibold">⚙️ Configuration</h3>
+              
+              {/* Subject Selection */}
+              <div className="mb-6">
+                <Label className="block mb-2 font-bold">
+                  📚 Subject:
+                </Label>
+                <Select 
+                  value={selectedSubject}
+                  onValueChange={(value) => handleSubjectChange(value)}
+                  disabled={subjectsLoading}
                 >
-                  <option value="">
-                    {subjectsLoading ? 'Loading topics...' : `Select a topic from ${selectedSubject}`}
-                  </option>
-                  {subjects[selectedSubject]?.topics?.map((topic, index) => (
-                    <option key={index} value={topic}>
-                      {topic.length > 60 ? `${topic.substring(0, 60)}...` : topic}
-                    </option>
-                  ))}
-                </select>
-                {selectedTopic && (
-                  <p style={{ 
-                    fontSize: '12px', 
-                    color: '#666', 
-                    margin: '5px 0',
-                    padding: '8px',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    border: '1px solid #4CAF50'
-                  }}>
-                    ✅ Selected: {selectedTopic}
-                  </p>
-                )}
+                  <SelectTrigger className={selectedSubject ? "border-green-500" : ""}>
+                    <SelectValue placeholder="Select a subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GS1">📚 General Studies Paper 1 ({subjects.GS1?.topics?.length || 0} topics)</SelectItem>
+                    <SelectItem value="GS2">🏛️ General Studies Paper 2 ({subjects.GS2?.topics?.length || 0} topics)</SelectItem>
+                    <SelectItem value="GS3">🔬 General Studies Paper 3 ({subjects.GS3?.topics?.length || 0} topics)</SelectItem>
+                    <SelectItem value="GS4">⚖️ General Studies Paper 4 ({subjects.GS4?.topics?.length || 0} topics)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
 
-            {/* Number of Questions (only for topic mode) */}
-            {mode === 'topic' && (
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                  🔢 Number of Questions: <span style={{ color: '#667eea' }}>{numQuestions}</span>
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={numQuestions}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value)
-                    console.log('Question count changed to:', value)
-                    setNumQuestions(value)
-                  }}
-                  style={{ 
-                    width: '100%',
-                    accentColor: '#667eea'
-                  }}
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#666' }}>
-                  <span>1</span>
-                  <span>5</span>
-                  <span>10</span>
+              {/* Topic Selection (only for topic mode) */}
+              {mode === 'topic' && (
+                <div className="mb-6">
+                  <Label className="block mb-2 font-bold">
+                    📖 Topic:
+                  </Label>
+                  <Select 
+                    value={selectedTopic}
+                    onValueChange={(value) => {
+                      console.log('Topic changed to:', value)
+                      setSelectedTopic(value)
+                    }}
+                    disabled={subjectsLoading || !subjects[selectedSubject]?.topics?.length}
+                  >
+                    <SelectTrigger className={selectedTopic ? "border-green-500" : ""}>
+                      <SelectValue placeholder={subjectsLoading ? 'Loading topics...' : `Select a topic from ${selectedSubject}`} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjects[selectedSubject]?.topics?.map((topic, index) => (
+                        <SelectItem key={index} value={topic}>
+                          {topic.length > 60 ? `${topic.substring(0, 60)}...` : topic}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTopic && (
+                    <p className="text-xs text-gray-600 mt-2 p-2 bg-gray-50 rounded border border-green-500">
+                      ✅ Selected: {selectedTopic}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Number of Questions (only for topic mode) */}
+              {mode === 'topic' && (
+                <div className="mb-6">
+                  <Label className="block mb-2 font-bold">
+                    🔢 Number of Questions: <span className="text-blue-500">{numQuestions}</span>
+                  </Label>
+                  <Slider
+                    min={1}
+                    max={10}
+                    step={1}
+                    value={[numQuestions]}
+                    onValueChange={(value) => {
+                      console.log('Question count changed to:', value[0])
+                      setNumQuestions(value[0])
+                    }}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>1</span>
+                    <span>5</span>
+                    <span>10</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Current Affairs */}
+              <div className="mb-6">
+                <div className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
+                  useCurrentAffairs ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200'
+                }`}>
+                  <Checkbox
+                    checked={useCurrentAffairs}
+                    onCheckedChange={(checked) => {
+                      console.log('Current affairs toggled:', checked)
+                      setUseCurrentAffairs(checked as boolean)
+                      toast({ title: "Setting Changed", description: checked ? '📰 Current Affairs enabled' : '📚 Regular mode enabled' })
+                    }}
+                    className="mr-3 h-5 w-5"
+                  />
+                  <div>
+                    <div className="font-bold">📰 Include Current Affairs (Last 6 months)</div>
+                    {useCurrentAffairs && (
+                      <div className="text-xs text-orange-700 mt-1 italic">
+                        ⚡ Questions will be enhanced with recent developments and news
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Current Affairs */}
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                cursor: 'pointer',
-                padding: '10px',
-                backgroundColor: useCurrentAffairs ? '#e8f5e8' : '#f9f9f9',
-                borderRadius: '6px',
-                border: `1px solid ${useCurrentAffairs ? '#4CAF50' : '#ddd'}`,
-                transition: 'all 0.2s ease'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={useCurrentAffairs}
-                  onChange={(e) => {
-                    console.log('Current affairs toggled:', e.target.checked)
-                    setUseCurrentAffairs(e.target.checked)
-                    toast({ title: "Setting Changed", description: e.target.checked ? '📰 Current Affairs enabled' : '📚 Regular mode enabled' })
-                  }}
-                  style={{ 
-                    marginRight: '12px',
-                    transform: 'scale(1.2)',
-                    accentColor: '#667eea'
-                  }}
-                />
+              {/* Generate Button */}
+              <Button
+                className="w-full text-lg py-6"
+                disabled={isGenerateDisabled}
+                onClick={handleGenerateQuestions}
+              >
+                {loading ? (
+                  '🔄 Generating...'
+                ) : subjectsLoading ? (
+                  '⏳ Loading subjects...'
+                ) : (
+                  `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
+                )}
+              </Button>
+            </div>
+
+            {/* Results */}
+            <div>
+              <h3 className="mb-6 text-xl font-semibold">
+                📄 Generated Questions
+                {questions && (
+                  <span className="text-sm font-normal text-gray-600 ml-2">
+                    ({questions.match(/^\d+\./gm)?.length || (mode === 'paper' ? 10 : numQuestions)} questions)
+                  </span>
+                )}
+              </h3>
+              
+              {questions ? (
                 <div>
-                  <div style={{ fontWeight: 'bold' }}>📰 Include Current Affairs (Last 6 months)</div>
-                  {useCurrentAffairs && (
-                    <div style={{ 
-                      fontSize: '12px', 
-                      color: '#e65100', 
-                      marginTop: '4px',
-                      fontStyle: 'italic'
-                    }}>
-                      ⚡ Questions will be enhanced with recent developments and news
+                  {/* Single button to generate answers for all questions */}
+                  <div className="text-center mb-4">
+                    <Button
+                      className="w-full"
+                      onClick={handleGenerateAllAnswers}
+                      disabled={generatingAllAnswers}
+                    >
+                      {generatingAllAnswers ? 'Generating Answers...' : 'Generate Answers for All'}
+                    </Button>
+                  </div>
+
+                  {/* Scrollable Q-A list */}
+                  <div className="max-h-[60vh] overflow-y-auto pr-2">
+                    {questions.split('\n\n').map((question, index) => (
+                      <Card key={index} className="mb-5">
+                        <CardContent className="p-4">
+                          <p className="whitespace-pre-wrap font-mono">{question}</p>
+                          {answers[index] && (
+                            <div className="mt-4 p-3 bg-gray-50 rounded">
+                              <h4 className="font-bold">Answer:</h4>
+                              <p><strong>Introduction:</strong> {answers[index].introduction}</p>
+                              <div><strong>Body:</strong>
+                                <ul className="list-disc pl-5">
+                                  {answers[index].body.map((keyword: string, i: number) => (
+                                    <li key={i}>{keyword}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                              <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  {loading ? (
+                    <div>
+                      <div className="text-4xl mb-4">🤖</div>
+                      <p className="text-lg">Generating questions using your UPSC AI system...</p>
+                      <p className="text-sm text-gray-500 mt-2">This may take 10-30 seconds</p>
+                    </div>
+                  ) : subjectsLoading ? (
+                    <div>
+                      <div className="text-4xl mb-4">📚</div>
+                      <p className="text-lg">Loading UPSC subjects and topics...</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-4xl mb-4">📝</div>
+                      <p className="text-lg">Configure your settings and generate questions to see results here</p>
+                      <p className="text-sm text-gray-500 mt-2">
+                        {totalTopics} topics available across {Object.keys(subjects).length} subjects
+                      </p>
                     </div>
                   )}
                 </div>
-              </label>
-            </div>
-
-            {/* Generate Button */}
-            <button
-              type="button"
-              style={{
-                ...(isGenerateDisabled ? styles.buttonDisabled : styles.button),
-                width: '100%',
-                fontSize: '18px',
-                padding: '15px',
-                backgroundColor: isGenerateDisabled ? '#ccc' : 
-                                buttonHover === 'generate' ? '#5a67d8' : '#667eea',
-                transform: buttonHover === 'generate' && !isGenerateDisabled ? 'translateY(-2px)' : 'none',
-                boxShadow: buttonHover === 'generate' && !isGenerateDisabled ? 
-                          '0 8px 20px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.1)'
-              }}
-              onMouseEnter={() => !isGenerateDisabled && setButtonHover('generate')}
-              onMouseLeave={() => setButtonHover(null)}
-              onClick={handleGenerateQuestions}
-              disabled={isGenerateDisabled}
-            >
-              {loading ? (
-                '🔄 Generating...'
-              ) : subjectsLoading ? (
-                '⏳ Loading subjects...'
-              ) : (
-                `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
               )}
-            </button>
+            </div>
           </div>
-
-          {/* Results */}
-          <div style={{ marginTop: window.innerWidth <= 768 ? '30px' : '0' }}>
-            <h3 style={{ marginBottom: '20px', color: '#333' }}>
-              📄 Generated Questions
-{questions && (
-  <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
-    {' '}({questions.match(/^\d+\./gm)?.length || (mode === 'paper' ? 10 : numQuestions)} questions)
-  </span>
-)}
-
-            </h3>
-            
-            {questions ? (
-              <div>
-                {/* Single button to generate answers for all questions */}
-                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                  <button
-                    type="button"
-                    style={{ ...styles.button, width: '100%', opacity: generatingAllAnswers ? 0.8 : 1 }}
-                    onClick={handleGenerateAllAnswers}
-                    disabled={generatingAllAnswers}
-                  >
-                    {generatingAllAnswers ? 'Generating Answers...' : 'Generate Answers for All'}
-                  </button>
-                </div>
-
-                {/* Scrollable Q-A list */}
-                <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '6px' }}>
-                  {questions.split('\n\n').map((question, index) => (
-                    <div key={index} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
-                      <p style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{question}</p>
-                      {answers[index] && (
-                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                          <h4>Answer:</h4>
-                          <p><strong>Introduction:</strong> {answers[index].introduction}</p>
-                          <div><strong>Body:</strong>
-                            <ul>
-                              {answers[index].body.map((keyword: string, i: number) => (
-                                <li key={i}>{keyword}</li>
-                              ))}
-                            </ul>
-                          </div>
-                          <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div style={styles.loading}>
-                {loading ? (
-                  <div>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>🤖</div>
-                    <p>Generating questions using your UPSC AI system...</p>
-                    <p style={{ fontSize: '14px', color: '#888' }}>This may take 10-30 seconds</p>
-                  </div>
-                ) : subjectsLoading ? (
-                  <div>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>📚</div>
-                    <p>Loading UPSC subjects and topics...</p>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ fontSize: '2rem', marginBottom: '15px' }}>📝</div>
-                    <p>Configure your settings and generate questions to see results here</p>
-                    <p style={{ fontSize: '14px', color: '#888' }}>
-                      {totalTopics} topics available across {Object.keys(subjects).length} subjects
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Footer */}
-      <div style={styles.card}>
-        <div style={{ textAlign: 'center', color: '#666' }}>
+      <Card className="max-w-4xl mx-auto">
+        <CardContent className="text-center py-6 text-gray-600">
           <p>© 2024 IntrepidQ. Built with ♥ .</p>
-          <p style={{ marginTop: '8px', fontSize: '14px' }}>
+          <p className="mt-2 text-sm">
             🤖 AI-RAG powered tool for UPSC aspirants with current affairs integration.
           </p>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

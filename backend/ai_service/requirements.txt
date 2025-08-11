@@ -17,4 +17,4 @@ supabase>=2.0.0
 postgrest>=0.15.0
 python-multipart>=0.0.5
 google-generativeai>=0.4.0
-torch==2.1.1+cpu
+torch==2.8.0+cpu

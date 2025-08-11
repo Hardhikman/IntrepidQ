@@ -148,8 +148,10 @@ class SupabaseService:
             logger.error(f"Failed to get user stats: {e}")
             return {'profile': None, 'recent_activity': []}
 
-    def check_and_update_generation_limit(self, user_id: str) -> bool:
-        """Check and update the user's daily generation limit."""
+    def check_and_update_generation_limit(self, user_id: str, daily_limit: int = 5) -> bool:
+        """Check and update the user's daily generation limit.
+        Returns True if the user can proceed and increments the counter; False if limit reached.
+        """
         from datetime import date
 
         profile = self.get_user_profile(user_id)
@@ -164,7 +166,7 @@ class SupabaseService:
         if last_generation_date != today:
             generation_count = 0
 
-        if generation_count >= 3:
+        if generation_count >= daily_limit:
             return False
 
         # Update the profile and also upsert to be robust if row was missing

@@ -198,6 +198,52 @@ class SupabaseService:
             logger.error(f"Failed to update generation limit for user {user_id}: {e}")
             return False
 
+    def get_user_analytics(self, user_id: str) -> Dict[str, Any]:
+        """Get comprehensive user analytics for the dashboard"""
+        try:
+            client = self._ensure_client()
+            
+            # Get total generations and questions
+            questions_res = client.table('generated_questions').select('question_count, subject, mode, use_current_affairs').eq('user_id', user_id).execute()
+            total_generations = len(questions_res.data) if questions_res.data else 0
+            total_questions = sum(item['question_count'] for item in questions_res.data) if questions_res.data else 0
+            
+            # Get subject breakdown
+            subject_breakdown = {}
+            mode_breakdown = {'topic': 0, 'paper': 0}
+            ca_usage = 0
+            
+            if questions_res.data:
+                for item in questions_res.data:
+                    subject = item['subject']
+                    subject_breakdown[subject] = subject_breakdown.get(subject, 0) + 1
+                    mode_breakdown[item['mode']] = mode_breakdown.get(item['mode'], 0) + 1
+                    if item['use_current_affairs']:
+                        ca_usage += 1
+            
+            # Get feedback stats
+            feedback_res = client.table('question_feedback').select('rating, question_id').eq('user_id', user_id).execute()
+            feedback_count = len(feedback_res.data) if feedback_res.data else 0
+            
+            # Calculate average rating
+            avg_rating = 0
+            if feedback_res.data:
+                total_rating = sum(item['rating'] for item in feedback_res.data)
+                avg_rating = total_rating / feedback_count if feedback_count > 0 else 0
+            
+            return {
+                'total_generations': total_generations,
+                'total_questions': total_questions,
+                'subject_breakdown': subject_breakdown,
+                'mode_breakdown': mode_breakdown,
+                'current_affairs_usage': ca_usage,
+                'feedback_count': feedback_count,
+                'average_rating': round(avg_rating, 2),
+            }
+        except Exception as e:
+            logger.error(f"Failed to get user analytics: {e}")
+            return {}
+
     def get_analytics_summary(self, user_id: str) -> Dict[str, Any]:
         """Get analytics summary for the dashboard."""
         try:

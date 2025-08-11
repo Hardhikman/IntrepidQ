@@ -14,7 +14,7 @@ export function useAuth() {
 
       if (session?.user) {
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
+          .from('user_profiles')
           .select('*')
           .eq('id', session.user.id)
           .single();
@@ -30,7 +30,7 @@ export function useAuth() {
         setUser(session?.user ?? null);
         if (session?.user) {
           const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
+            .from('user_profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
@@ -41,9 +41,69 @@ export function useAuth() {
         setLoading(false);
       }
     );
-
+    
     return () => subscription.unsubscribe();
   }, []);
+
+  // Realtime: subscribe to user_profiles changes for this user
+  useEffect(() => {
+    if (!user?.id) return
+
+    const channel = supabase
+      .channel(`user_profiles:${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_profiles', filter: `id=eq.${user.id}` },
+        (payload) => {
+          const newRow: any = (payload as any).new
+          if (newRow) {
+            setProfile((prev: any) => ({ ...prev, ...newRow }))
+          } else {
+            // fallback: refetch if payload missing new
+            refreshProfile()
+          }
+        }
+      )
+      .subscribe()
+
+    return () => {
+      try { supabase.removeChannel(channel) } catch {}
+    }
+  }, [user?.id])
+
+  // Fetch the latest profile (e.g., after a generation updates counters)
+  const refreshProfile = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const currentUser = session?.user
+      if (!currentUser) return
+
+      const { data: profileData } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', currentUser.id)
+        .single()
+      setProfile(profileData)
+    } catch (err) {
+      // swallow errors for UX; console available for debugging
+      console.error('refreshProfile error', err)
+    }
+  }
+
+  // Optimistic UI: bump local daily generation counter immediately
+  const applyLocalGenerationIncrement = (increment: number = 1) => {
+    setProfile((prev: any) => {
+      if (!prev) return prev
+      const today = new Date().toISOString().slice(0, 10)
+      const last = prev.last_generation_date
+      const baseCount = last === today ? (prev.generation_count_today || 0) : 0
+      return {
+        ...prev,
+        last_generation_date: today,
+        generation_count_today: Math.min((baseCount as number) + increment, 999)
+      }
+    })
+  }
 
   // Add the missing authentication functions
   const signInWithEmail = async (email: string, password: string) => {
@@ -97,6 +157,8 @@ export function useAuth() {
     user,
     profile,
     loading,
+    refreshProfile,
+    applyLocalGenerationIncrement,
     signInWithEmail,
     signUpWithEmail,
     signOut,

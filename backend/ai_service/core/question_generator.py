@@ -403,16 +403,16 @@ Generate the complete 10-question paper now:"""
         """Format the final paper with proper UPSC format"""
         paper_content = f"""# UPSC Civil Services Mains Examination - {subject}
 
-**Time Allowed:** 1 Hours  
-**Maximum Marks:** 100
+Time Allowed:1 Hours  
+Maximum Marks:100
 
 ---
 
 ## Instructions:
-- Answer **ALL** questions
-- All questions carry **equal marks** (10 marks each)
-- Word limit: **250 words** per question
-- Candidates should attempt questions in a **methodical manner**
+- Answer ALL questions
+- All questions carry equal marks(10 marks each)
+- Word limit: 2 A4 size pages per question
+- Candidates should attempt questions in a methodical manner
 
 ---
 

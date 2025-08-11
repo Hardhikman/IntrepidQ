@@ -349,8 +349,8 @@ export default function AuthForm() {
             borderTop: '1px solid #f3f4f6',
             paddingTop: '20px'
           }}>
-            <p>🎓 UPSC Question Generator</p>
-            <p>AI-powered preparation for civil services</p>
+            <p>🎓 IntrepidQ generator</p>
+            <p>AI-powered preparation for civil services mains Examination</p>
           </div>
         </div>
       </div>

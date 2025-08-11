@@ -136,8 +136,9 @@ interface Subject {
   topics: string[]
 }
 
+
 export default function UPSCQuestionGenerator() {
-  const { user, profile, loading: authLoading, signOut } = useAuth()
+  const { user, profile, loading: authLoading, signOut, refreshProfile, applyLocalGenerationIncrement } = useAuth()
   const { toast } = useToast()
   
   const [subjects, setSubjects] = useState<Record<string, Subject>>({})
@@ -149,13 +150,52 @@ export default function UPSCQuestionGenerator() {
   const [loading, setLoading] = useState<boolean>(false)
   const [questions, setQuestions] = useState<string>('')
   const [answers, setAnswers] = useState<Record<number, any>>({})
-  const [generatingAnswers, setGeneratingAnswers] = useState<Record<number, boolean>>({})
+  const [generatingAllAnswers, setGeneratingAllAnswers] = useState<boolean>(false)
   const [buttonHover, setButtonHover] = useState<string | null>(null)
-  const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true) // Added state
+  const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true)
+
+  // ADD THIS USEEFFECT HERE - Toast positioning fix
+  useEffect(() => {
+    // Function to reposition any toast that appears
+    const repositionToasts = () => {
+      const toastElements = document.querySelectorAll('[data-radix-toast-viewport], [data-sonner-toaster], .Toaster');
+      toastElements.forEach(toast => {
+        if (toast instanceof HTMLElement) {
+          toast.style.position = 'fixed';
+          toast.style.top = '20px';
+          toast.style.right = '20px';
+          toast.style.left = 'auto';
+          toast.style.bottom = 'auto';
+          toast.style.zIndex = '99999';
+          toast.style.transform = 'none';
+        }
+      });
+    };
+
+    // Run immediately and on any DOM changes
+    repositionToasts();
+    
+    const observer = new MutationObserver(repositionToasts);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     fetchSubjects()
   }, [])
+
+  // Fallback polling: while generating questions or answers, refresh profile every ~2.5s
+  useEffect(() => {
+    const shouldPoll = loading || generatingAllAnswers
+    if (!shouldPoll) return
+
+    const id = window.setInterval(() => {
+      refreshProfile?.()
+    }, 2500)
+
+    return () => window.clearInterval(id)
+  }, [loading, generatingAllAnswers, refreshProfile])
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true) // Start loading
@@ -223,6 +263,9 @@ export default function UPSCQuestionGenerator() {
       return
     }
 
+    // Reset previous results before a new generation
+    setQuestions('')
+    setAnswers({})
     setLoading(true)
     const startTime = Date.now()
     
@@ -295,47 +338,108 @@ export default function UPSCQuestionGenerator() {
       toast({ title: "Error", description: `❌ Generation failed: ${errorMessage}`, variant: "destructive" })
     } finally {
       setLoading(false)
+      // Optimistic update for the daily counter (count 1 per generation)
+      applyLocalGenerationIncrement?.(1)
+      // Refresh user profile to update daily generation counters
+      refreshProfile?.()
     }
   }
 
-  const handleSignOut = async (e?: React.MouseEvent) => {
-    e?.preventDefault()
-    e?.stopPropagation()
+const handleSignOut = async (e?: React.MouseEvent) => {
+  e?.preventDefault()
+  e?.stopPropagation()
+  
+  console.log('Sign out button clicked!')
+  
+  try {
+    await signOut()
     
-    console.log('Sign out button clicked!')
+    // Create a custom positioned toast
+    const toastDiv = document.createElement('div');
+    toastDiv.innerHTML = '👋 Signed out successfully!';
+    toastDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 99999;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    `;
     
-    try {
-      toast({ title: "Signing out", description: "Please wait..." })
-      await signOut()
-      toast({ title: "Success", description: '👋 Signed out successfully!' })
-    } catch (error) {
-      console.error('Sign out error:', error)
-      toast({ title: "Error", description: '❌ Failed to sign out', variant: "destructive" })
-    }
+    document.body.appendChild(toastDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      document.body.removeChild(toastDiv);
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Sign out error:', error)
+    
+    // Custom error toast
+    const errorDiv = document.createElement('div');
+    errorDiv.innerHTML = '❌ Failed to sign out';
+    errorDiv.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ef4444;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      z-index: 99999;
+      font-family: Arial, sans-serif;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    setTimeout(() => {
+      document.body.removeChild(errorDiv);
+    }, 3000);
   }
+}
 
-  const handleGenerateAnswer = async (question: string, index: number) => {
-    setGeneratingAnswers((prev) => ({ ...prev, [index]: true }));
-    toast({ title: "Generating Answer", description: "Please wait..." });
+  const handleGenerateAllAnswers = async () => {
+    if (!questions) return
+    setGeneratingAllAnswers(true)
+    toast({ title: 'Generating Answers', description: 'Generating answers for all questions...' })
     try {
-      const response = await fetch('/api/generate_answer', {
+      const questionList = questions
+        .split('\n\n')
+        .map(q => q.trim())
+        .filter(q => q.length > 0)
+
+      const response = await fetch('/api/generate_answers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question }),
-      });
+        body: JSON.stringify({ questions: questionList })
+      })
       if (!response.ok) {
-        throw new Error('Failed to generate answer');
+        throw new Error('Failed to generate answers')
       }
-      const data = await response.json();
-      setAnswers((prev) => ({ ...prev, [index]: data }));
-      toast({ title: "Success", description: `Answer generated for question ${index + 1}!` });
+      const data = await response.json()
+      const newAnswers: Record<number, any> = {}
+      ;(data.answers || []).forEach((ans: any, idx: number) => {
+        newAnswers[idx] = ans
+      })
+      setAnswers(newAnswers)
+      toast({ title: 'Success', description: 'Generated answers for all questions!' })
     } catch (error) {
-      console.error('Error generating answer:', error);
-      toast({ title: "Error", description: `Failed to generate answer for question ${index + 1}.`, variant: "destructive" });
+      console.error('Error generating answers:', error)
+      toast({ title: 'Error', description: 'Failed to generate answers for all questions.', variant: 'destructive' })
     } finally {
-      setGeneratingAnswers((prev) => ({ ...prev, [index]: false }));
+      setGeneratingAllAnswers(false)
+      // Optimistic update for the daily counter (count 1 per answers batch)
+      applyLocalGenerationIncrement?.(1)
+      // Refresh profile to update the daily counter after answers generation
+      refreshProfile?.()
     }
-  };
+  }
 
   // Loading state for authentication
   if (authLoading) {
@@ -364,17 +468,74 @@ export default function UPSCQuestionGenerator() {
       {/* Header */}
       <div style={styles.card}>
         <div style={styles.header}>
-          <h1 style={styles.title}>🎓 UPSC Question Generator</h1>
+           <div style={{ textAlign: 'center' }}>
+  <div style={{
+    display: 'inline-block', // This makes the box fit the content width
+    border: '3px solid #CC5500',
+    borderRadius: '12px',
+    padding: '15px 25px',
+    background: 'linear-gradient(135deg, rgba(204, 85, 0, 0.08), rgba(255, 140, 0, 0.08))',
+    boxShadow: '0 4px 12px rgba(204, 85, 0, 0.2)'
+  }}>
+    <h1 style={{
+      ...styles.title,
+      background: 'linear-gradient(45deg, #CC5500, #FF8C00, #CC5500)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundSize: '200% 200%',
+      animation: 'gradient 4s ease infinite',
+      textAlign: 'center',
+      position: 'relative',
+      letterSpacing: '1px',
+      margin: '0' // Remove default margins
+    }}>
+       Introducing IntrepidQ....
+    </h1>
+  </div>
+</div>
+
+
+  
+  <p style={{
+    fontSize: '1.3rem',
+    color: '#666',
+    textAlign: 'center',
+    margin: '0',
+    fontWeight: '500',
+    letterSpacing: '0.5px',
+    background: 'linear-gradient(45deg, #764ba2, #667eea)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    fontStyle: 'bold'
+  }}>
+    AI-RAG Powered Agent for Civil Services Mains Examination
+  </p>
+
+
           <p style={{ fontSize: '1.1rem', color: '#666', marginBottom: '10px' }}>
             Welcome back, <strong>{user.user_metadata?.full_name || user.email}</strong>!
           </p>
-          <p style={{ fontSize: '0.9rem', color: '#888', marginBottom: '20px' }}>
+          <div style={{ marginBottom: '20px' }}>
             {subjectsLoading ? (
-              <span>📊 Loading subjects...</span>
+              <span style={{ fontSize: '0.9rem', color: '#888' }}>📊 Loading subjects...</span>
             ) : (
-              <span>📊 {Object.keys(subjects).length} subjects loaded with {totalTopics} topics. Generations left today: {remainingGenerations}</span>
+              <div>
+                <div style={{ height: 8, background: '#2d2d2d', borderRadius: 8, overflow: 'hidden', marginBottom: 6 }}>
+                  <div
+                    style={{
+                      width: `${Math.min(3 - remainingGenerations + 0, 3) / 3 * 100}%`,
+                      height: '100%',
+                      background: '#8b5cf6',
+                      transition: 'width 300ms ease'
+                    }}
+                  />
+                </div>
+                <div style={{ fontSize: '0.9rem', color: '#888' }}>
+                  Daily task limit ({3 - remainingGenerations}/{3})
+                </div>
+              </div>
             )}
-          </p>
+          </div>
           <button 
             type="button"
             style={{
@@ -442,7 +603,7 @@ export default function UPSCQuestionGenerator() {
             textAlign: 'center'
           }}>
             <p style={{ margin: 0, color: '#1976d2', fontWeight: 'bold' }}>
-              📋 Whole Paper Mode: Generates 10 questions (25 marks each) | 3 Hours | Total: 250 Marks
+              📋 Whole Paper Mode: Generates 10 questions (10 marks each) | 1 Hour | Total: 100 Marks
             </p>
           </div>
         )}
@@ -617,49 +778,56 @@ export default function UPSCQuestionGenerator() {
                 `🚀 Generate ${mode === 'topic' ? `${numQuestions} Questions` : 'Whole Paper (10 Q)'}`
               )}
             </button>
-
           </div>
 
           {/* Results */}
           <div style={{ marginTop: window.innerWidth <= 768 ? '30px' : '0' }}>
             <h3 style={{ marginBottom: '20px', color: '#333' }}>
               📄 Generated Questions
-              {questions && (
-                <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
-                  {' '}({questions.split('\n\n').filter(q => q.trim()).length} questions)
-                </span>
-              )}
+{questions && (
+  <span style={{ fontSize: '14px', color: '#666', fontWeight: 'normal' }}>
+    {' '}({questions.match(/^\d+\./gm)?.length || (mode === 'paper' ? 10 : numQuestions)} questions)
+  </span>
+)}
+
             </h3>
             
             {questions ? (
               <div>
-                {questions.split('\n\n').map((question, index) => (
-                  <div key={index} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
-                    <p style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{question}</p>
-                    <button
-                      type="button"
-                      style={{ ...styles.button, marginTop: '10px' }}
-                      onClick={() => handleGenerateAnswer(question, index)}
-                      disabled={generatingAnswers[index]}
-                    >
-                      {generatingAnswers[index] ? 'Generating Answer...' : 'Generate Answer'}
-                    </button>
-                    {answers[index] && (
-                      <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
-                        <h4>Answer:</h4>
-                        <p><strong>Introduction:</strong> {answers[index].introduction}</p>
-                        <div><strong>Body:</strong>
-                          <ul>
-                            {answers[index].body.map((keyword: string, i: number) => (
-                              <li key={i}>{keyword}</li>
-                            ))}
-                          </ul>
+                {/* Single button to generate answers for all questions */}
+                <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    style={{ ...styles.button, width: '100%', opacity: generatingAllAnswers ? 0.8 : 1 }}
+                    onClick={handleGenerateAllAnswers}
+                    disabled={generatingAllAnswers}
+                  >
+                    {generatingAllAnswers ? 'Generating Answers...' : 'Generate Answers for All'}
+                  </button>
+                </div>
+
+                {/* Scrollable Q-A list */}
+                <div style={{ maxHeight: '60vh', overflowY: 'auto', paddingRight: '6px' }}>
+                  {questions.split('\n\n').map((question, index) => (
+                    <div key={index} style={{ marginBottom: '20px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px' }}>
+                      <p style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace' }}>{question}</p>
+                      {answers[index] && (
+                        <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+                          <h4>Answer:</h4>
+                          <p><strong>Introduction:</strong> {answers[index].introduction}</p>
+                          <div><strong>Body:</strong>
+                            <ul>
+                              {answers[index].body.map((keyword: string, i: number) => (
+                                <li key={i}>{keyword}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
                         </div>
-                        <p><strong>Conclusion:</strong> {answers[index].conclusion}</p>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : (
               <div style={styles.loading}>
@@ -692,9 +860,9 @@ export default function UPSCQuestionGenerator() {
       {/* Footer */}
       <div style={styles.card}>
         <div style={{ textAlign: 'center', color: '#666' }}>
-          <p>© 2024 UPSC Question Generator. Built with Next.js, FastAPI, Groq AI, and Supabase.</p>
+          <p>© 2024 IntrepidQ. Built with ♥ .</p>
           <p style={{ marginTop: '8px', fontSize: '14px' }}>
-            🤖 AI-powered tool for UPSC aspirants with current affairs integration.
+            🤖 AI-RAG powered tool for UPSC aspirants with current affairs integration.
           </p>
         </div>
       </div>

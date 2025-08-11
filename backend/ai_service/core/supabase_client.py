@@ -20,7 +20,8 @@ class SupabaseService:
         if self.client is None:
             if not self.url or not self.key:
                 raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set")
-            self.client = create_client(self.url, self.key)
+            # Prefer service role key on the server to bypass RLS for server-side updates
+            self.client = create_client(self.url, self.service_key or self.key)
         return self.client
 
     def verify_user(self, token: str) -> Optional[Dict[str, Any]]:
@@ -36,7 +37,8 @@ class SupabaseService:
     def get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
         """Get user profile data"""
         try:
-            response = self.client.table('user_profiles').select('*').eq('id', user_id).execute()
+            client = self._ensure_client()
+            response = client.table('user_profiles').select('*').eq('id', user_id).execute()
             return response.data[0] if response.data else None
         except Exception as e:
             logger.error(f"Failed to get user profile: {e}")
@@ -165,12 +167,13 @@ class SupabaseService:
         if generation_count >= 3:
             return False
 
-        # Update the profile
+        # Update the profile and also upsert to be robust if row was missing
         try:
-            self._ensure_client().table('user_profiles').update({
+            self._ensure_client().table('user_profiles').upsert({
+                'id': user_id,
                 'generation_count_today': generation_count + 1,
                 'last_generation_date': today
-            }).eq('id', user_id).execute()
+            }).execute()
             return True
         except Exception as e:
             logger.error(f"Failed to update generation limit for user {user_id}: {e}")

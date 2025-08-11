@@ -40,7 +40,7 @@ export default function Profile({ session }: ProfileProps) {
     try {
       setLoading(true)
       const { data, error } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('*')
         .eq('id', session?.user.id)
         .single()
@@ -67,7 +67,7 @@ export default function Profile({ session }: ProfileProps) {
         updated_at: new Date().toISOString(),
       }
 
-      const { error } = await supabase.from('profiles').upsert(updates)
+      const { error } = await supabase.from('user_profiles').upsert(updates)
 
       if (error) {
         throw error
@@ -177,4 +177,5 @@ export default function Profile({ session }: ProfileProps) {
     </div>
   )
 }
+
 

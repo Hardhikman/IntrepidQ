@@ -62,7 +62,7 @@ async def get_user_profile(
 ):
     """Get user profile and stats"""
     try:
-        stats = supabase_service.get_user_stats(user['id'])
+        stats = supabase_service().get_user_stats(user['id'])
         return UserProfileResponse(profile=stats['profile'], user=user)
     except Exception as e:
         logger.error(f"Error fetching user profile: {e}")
@@ -76,7 +76,7 @@ async def get_question_history(
 ):
     """Get user's question generation history"""
     try:
-        response = (supabase_service.client.table('generated_questions')
+        response = (supabase_service().client.table('generated_questions')
                    .select('*')
                    .eq('user_id', user['id'])
                    .order('created_at', desc=True)
@@ -97,7 +97,7 @@ async def delete_question(
 ):
     """Delete a question from history"""
     try:
-        response = (supabase_service.client.table('generated_questions')
+        response = (supabase_service().client.table('generated_questions')
                    .delete()
                    .eq('id', question_id)
                    .eq('user_id', user['id'])  # Ensure user can only delete their own questions
@@ -128,7 +128,7 @@ async def update_user_profile(
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields to update")
         
-        response = (supabase_service.client.table('user_profiles')
+        response = (supabase_service().client.table('user_profiles')
                    .update(update_data)
                    .eq('id', user['id'])
                    .execute())
@@ -151,10 +151,10 @@ async def get_user_stats(
     """Get detailed user statistics"""
     try:
         # Get profile stats
-        profile = supabase_service.get_user_profile(user['id'])
+        profile = supabase_service().get_user_profile(user['id'])
         
         # Get subject-wise breakdown
-        response = (supabase_service.client.table('generated_questions')
+        response = (supabase_service().client.table('generated_questions')
                    .select('subject, mode, created_at')
                    .eq('user_id', user['id'])
                    .execute())

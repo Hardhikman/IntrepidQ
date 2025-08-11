@@ -71,7 +71,7 @@ async def generate_questions(
         # Save to database if user is logged in
         if user:
             try:
-                supabase_service.client.table('generated_questions').insert({
+                supabase_service().client.table('generated_questions').insert({
                     'user_id': user['id'],
                     'subject': question_generator.get_subject_from_topic(topic),
                     'topic': topic,
@@ -125,7 +125,7 @@ async def generate_whole_paper(
         # Save to database if user is logged in
         if user:
             try:
-                supabase_service.client.table('generated_questions').insert({
+                supabase_service().client.table('generated_questions').insert({
                     'user_id': user['id'],
                     'subject': subject,
                     'topic': None,

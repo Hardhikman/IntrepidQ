@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
 import { GeneratedQuestion } from '@/lib/supabase'
 import { QuestionDisplay } from '@/components/QuestionDisplay'
+import { Dashboard } from '@/components/Dashboard'
 
 
 interface Subject {
@@ -26,6 +27,7 @@ export default function UPSCQuestionGenerator() {
   const { user, profile, loading: authLoading, signOut, refreshProfile, applyLocalGenerationIncrement } = useAuth()
   const { toast } = useToast()
   
+  const [showDashboard, setShowDashboard] = useState(false);
   const [subjects, setSubjects] = useState<Record<string, Subject>>({})
   const [selectedSubject, setSelectedSubject] = useState<string>('GS1')
   const [selectedTopic, setSelectedTopic] = useState<string>('')
@@ -243,8 +245,8 @@ export default function UPSCQuestionGenerator() {
         return;
       }
 
-      const response = await fetch('/api/feedback', {
-        method: 'POST',
+      const response = await fetch('/api/question_feedback', {
+              method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -327,48 +329,62 @@ export default function UPSCQuestionGenerator() {
   const isGenerateDisabled = loading || (mode === 'topic' && !selectedTopic) || subjectsLoading || remainingGenerations <= 0;
   const totalTopics = Object.values(subjects).reduce((total, subject) => total + subject.topics.length, 0)
 
+  if (showDashboard) {
+    return <Dashboard onNavigateToGenerator={() => setShowDashboard(false)} />;
+  }
+
   return (
     <div className="min-h-screen p-4">
       {/* Header */}
       <Card className="max-w-4xl mx-auto mb-6">
         <CardHeader className="text-center">
-          <div className="inline-block border-3 border-orange-700 rounded-xl p-4 bg-gradient-to-r from-orange-100 to-orange-200 shadow-lg">
-            <CardTitle className="bg-gradient-to-r from-orange-700 via-orange-500 to-orange-700 bg-200% animate-gradient bg-clip-text text-transparent text-center relative text-4xl font-bold tracking-wide">
-              Introducing IntrepidQ....
-            </CardTitle>
-          </div>
-          <p className="text-xl text-gray-600 text-center font-medium bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent italic">
-            AI-RAG Powered Agent for Civil Services Mains Examination
-          </p>
-          <p className="text-lg">
-            Welcome back, <strong>{user.user_metadata?.full_name || user.email}</strong>!
-          </p>
-          <div className="my-5">
-            {subjectsLoading ? (
-              <span className="text-sm text-gray-500">📊 Loading subjects...</span>
-            ) : (
-              <div>
-                <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
-                  <div
-                    className="h-full bg-violet-500 transition-all duration-300"
-                    style={{
-                      width: `${Math.min(DAILY_LIMIT - remainingGenerations, DAILY_LIMIT) / DAILY_LIMIT * 100}%`,
-                    }}
-                  />
-                </div>
-                <div className="text-sm text-gray-500">
-                  Daily task limit ({DAILY_LIMIT - remainingGenerations}/{DAILY_LIMIT})
-                </div>
-              </div>
-            )}
-          </div>
-          <Button 
-            variant="destructive"
-            onClick={handleSignOut}
-          >
-            🚪 Sign Out
-          </Button>
-        </CardHeader>
+                  <div className="inline-block border-3 border-orange-700 rounded-xl p-4 bg-gradient-to-r from-orange-100 to-orange-200 shadow-lg">
+                    <div className="flex items-center justify-center gap-4">
+                      <CardTitle className="bg-gradient-to-r from-orange-700 via-orange-500 to-orange-700 bg-200% animate-gradient bg-clip-text text-transparent text-center relative text-4xl font-bold tracking-wide">
+                        Introducing IntrepidQ....
+                      </CardTitle>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowDashboard(true)}
+                          className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white h-10 px-4"
+                        >
+                          📊 Dashboard
+                        </Button>
+                        <Button
+                          onClick={handleSignOut}
+                          className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white h-10 px-4"
+                        >
+                          🚪 Sign Out
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xl text-gray-600 text-center font-medium bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent italic">
+                    AI-RAG Powered Agent for Civil Services Mains Examination
+                  </p>
+                  <p className="text-lg">
+                    Welcome back, <strong>{user.user_metadata?.full_name || user.email}</strong>!
+                  </p>
+                  <div className="my-5">
+                    {subjectsLoading ? (
+                      <span className="text-sm text-gray-500">📊 Loading subjects...</span>
+                    ) : (
+                      <div>
+                        <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-2">
+                          <div
+                            className="h-full bg-violet-500 transition-all duration-300"
+                            style={{
+                              width: `${Math.min(DAILY_LIMIT - remainingGenerations, DAILY_LIMIT) / DAILY_LIMIT * 100}%`,
+                            }}
+                          />
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Daily task limit ({DAILY_LIMIT - remainingGenerations}/{DAILY_LIMIT})
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
       </Card>
 
       {/* Mode Selection */}

@@ -78,9 +78,10 @@ export const getUserStats = async () => {
   return response.data
 }
 
-export const submitFeedback = async (questionId: string, rating: number, comment?: string) => {
+export const submitFeedback = async (generationId: string, questionIndex: number, rating: number, comment?: string) => {
   const response = await apiClient.post('/api/question_feedback', {
-    question_id: questionId,
+    generation_id: generationId,
+    question_index: questionIndex,
     rating,
     comment
   })

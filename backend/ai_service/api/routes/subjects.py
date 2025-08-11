@@ -68,6 +68,36 @@ async def get_user_profile(
         logger.error(f"Error fetching user profile: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch user profile")
 
+@router.post("/question_feedback")
+async def submit_feedback(
+    feedback_data: Dict[str, Any],
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """Submit feedback for a generated question"""
+    try:
+        required_fields = ['generation_id', 'question_index', 'rating']
+        for field in required_fields:
+            if field not in feedback_data:
+                raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
+        
+        success = supabase_service().save_feedback(
+            user_id=user['id'],
+            generation_id=feedback_data['generation_id'],
+            question_index=feedback_data['question_index'],
+            rating=feedback_data['rating'],
+            comment=feedback_data.get('comment')
+        )
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to save feedback")
+            
+        return {"success": True, "message": "Feedback submitted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error submitting feedback: {e}")
+        raise HTTPException(status_code=500, detail="Failed to submit feedback")
+
 # ✅ ADDED: Missing question history route
 @router.get("/question_history")
 async def get_question_history(
@@ -150,36 +180,8 @@ async def get_user_stats(
 ):
     """Get detailed user statistics"""
     try:
-        # Get profile stats
-        profile = supabase_service().get_user_profile(user['id'])
-        
-        # Get subject-wise breakdown
-        response = (supabase_service().client.table('generated_questions')
-                   .select('subject, mode, created_at')
-                   .eq('user_id', user['id'])
-                   .execute())
-        
-        # Process statistics
-        subject_stats = {}
-        mode_stats = {'topic': 0, 'paper': 0}
-        
-        for item in response.data or []:
-            subject = item['subject']
-            mode = item['mode']
-            
-            if subject not in subject_stats:
-                subject_stats[subject] = {'topic': 0, 'paper': 0}
-            
-            subject_stats[subject][mode] += 1
-            mode_stats[mode] += 1
-        
-        return {
-            'profile': profile,
-            'subject_breakdown': subject_stats,
-            'mode_breakdown': mode_stats,
-            'total_generations': sum(mode_stats.values())
-        }
-        
+        analytics = supabase_service().get_user_analytics(user['id'])
+        return analytics
     except Exception as e:
         logger.error(f"Error fetching user stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch user statistics")

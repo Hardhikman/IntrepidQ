@@ -15,7 +15,7 @@ security = HTTPBearer()
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """Dependency to get current authenticated user"""
     token = credentials.credentials
-    user = supabase_service.verify_user(token)
+    user = supabase_service().verify_user(token)
     
     if not user:
         logger.warning("Invalid authentication token received")
@@ -35,7 +35,7 @@ async def get_optional_user(
         return None
     
     try:
-        return supabase_service.verify_user(credentials.credentials)
+        return supabase_service().verify_user(credentials.credentials)
     except Exception as e:
         logger.warning(f"Optional auth failed: {e}")
         return None

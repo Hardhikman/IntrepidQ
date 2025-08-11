@@ -1,8 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { GeneratedQuestion } from "@/lib/supabase";
-import { Star } from 'lucide-react';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { useState } from 'react';
 
 
@@ -14,13 +13,11 @@ interface QuestionDisplayProps {
 }
 
 export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answer, index, onFeedbackSubmit }) => {
-  const [rating, setRating] = useState<number>(0);
-  const [comment, setComment] = useState('');
+  const [feedback, setFeedback] = useState<'good' | 'bad' | null>(null);
 
-  const handleFeedbackSubmit = () => {
-    if (rating > 0) {
-      onFeedbackSubmit(question.id, rating, comment);
-    }
+  const handleFeedbackSubmit = (rating: number) => {
+    setFeedback(rating > 3 ? 'good' : 'bad');
+    onFeedbackSubmit(question.id, rating, rating > 3 ? 'Good question' : 'Needs improvement');
   };
 
 
@@ -44,23 +41,29 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answ
         )}
         <div className="mt-4 border-t pt-4">
           <h5 className="font-semibold mb-2">Rate this question:</h5>
-          <div className="flex items-center space-x-1 mb-2">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <Star
-                key={star}
-                className={`h-6 w-6 cursor-pointer ${rating >= star ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                onClick={() => setRating(star)}
-              />
-            ))}
+          <div className="flex items-center space-x-4">
+            <Button
+              variant={feedback === 'good' ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFeedbackSubmit(5)}
+              className={feedback === 'good' ? "bg-green-500 hover:bg-green-600" : ""}
+            >
+              <ThumbsUp className="h-4 w-4 mr-2" />
+              Good
+            </Button>
+            <Button
+              variant={feedback === 'bad' ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleFeedbackSubmit(1)}
+              className={feedback === 'bad' ? "bg-red-500 hover:bg-red-600" : ""}
+            >
+              <ThumbsDown className="h-4 w-4 mr-2" />
+              Bad
+            </Button>
           </div>
-          {rating > 0 && (
-            <div className="mt-2">
-              <Textarea
-                placeholder="Provide additional feedback... (optional)"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-              />
-              <Button size="sm" className="mt-2" onClick={handleFeedbackSubmit}>Submit Feedback</Button>
+          {feedback && (
+            <div className="mt-2 text-sm text-gray-600">
+              Thank you for your feedback!
             </div>
           )}
         </div>

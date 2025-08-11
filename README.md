@@ -146,10 +146,16 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 1. Create a new Supabase project
 2. Set up authentication (enable email/password)
-3. Create the required database tables:
+3. Create the required database tables by running the SQL scripts in the `scripts/db` directory in the Supabase SQL Editor.
    - `profiles` - User profiles
    - `questions` - Generated questions
    - `subjects` - Subject organization
+   - `question_feedback` - User feedback on questions
+   - `usage_analytics` - User analytics data
+
+### Database Migrations
+
+When new database schema changes are introduced, they will be added as SQL files in the `scripts/db` directory. To apply these changes, navigate to the Supabase SQL Editor and run the new scripts in order. For example, to apply the first migration, run the contents of `scripts/db/01_add_feedback_table.sql`.
 
 ## 📚 Usage
 

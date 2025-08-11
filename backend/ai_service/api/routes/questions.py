@@ -71,22 +71,47 @@ async def generate_questions(
         # Save to database if user is logged in
         if user:
             try:
-                supabase_service().client.table('generated_questions').insert({
-                    'user_id': user['id'],
-                    'subject': question_generator.get_subject_from_topic(topic),
-                    'topic': topic,
-                    'questions': result,
-                    'mode': 'topic',
-                    'use_current_affairs': use_ca,
-                    'question_count': num_questions,
-                    'created_at': 'now()'
-                }).execute()
+                # Split questions and prepare for batch insert
+                question_list = [q.strip() for q in result.split('\n\n') if q.strip()]
+
+                records_to_insert = []
+                for q_text in question_list:
+                    records_to_insert.append({
+                        'user_id': user['id'],
+                        'subject': question_generator.get_subject_from_topic(topic),
+                        'topic': topic,
+                        'questions': q_text, # Save individual question
+                        'mode': 'topic',
+                        'use_current_affairs': use_ca,
+                        'question_count': 1, # Each row is 1 question
+                    })
+
+                if records_to_insert:
+                    response = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
+
+                    if response.data:
+                        # Log analytics
+                        supabase_service().log_analytics(
+                            user_id=user['id'],
+                            action='generate_questions',
+                            subject=question_generator.get_subject_from_topic(topic),
+                            topic=topic,
+                            success=True
+                        )
+                        # Return the newly created questions with their IDs
+                        return {
+                            'questions': response.data,
+                            'topic': topic,
+                            'question_count': len(response.data)
+                        }
+
             except Exception as save_error:
                 logger.error(f"Failed to save questions: {save_error}")
-                # Don't fail the request if saving fails
+                # Don't fail the request if saving fails, return the raw text
         
+        # Fallback for non-logged-in users or if save fails
         return {
-            'result': result,
+            'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'topic': topic,
             'question_count': num_questions
         }
@@ -125,22 +150,47 @@ async def generate_whole_paper(
         # Save to database if user is logged in
         if user:
             try:
-                supabase_service().client.table('generated_questions').insert({
-                    'user_id': user['id'],
-                    'subject': subject,
-                    'topic': None,
-                    'questions': result,
-                    'mode': 'paper',
-                    'use_current_affairs': use_ca,
-                    'question_count': 10,
-                    'created_at': 'now()'
-                }).execute()
+                # Split questions and prepare for batch insert
+                question_list = [q.strip() for q in result.split('\n\n') if q.strip()]
+
+                records_to_insert = []
+                for q_text in question_list:
+                    records_to_insert.append({
+                        'user_id': user['id'],
+                        'subject': subject,
+                        'topic': None,
+                        'questions': q_text, # Save individual question
+                        'mode': 'paper',
+                        'use_current_affairs': use_ca,
+                        'question_count': 1, # Each row is 1 question
+                    })
+
+                if records_to_insert:
+                    response = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
+
+                    if response.data:
+                        # Log analytics
+                        supabase_service().log_analytics(
+                            user_id=user['id'],
+                            action='generate_whole_paper',
+                            subject=subject,
+                            topic=None,
+                            success=True
+                        )
+                        # Return the newly created questions with their IDs
+                        return {
+                            'questions': response.data,
+                            'subject': subject,
+                            'question_count': len(response.data)
+                        }
+
             except Exception as save_error:
                 logger.error(f"Failed to save paper: {save_error}")
-                # Don't fail the request if saving fails
+                # Don't fail the request if saving fails, return the raw text
         
+        # Fallback for non-logged-in users or if save fails
         return {
-            'result': result,
+            'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'subject': subject,
             'question_count': 10
         }

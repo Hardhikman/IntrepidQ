@@ -120,10 +120,13 @@ class AuthResponse(BaseModel):
 # Statistics models
 class UserStatsResponse(BaseModel):
     """Response model for user statistics"""
-    profile: UserProfile = Field(..., description="User profile")
-    subject_breakdown: Dict[str, Dict[str, int]] = Field(..., description="Questions by subject and mode")
+    total_generations: int = Field(..., description="Total generations")
+    total_questions: int = Field(..., description="Total questions generated")
+    subject_breakdown: Dict[str, int] = Field(..., description="Questions by subject")
     mode_breakdown: Dict[str, int] = Field(..., description="Questions by mode")
-    total_generations: int = Field(..., description="Total questions generated")
+    current_affairs_usage: int = Field(..., description="Number of generations using current affairs")
+    feedback_count: int = Field(..., description="Total feedback submitted")
+    average_rating: float = Field(..., description="Average rating of questions")
 
 # Generic response models
 class SuccessResponse(BaseModel):

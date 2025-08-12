@@ -21,8 +21,6 @@ from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
 from api.routes.answer import router as answer_router
-from api.routes.feedback import router as feedback_router
-from api.routes.analytics import router as analytics_router
 
 # Load environment variables
 load_dotenv()
@@ -62,11 +60,12 @@ async def lifespan(app: FastAPI):
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
-        qg = create_question_generator(groq_api_key, vectorstore)
+        together_key = os.getenv("TOGETHER_API_KEY")
+        qg = create_question_generator(groq_api_key, together_key, vectorstore)
         app_state["question_generator"] = qg
         logger.info("Question generator initialized")
 
-        logger.info("🚀 AI services ready")
+        logger.info("AI services ready")
     except Exception as e:
         logger.error(f"Startup failed: {e}")
         app_state.update({"vectorstore": None, "question_generator": None})
@@ -75,7 +74,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     app_state.clear()
-    logger.info("🛑 AI services shut down")
+    logger.info("AI services shut down")
 
 # Allowed origins — include localhost & Vercel in production
 ALLOWED_ORIGINS = [
@@ -121,8 +120,6 @@ app.add_middleware(
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
-app.include_router(feedback_router, prefix="/api/feedback", tags=["feedback"])
-app.include_router(analytics_router, prefix="/api/analytics", tags=["analytics"])
 
 @app.get("/")
 def root():

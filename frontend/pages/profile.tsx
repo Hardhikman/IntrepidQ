@@ -44,13 +44,19 @@ export default function Profile({ session }: ProfileProps) {
         .from('user_profiles')
         .select('*')
         .eq('id', session?.user.id)
-        .single()
+        .maybeSingle()
 
       if (error) {
-        console.warn(error)
+        if (error.code === 'PGRST116') {
+          // This is expected when a user has no profile yet.
+          console.log('No profile found for user, which is fine.');
+        } else {
+          // Log other errors for debugging.
+          console.error('Error loading profile:', error);
+        }
       } else if (data) {
-        setProfile(data)
-        setFullName(data.full_name || '')
+        setProfile(data);
+        setFullName(data.full_name || '');
       }
     } catch (error) {
       console.error('Error loading profile:', error)
@@ -71,6 +77,7 @@ export default function Profile({ session }: ProfileProps) {
       const { error } = await supabase.from('user_profiles').upsert(updates)
 
       if (error) {
+        console.error('Error updating profile:', error)
         throw error
       }
 
@@ -112,12 +119,15 @@ export default function Profile({ session }: ProfileProps) {
     <div className="min-h-screen py-8">
       <div className="max-w-2xl mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">Profile</h1>
-          <Button onClick={signOut} variant="outline">
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
+                  <h1 className="text-3xl font-bold">Profile</h1>
+                  <Button
+                    onClick={signOut}
+                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
 
         <Card>
           <CardHeader>
@@ -167,16 +177,14 @@ export default function Profile({ session }: ProfileProps) {
         </Card>
 
         <div className="mt-8 text-center">
-          <Button
-            onClick={() => router.push('/')}
-            variant="ghost"
-          >
-            Back to Dashboard
-          </Button>
-        </div>
+                  <Button
+                    onClick={() => router.push('/')}
+                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+                  >
+                    Back to Dashboard
+                  </Button>
+                </div>
       </div>
     </div>
   )
 }
-
-

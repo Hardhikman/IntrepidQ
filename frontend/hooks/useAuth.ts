@@ -18,7 +18,7 @@ export function useAuth() {
           .from('user_profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         setProfile(profileData);
       }
       setLoading(false);
@@ -34,7 +34,7 @@ export function useAuth() {
             .from('user_profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
           setProfile(profileData);
         } else {
           setProfile(null);
@@ -83,7 +83,7 @@ export function useAuth() {
         .from('user_profiles')
         .select('*')
         .eq('id', currentUser.id)
-        .single()
+        .maybeSingle()
       setProfile(profileData)
     } catch (err) {
       // swallow errors for UX; console available for debugging
@@ -126,6 +126,21 @@ export function useAuth() {
     return { data, error }
   }
 
+  // Google OAuth sign-in (used for signup flow)
+  const signInWithGoogle = async () => {
+    const redirectTo = typeof window !== 'undefined' ? window.location.origin : undefined
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        queryParams: {
+          prompt: 'select_account'
+        }
+      }
+    })
+    return { data, error }
+  }
+
   // 🔧 FIX: Improved signOut with better error handling
   const signOut = async () => {
     try {
@@ -162,6 +177,7 @@ export function useAuth() {
     applyLocalGenerationIncrement,
     signInWithEmail,
     signUpWithEmail,
+    signInWithGoogle,
     signOut,
   }
 }

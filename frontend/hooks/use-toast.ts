@@ -3,21 +3,20 @@
 import * as React from "react";
 import { toast as sonnerToast, type ToastT } from "sonner";
 
-// Config
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-// Core toast type for local state
+type ToastVariant = "default" | "destructive"; // ✅ strict variant
+
 type ToasterToast = {
-  id: string; // ✅ always a string
+  id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
-  variant?: "default" | "destructive" | string;
+  variant?: ToastVariant;
   open?: boolean;
-} & Partial<Omit<ToastT, "id">>; // ✅ Remove id from Sonner props type
+} & Partial<Omit<ToastT, "id">>; // remove id from Sonner props
 
-// Reducer types
 type State = { toasts: ToasterToast[] };
 
 const actionTypes = {
@@ -33,14 +32,12 @@ type Action =
   | { type: typeof actionTypes.DISMISS_TOAST; toastId?: string }
   | { type: typeof actionTypes.REMOVE_TOAST; toastId?: string };
 
-// ID generator (string only)
 let count = 0;
 function genId(): string {
   count = (count + 1) % Number.MAX_SAFE_INTEGER;
-  return count.toString(); // ✅ string conversion
+  return count.toString();
 }
 
-// Timeout management
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 const addToRemoveQueue = (toastId: string) => {
@@ -52,7 +49,6 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout);
 };
 
-// Reducer logic
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case actionTypes.ADD_TOAST:
@@ -87,7 +83,7 @@ export const reducer = (state: State, action: Action): State => {
   }
 };
 
-// Internal store for reducer
+// Store
 const listeners: Array<(state: State) => void> = [];
 let memoryState: State = { toasts: [] };
 
@@ -96,47 +92,35 @@ function dispatch(action: Action) {
   listeners.forEach((listener) => listener(memoryState));
 }
 
-// Toast input type (id omitted so only we set it)
+// Input type (no id so we set it)
 type ToastInput = {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: React.ReactNode;
-  variant?: "default" | "destructive" | string;
+  variant?: ToastVariant;
 } & Partial<Omit<ToastT, "id">>;
 
-// Toast trigger
-function toast({ title, description, action, ...props }: ToastInput) {
-  const id = genId(); // ✅ always string
-  const message = [title, description].filter(Boolean).join(" — ") || "";
+function toast({ title, description, action, variant = "default", ...props }: ToastInput) {
+  const id = genId();
 
-  // Show via Sonner
-  sonnerToast(message, props);
+  sonnerToast(
+    [title, description].filter(Boolean).join(" — ") || "",
+    props
+  );
 
-  // Save to local state
   dispatch({
     type: actionTypes.ADD_TOAST,
-    toast: {
-      ...props,
-      id, // ✅ ensures string, placed after props so it wins
-      title,
-      description,
-      action,
-      open: true,
-    },
+    toast: { id, title, description, action, variant, open: true, ...props },
   });
 
   return {
     id,
     dismiss: () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id }),
     update: (newProps: Partial<ToasterToast>) =>
-      dispatch({
-        type: actionTypes.UPDATE_TOAST,
-        toast: { id, ...newProps },
-  }),
+      dispatch({ type: actionTypes.UPDATE_TOAST, toast: { id, ...newProps } }),
   };
 }
 
-// Hook to access toast state/actions
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
 
@@ -148,11 +132,7 @@ function useToast() {
     };
   }, []);
 
-  return {
-    ...state,
-    toast,
-    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
-  };
+  return { ...state, toast, dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }) };
 }
 
 export { useToast, toast };

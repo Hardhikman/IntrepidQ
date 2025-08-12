@@ -3,10 +3,11 @@
 import * as React from "react";
 import { toast as sonnerToast, type ToastT } from "sonner";
 
+// Limit allowed variants to match Shadcn's Toast styling
+export type ToastVariant = "default" | "destructive";
+
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
-
-type ToastVariant = "default" | "destructive"; // ✅ Strict union type
 
 type ToasterToast = {
   id: string;
@@ -15,7 +16,7 @@ type ToasterToast = {
   action?: React.ReactNode;
   variant?: ToastVariant;
   open?: boolean;
-} & Partial<Omit<ToastT, "id">>; // Remove Sonner's id from props
+} & Partial<Omit<ToastT, "id">>;
 
 type State = { toasts: ToasterToast[] };
 
@@ -42,10 +43,12 @@ const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) return;
+
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId);
     dispatch({ type: actionTypes.REMOVE_TOAST, toastId });
   }, TOAST_REMOVE_DELAY);
+
   toastTimeouts.set(toastId, timeout);
 };
 
@@ -57,7 +60,9 @@ export const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast, id: String(action.toast.id) } : t
+          t.id === action.toast.id
+            ? { ...t, ...action.toast, id: String(action.toast.id) }
+            : t
         ),
       };
     case actionTypes.DISMISS_TOAST:
@@ -83,7 +88,6 @@ export const reducer = (state: State, action: Action): State => {
   }
 };
 
-// Store listeners
 const listeners: Array<(state: State) => void> = [];
 let memoryState: State = { toasts: [] };
 
@@ -92,7 +96,6 @@ function dispatch(action: Action) {
   listeners.forEach((listener) => listener(memoryState));
 }
 
-// Public toast function
 type ToastInput = {
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -102,6 +105,7 @@ type ToastInput = {
 
 function toast({ title, description, action, variant = "default", ...props }: ToastInput) {
   const id = genId();
+
   sonnerToast([title, description].filter(Boolean).join(" — ") || "", props);
 
   dispatch({
@@ -128,7 +132,11 @@ function useToast() {
     };
   }, []);
 
-  return { ...state, toast, dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }) };
+  return {
+    ...state,
+    toast,
+    dismiss: (toastId?: string) => dispatch({ type: actionTypes.DISMISS_TOAST, toastId }),
+  };
 }
 
 export { useToast, toast };

@@ -1,12 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { GeneratedQuestion } from "@/lib/supabase";
 
-
 interface QuestionDisplayProps {
   question: GeneratedQuestion;
   answer: any; // Or a more specific type if available
   index: number;
 }
+
 
 export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answer, index }) => {
   return (

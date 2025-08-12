@@ -133,6 +133,7 @@ class SupabaseService:
             logger.error(f"Failed to delete question: {e}")
             return False
 
+
     # ----------------- Feedback -----------------
     def save_question_feedback(self, user_id: str, question_id: Optional[str],
                                 rating: Optional[int], comment: Optional[str] = None) -> bool:

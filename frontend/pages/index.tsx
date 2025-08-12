@@ -363,7 +363,7 @@ export default function UPSCQuestionGenerator() {
                   <p className="text-lg">
                     Welcome back, <strong>{user.user_metadata?.full_name || user.email}</strong>!
                   </p>
-                                  </CardHeader>
+            </CardHeader>
       </Card>
 
 {/* Intro Section - Centered Layout */}
@@ -382,11 +382,9 @@ export default function UPSCQuestionGenerator() {
     <div className="mt-4 rounded-lg border border-orange-200 bg-white/80 p-4 lg:p-6 lg:border-l-4 lg:border-l-orange-300 inline-block text-left">
       <TypographyList />
     </div>
-
   </CardContent>
 </Card>
-
-
+        
     {/* Mode Selection */}
 <Card className="max-w-4xl mx-auto mb-6 border-2 border-orange-200 shadow-sm">
   <CardContent className="text-center py-8 bg-gradient-to-b from-orange-50 to-orange-100 rounded-lg">

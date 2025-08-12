@@ -6,7 +6,7 @@ import { toast as sonnerToast, type ToastT } from "sonner";
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
 
-type ToastVariant = "default" | "destructive"; // ✅ strict variant
+type ToastVariant = "default" | "destructive"; // ✅ Strict union type
 
 type ToasterToast = {
   id: string;
@@ -15,7 +15,7 @@ type ToasterToast = {
   action?: React.ReactNode;
   variant?: ToastVariant;
   open?: boolean;
-} & Partial<Omit<ToastT, "id">>; // remove id from Sonner props
+} & Partial<Omit<ToastT, "id">>; // Remove Sonner's id from props
 
 type State = { toasts: ToasterToast[] };
 
@@ -83,7 +83,7 @@ export const reducer = (state: State, action: Action): State => {
   }
 };
 
-// Store
+// Store listeners
 const listeners: Array<(state: State) => void> = [];
 let memoryState: State = { toasts: [] };
 
@@ -92,7 +92,7 @@ function dispatch(action: Action) {
   listeners.forEach((listener) => listener(memoryState));
 }
 
-// Input type (no id so we set it)
+// Public toast function
 type ToastInput = {
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -102,11 +102,7 @@ type ToastInput = {
 
 function toast({ title, description, action, variant = "default", ...props }: ToastInput) {
   const id = genId();
-
-  sonnerToast(
-    [title, description].filter(Boolean).join(" — ") || "",
-    props
-  );
+  sonnerToast([title, description].filter(Boolean).join(" — ") || "", props);
 
   dispatch({
     type: actionTypes.ADD_TOAST,

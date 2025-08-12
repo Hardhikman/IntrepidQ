@@ -1,30 +1,26 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import {
-  Toast,
-  ToastTitle,
-  ToastDescription,
-  ToastViewport,
-  ToastClose,
-} from "@/components/ui/toast";
-import { useToast } from "@/hooks/use-toast";
+import * as React from "react"
+import { useTheme } from "next-themes"
+import { Toaster as Sonner, type ToasterProps } from "sonner"
 
-export function Toaster() {
-  const { toasts } = useToast();
+const Toaster = ({ ...props }: ToasterProps) => {
+  const { theme = "system" } = useTheme()
 
   return (
-    <ToastViewport>
-      {toasts.map(({ id, title, description, action, variant, ...props }) => (
-        <Toast key={id} variant={variant} {...props}>
-          <div className="grid gap-1">
-            {title && <ToastTitle>{title}</ToastTitle>}
-            {description && <ToastDescription>{description}</ToastDescription>}
-          </div>
-          {action}
-          <ToastClose />
-        </Toast>
-      ))}
-    </ToastViewport>
-  );
+    <Sonner
+      theme={theme as ToasterProps["theme"]}
+      className="toaster group"
+      position="top-center"
+      style={{
+        // Align Sonner with shadcn theme tokens
+        "--normal-bg": "var(--popover)",
+        "--normal-text": "var(--popover-foreground)",
+        "--normal-border": "var(--border)",
+      } as React.CSSProperties}
+      {...props}
+    />
+  )
 }
+
+export { Toaster }

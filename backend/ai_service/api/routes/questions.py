@@ -1,5 +1,5 @@
 """
-Question generation API routes - FIXED VERSION
+Question generation API routes - FULLY FIXED VERSION
 """
 import logging
 from fastapi import APIRouter, Depends, HTTPException
@@ -31,13 +31,24 @@ def get_question_generator():
         raise HTTPException(status_code=503, detail="AI service not available")
 
 
+def serialize_date_fields(data):
+    """Recursively convert any date objects in dict/list to ISO strings"""
+    if isinstance(data, list):
+        return [serialize_date_fields(item) for item in data]
+    elif isinstance(data, dict):
+        return {k: serialize_date_fields(v) for k, v in data.items()}
+    elif isinstance(data, date):
+        return data.isoformat()
+    else:
+        return data
+
+
 def get_user_stats(user_id: str):
     """Fetch user stats including daily generation count, streak, and serialize dates"""
     rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
     if rpc_resp.data:
         profile = rpc_resp.data[0].get("profile", {})
 
-        # Convert date fields to ISO string for JSON serialization
         last_gen_date = profile.get("last_generation_date")
         if last_gen_date:
             last_gen_date = last_gen_date.isoformat()
@@ -69,7 +80,7 @@ async def generate_questions(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # ✅ Enforce trigger-based daily limit
+        # Enforce trigger-based daily limit
         if user:
             try:
                 supabase_service().client.table("user_profiles").update(
@@ -106,6 +117,7 @@ async def generate_questions(
                 'question_count': 1
             } for q_text in question_list]
 
+            resp = None
             if records_to_insert:
                 resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
                 supabase_service().log_analytics(
@@ -116,20 +128,22 @@ async def generate_questions(
                     success=True
                 )
 
-                stats = get_user_stats(user['id'])
-                return jsonable_encoder({
-                    'questions': resp.data,
-                    'topic': topic,
-                    'question_count': len(resp.data),
-                    'stats': stats
-                })
+            stats = get_user_stats(user['id'])
+
+            questions_serializable = serialize_date_fields(resp.data) if resp else []
+            return {
+                'questions': questions_serializable,
+                'topic': topic,
+                'question_count': len(questions_serializable),
+                'stats': stats
+            }
 
         # Fallback for non-logged-in users or if save fails
-        return jsonable_encoder({
+        return {
             'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'topic': topic,
             'question_count': num_questions
-        })
+        }
 
     except Exception as e:
         logger.error(f"Error generating questions: {e}")
@@ -148,7 +162,7 @@ async def generate_whole_paper(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # ✅ Enforce trigger-based daily limit
+        # Enforce trigger-based daily limit
         if user:
             try:
                 supabase_service().client.table("user_profiles").update(
@@ -182,6 +196,7 @@ async def generate_whole_paper(
                 'question_count': 1
             } for q_text in question_list]
 
+            resp = None
             if records_to_insert:
                 resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
                 supabase_service().log_analytics(
@@ -192,20 +207,21 @@ async def generate_whole_paper(
                     success=True
                 )
 
-                stats = get_user_stats(user['id'])
-                return jsonable_encoder({
-                    'questions': resp.data,
-                    'subject': subject,
-                    'question_count': len(resp.data),
-                    'stats': stats
-                })
+            stats = get_user_stats(user['id'])
+            questions_serializable = serialize_date_fields(resp.data) if resp else []
+            return {
+                'questions': questions_serializable,
+                'subject': subject,
+                'question_count': len(questions_serializable),
+                'stats': stats
+            }
 
         # Fallback for non-logged-in users or if save fails
-        return jsonable_encoder({
+        return {
             'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'subject': subject,
             'question_count': 10
-        })
+        }
 
     except Exception as e:
         logger.error(f"Error generating whole paper: {e}")

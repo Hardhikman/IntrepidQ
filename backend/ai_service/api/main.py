@@ -6,7 +6,7 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
@@ -76,11 +76,22 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
-# Allowed origins — include localhost & Vercel in production
+# ==========================================
+# CORS Setup — supports prod, preview, local
+# ==========================================
+
+# Parse comma-separated list from .env
+# Example in .env:
+# FRONTEND_URL=https://intrepid-q1.vercel.app,https://intrepid-q1-nzmt.vercel.app
 ALLOWED_ORIGINS = [
-    #"http://localhost:3000",
-    os.getenv("FRONTEND_URL", "").strip()  # e.g. https://yourapp.vercel.app
+    o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
 ]
+
+# Always include localhost for dev
+if "http://localhost:3000" not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append("http://localhost:3000")
+
+logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
 
 # FastAPI app
 app = FastAPI(
@@ -90,27 +101,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Manual CORS handling — ensures OPTIONS + all responses have headers
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    origin = request.headers.get("origin")
-    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS[0] else "*"
-
-    if request.method == "OPTIONS":
-        response = JSONResponse(content={})
-    else:
-        response = await call_next(request)
-
-    response.headers["Access-Control-Allow-Origin"] = allow_origin
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
-
-# Standard CORS middleware as backup
+# Standard CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o for o in ALLOWED_ORIGINS if o],
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

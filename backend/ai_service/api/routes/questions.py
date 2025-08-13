@@ -1,7 +1,11 @@
+"""
+Question generation API routes - FIXED VERSION
+"""
 import logging
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, Optional
 from datetime import date
+from fastapi.encoders import jsonable_encoder
 import sys
 sys.path.append('.')
 
@@ -28,19 +32,28 @@ def get_question_generator():
 
 
 def get_user_stats(user_id: str):
-    """Fetch user stats including daily generation count and streak"""
+    """Fetch user stats including daily generation count, streak, and serialize dates"""
     rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
     if rpc_resp.data:
         profile = rpc_resp.data[0].get("profile", {})
+
+        # Convert date fields to ISO string for JSON serialization
+        last_gen_date = profile.get("last_generation_date")
+        if last_gen_date:
+            last_gen_date = last_gen_date.isoformat()
+
         generation_count_today = profile.get("generation_count_today", 0)
         remaining_today = max(DAILY_LIMIT - generation_count_today, 0)
         streak = profile.get("study_streak", 0)
+
         return {
             "generation_count_today": generation_count_today,
             "remaining_today": remaining_today,
-            "streak": streak
+            "streak": streak,
+            "last_generation_date": last_gen_date
         }
-    return {"generation_count_today": 0, "remaining_today": DAILY_LIMIT, "streak": 0}
+
+    return {"generation_count_today": 0, "remaining_today": DAILY_LIMIT, "streak": 0, "last_generation_date": None}
 
 
 @router.post("/generate_questions")
@@ -56,7 +69,7 @@ async def generate_questions(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # ✅ Trigger-based daily limit enforcement
+        # ✅ Enforce trigger-based daily limit
         if user:
             try:
                 supabase_service().client.table("user_profiles").update(
@@ -104,19 +117,19 @@ async def generate_questions(
                 )
 
                 stats = get_user_stats(user['id'])
-                return {
+                return jsonable_encoder({
                     'questions': resp.data,
                     'topic': topic,
                     'question_count': len(resp.data),
                     'stats': stats
-                }
+                })
 
         # Fallback for non-logged-in users or if save fails
-        return {
+        return jsonable_encoder({
             'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'topic': topic,
             'question_count': num_questions
-        }
+        })
 
     except Exception as e:
         logger.error(f"Error generating questions: {e}")
@@ -135,7 +148,7 @@ async def generate_whole_paper(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # ✅ Trigger-based daily limit enforcement
+        # ✅ Enforce trigger-based daily limit
         if user:
             try:
                 supabase_service().client.table("user_profiles").update(
@@ -180,19 +193,19 @@ async def generate_whole_paper(
                 )
 
                 stats = get_user_stats(user['id'])
-                return {
+                return jsonable_encoder({
                     'questions': resp.data,
                     'subject': subject,
                     'question_count': len(resp.data),
                     'stats': stats
-                }
+                })
 
         # Fallback for non-logged-in users or if save fails
-        return {
+        return jsonable_encoder({
             'questions': [{'id': None, 'questions': q.strip()} for q in result.split('\n\n') if q.strip()],
             'subject': subject,
             'question_count': 10
-        }
+        })
 
     except Exception as e:
         logger.error(f"Error generating whole paper: {e}")

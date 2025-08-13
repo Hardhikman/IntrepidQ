@@ -66,37 +66,49 @@ class SupabaseService:
             return None
 
     def check_and_update_generation_limit(self, user_id: str, daily_limit: int = 5) -> bool:
-        """Check and update daily generation limit for a user."""
+        """Check and update daily generation limit for a user. Auto-create profile if missing."""
         try:
-            profile = self.client.table("user_profiles").select(
+            profile_resp = self.client.table("user_profiles").select(
                 "generation_count_today, last_generation_date"
-            ).eq("id", user_id).single().execute()
-
-            if not profile.data:
-                return False  # No profile found
+            ).eq("id", user_id).execute()
 
             today = datetime.utcnow().date()
-            gen_count = profile.data.get("generation_count_today", 0)
-            last_date = profile.data.get("last_generation_date")
 
-            # Reset counter if not generated today
+            # ✅ Auto-create profile if missing
+            if not profile_resp.data:
+                logger.info(f"[Supabase] Creating new profile for user {user_id}")
+                self.client.table("user_profiles").insert({
+                    "id": user_id,
+                    "generation_count_today": 1,
+                    "last_generation_date": str(today)
+                }).execute()
+                return True
+
+            profile = profile_resp.data[0]
+            gen_count = profile.get("generation_count_today", 0)
+            last_date = profile.get("last_generation_date")
+
+            # Reset counter if new day
             if last_date != str(today):
                 gen_count = 0
 
             if gen_count >= daily_limit:
+                logger.info(f"[Supabase] Daily limit reached for user {user_id}")
                 return False  # Limit reached
 
-            # Update counter
+            # Increment counter
             self.client.table("user_profiles").update({
                 "generation_count_today": gen_count + 1,
                 "last_generation_date": str(today)
             }).eq("id", user_id).execute()
 
+            logger.info(f"[Supabase] Updated generation count to {gen_count + 1} for user {user_id}")
             return True
 
         except Exception as e:
-            print(f"[Supabase] Limit check failed: {e}")
+            logger.error(f"[Supabase] Limit check failed for user {user_id}: {e}")
             return False
+
 
     # ----------------- User Stats -----------------
     def get_user_stats(self, user_id: str, admin_mode: bool = False,

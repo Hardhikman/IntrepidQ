@@ -12,29 +12,51 @@ export default function FloatingFeedbackButton() {
   const { toast } = useToast();
 
   const submitFeedback = async (rating?: number) => {
-    try {
-      setSubmitting(true);
-      const sessionResponse = await supabase.auth.getSession();
-      const token = sessionResponse.data.session?.access_token;
+  try {
+    setSubmitting(true);
 
-      if (!token) {
-        toast({ title: "Login required", description: "Please sign in to submit feedback.", variant: "destructive" });
-        return;
-      }
+    // Always refresh session before submitting
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
 
-      const res = await fetch("/api/question_feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          // Treat as site-wide UX feedback
-          generation_id: "website_feedback",
-          rating,
-          comment: comment?.trim() || undefined,
-        }),
-      });
+    if (!token) {
+      toast({ title: "Login required", description: "Please sign in to submit feedback.", variant: "destructive" });
+      return;
+    }
+
+    // Prevent empty comment submissions
+    const trimmedComment = comment.trim();
+    if (!rating && !trimmedComment) {
+      toast({ title: "Nothing to submit", description: "Please add a comment or rating.", variant: "destructive" });
+      return;
+    }
+
+    const res = await fetch("/api/question_feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        generation_id: "website_feedback", // keep site-wide feedback ID
+        ...(rating ? { rating } : {}),
+        ...(trimmedComment ? { comment: trimmedComment } : {}),
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed (${res.status})`);
+    }
+
+    toast({ title: "Thanks!", description: "Feedback submitted." });
+    setOpen(false);
+    setComment("");
+  } catch (e: any) {
+    toast({ title: "Error", description: e.message || "Unable to submit feedback.", variant: "destructive" });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
       if (!res.ok) {
         throw new Error(`Failed (${res.status})`);

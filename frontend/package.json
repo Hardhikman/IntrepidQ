@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "generate:types": "openapi-typescript $OPENAPI_URL -o src/types/api.ts",
+    "generate:types": "openapi-typescript https://intrepidq1-production.up.railway.app/openapi.json -o src/types/api.ts",
     "dev": "npm run generate:types && next dev",
     "build": "next build",
     "start": "next start",

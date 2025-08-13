@@ -6,6 +6,7 @@ import logging
 from typing import Optional, Dict, Any, List
 from supabase import create_client, Client
 from datetime import datetime
+from fastapi.encoders import jsonable_encoder
 
 logging.basicConfig(
     level=logging.INFO,
@@ -122,7 +123,9 @@ class SupabaseService:
                 return self._empty_stats()
 
             stats = response.data if isinstance(response.data, dict) else response.data[0]
+            stats = jsonable_encoder(stats)
             stats.setdefault("mode_breakdown", {"topic": 0, "paper": 0})
+            
             return stats
         except Exception as e:
             logger.error(f"Failed to get user stats via RPC: {e}", exc_info=True)

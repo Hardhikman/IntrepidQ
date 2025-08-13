@@ -1,7 +1,6 @@
 """
-Main FastAPI application - Production Ready with CORS Fix & FAISS fallback
+Main FastAPI application - Render + Vercel Production Ready with CORS Fix & FAISS fallback
 """
-
 import os
 import logging
 from contextlib import asynccontextmanager
@@ -77,32 +76,13 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
+# Allowed origins — include localhost & Vercel in production
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    os.getenv("FRONTEND_URL", "").strip()  # e.g. https://yourapp.vercel.app
+]
 
-# --------------------------
-# CORS CONFIGURATION
-# --------------------------
-
-# Parse FRONTEND_URL env (comma-separated allowed origins)
-frontend_urls = os.getenv("FRONTEND_URL", "").strip()
-if frontend_urls:
-    allowed_from_env = [url.strip() for url in frontend_urls.split(",") if url.strip()]
-else:
-    allowed_from_env = []
-
-# Default origins (local dev always allowed)
-ALLOWED_ORIGINS = ["http://localhost:3000"] + allowed_from_env
-
-# For extra safety: allow all in development if no env provided
-if os.getenv("DEBUG", "false").lower() == "true" and not allowed_from_env:
-    ALLOWED_ORIGINS = ["*"]
-
-logger.info(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
-
-
-# --------------------------
-# FASTAPI APP
-# --------------------------
-
+# FastAPI app
 app = FastAPI(
     title="UPSC Question Generator AI Service",
     version="1.0.0",
@@ -110,21 +90,36 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Attach CORS middleware
+# Manual CORS handling — ensures OPTIONS + all responses have headers
+@app.middleware("http")
+async def cors_handler(request: Request, call_next):
+    origin = request.headers.get("origin")
+    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS[0] else "*"
+
+    if request.method == "OPTIONS":
+        response = JSONResponse(content={})
+    else:
+        response = await call_next(request)
+
+    response.headers["Access-Control-Allow-Origin"] = allow_origin
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
+
+# Standard CORS middleware as backup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=[o for o in ALLOWED_ORIGINS if o],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 # Routers
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
-
 
 @app.get("/")
 def root():
@@ -134,7 +129,6 @@ def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
-
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
@@ -148,39 +142,26 @@ def health_check():
         timestamp=datetime.utcnow()
     )
 
-
 @app.get("/test-cors")
-def test_cors(request: Request):
-    origin = request.headers.get("origin")
-    return {
-        "message": "CORS is working!",
-        "status": "success",
-        "your_origin": origin
-    }
+def test_cors():
+    return {"message": "CORS is working!", "status": "success"}
 
-
-# --------------------------
-# ERROR HANDLERS
-# (No need to manually set CORS headers — CORSMiddleware does it)
-# --------------------------
-
+# Error handlers — add CORS headers here too
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
-
+async def http_exception_handler(request, exc):
+    response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+async def general_exception_handler(request, exc):
     logger.error(f"Unhandled exception: {exc}")
-    return JSONResponse(status_code=500, content={"error": "Internal server error"})
-
+    response = JSONResponse(status_code=500, content={"error": "Internal server error"})
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    return response
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "api.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
-        log_level="info"
-    )
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")

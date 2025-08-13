@@ -79,8 +79,10 @@ async def lifespan(app: FastAPI):
 # Allowed origins — include localhost & Vercel in production
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    os.getenv("FRONTEND_URL", "").strip()  # e.g. https://yourapp.vercel.app
 ]
+frontend_url = os.getenv("FRONTEND_URL", "").strip()
+if frontend_url:
+    ALLOWED_ORIGINS.append(frontend_url)
 
 # FastAPI app
 app = FastAPI(
@@ -94,17 +96,23 @@ app = FastAPI(
 @app.middleware("http")
 async def cors_handler(request: Request, call_next):
     origin = request.headers.get("origin")
-    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS[0] else "*"
+    if origin and origin in ALLOWED_ORIGINS:
+        allow_origin = origin
+    else:
+        allow_origin = None  # or "*" if you want to allow all
 
     if request.method == "OPTIONS":
         response = JSONResponse(content={})
     else:
         response = await call_next(request)
 
-    response.headers["Access-Control-Allow-Origin"] = allow_origin
+    if allow_origin:
+        response.headers["Access-Control-Allow-Origin"] = allow_origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+    # else do not set header or set to "*"
+
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
 # Standard CORS middleware as backup

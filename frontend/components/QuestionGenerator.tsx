@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Loader2 } from 'lucide-react';
+import { supabase } from "@/lib/supabase";
 
 interface QuestionGeneratorProps {
   onGenerate: (questions: any[]) => void;
@@ -18,31 +19,46 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({ onGenerate
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {
-    if (!subject || !topic) return;
-    
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/questions/generate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          subject,
-          topic,
-          count: questionCount,
-          difficulty,
-        }),
-      });
-      
-      const data = await response.json();
-      onGenerate(data.questions);
-    } catch (error) {
-      console.error('Error generating questions:', error);
-    } finally {
-      setIsLoading(false);
+  if (!subject || !topic) return;
+
+  setIsLoading(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+
+    if (!token) {
+      alert("Please log in to generate questions.");
+      return;
     }
-  };
+
+    const response = await fetch('/api/generate_questions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        subject,
+        topic,
+        count: questionCount,
+        difficulty,
+      }),
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Failed (${response.status}): ${errText}`);
+    }
+
+    const data = await response.json();
+    onGenerate(data.questions || []);
+  } catch (error) {
+    console.error('Error generating questions:', error);
+    alert(`Error generating questions: ${error.message || error}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Card className="w-full max-w-2xl mx-auto">

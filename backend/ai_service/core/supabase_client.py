@@ -65,6 +65,39 @@ class SupabaseService:
             logger.error(f"Failed to get user profile: {e}")
             return None
 
+    def check_and_update_generation_limit(self, user_id: str, daily_limit: int = 5) -> bool:
+        """Check and update daily generation limit for a user."""
+        try:
+            profile = self.client.table("user_profiles").select(
+                "generation_count_today, last_generation_date"
+            ).eq("id", user_id).single().execute()
+
+            if not profile.data:
+                return False  # No profile found
+
+            today = datetime.utcnow().date()
+            gen_count = profile.data.get("generation_count_today", 0)
+            last_date = profile.data.get("last_generation_date")
+
+            # Reset counter if not generated today
+            if last_date != str(today):
+                gen_count = 0
+
+            if gen_count >= daily_limit:
+                return False  # Limit reached
+
+            # Update counter
+            self.client.table("user_profiles").update({
+                "generation_count_today": gen_count + 1,
+                "last_generation_date": str(today)
+            }).eq("id", user_id).execute()
+
+            return True
+
+        except Exception as e:
+            print(f"[Supabase] Limit check failed: {e}")
+            return False
+
     # ----------------- User Stats -----------------
     def get_user_stats(self, user_id: str, admin_mode: bool = False,
                        target_user_id: Optional[str] = None) -> Dict[str, Any]:
@@ -162,6 +195,7 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"Failed to get question history: {e}", exc_info=True)
             return []
+            
 
 
 # Global accessor

@@ -78,7 +78,7 @@ async def lifespan(app: FastAPI):
 
 # Allowed origins — include localhost & Vercel in production
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",
+    #"http://localhost:3000",
     os.getenv("FRONTEND_URL", "").strip()  # e.g. https://yourapp.vercel.app
 ]
 

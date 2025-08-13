@@ -60,11 +60,12 @@ async def lifespan(app: FastAPI):
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
-        qg = create_question_generator(groq_api_key, vectorstore)
+        together_key = os.getenv("TOGETHER_API_KEY")
+        qg = create_question_generator(groq_api_key, together_key, vectorstore)
         app_state["question_generator"] = qg
         logger.info("Question generator initialized")
 
-        logger.info("🚀 AI services ready")
+        logger.info("AI services ready")
     except Exception as e:
         logger.error(f"Startup failed: {e}")
         app_state.update({"vectorstore": None, "question_generator": None})
@@ -73,7 +74,7 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     app_state.clear()
-    logger.info("🛑 AI services shut down")
+    logger.info("AI services shut down")
 
 # Allowed origins — include localhost & Vercel in production
 ALLOWED_ORIGINS = [

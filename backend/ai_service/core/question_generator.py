@@ -14,16 +14,28 @@ import requests
 from diskcache import Cache
 import logging
 
+try:
+    from together import Together
+except Exception:
+    Together = None  # type: ignore
+
 logger = logging.getLogger(__name__)
 
 class QuestionGenerator:
-    def __init__(self, groq_api_key: str, vectorstore: FAISS, cache_dir: str = "news_cache"):
+    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS, cache_dir: str = "news_cache"):
         self.llm = ChatGroq(
             model=os.getenv("GROQ_MODEL", "llama3-70b-8192"),
             groq_api_key=groq_api_key,
             # Slightly higher default temperature for more variety; can be overridden via env
             temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7"))
         )
+        # Optional Together client for fallback
+        self.together = None
+        if together_api_key and Together is not None:
+            try:
+                self.together = Together(api_key=together_api_key)
+            except Exception as e:
+                logger.warning(f"Together client init failed: {e}")
         self.vectorstore = vectorstore
         self.cache = Cache(cache_dir)
         self.topics_by_subject = self._build_topics_by_subject()
@@ -66,6 +78,39 @@ Generate the complete 10-question paper now:"""
 
         self.gs_prompt = PromptTemplate.from_template(self.gs_template)
         self.whole_paper_prompt = PromptTemplate.from_template(self.whole_paper_template)
+
+    def _gen_with_together(self, prompt: str) -> str:
+        """Generate text using Together as a fallback, streaming tokens."""
+        if not getattr(self, "together", None):
+            return ""
+        try:
+            messages = [{"role": "user", "content": prompt}]
+            resp = self.together.chat.completions.create(
+                model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+                messages=messages,
+                stream=True,
+            )
+            parts: List[str] = []
+            for token in resp:
+                try:
+                    delta_content = None
+                    if hasattr(token, "choices"):
+                        delta = getattr(token.choices[0], "delta", None)
+                        delta_content = getattr(delta, "content", None) if delta is not None else None
+                    else:
+                        delta_content = (
+                            token.get("choices", [{}])[0]
+                                .get("delta", {})
+                                .get("content")
+                        )
+                    if delta_content:
+                        parts.append(delta_content)
+                except Exception:
+                    continue
+            return "".join(parts).strip()
+        except Exception as e:
+            logger.error(f"Together generation failed: {e}")
+            return ""
 
     def _build_topics_by_subject(self) -> Dict[str, List[str]]:
         """Build topics categorized by GS papers from vectorstore"""
@@ -285,8 +330,17 @@ Generate exactly {num} questions now.
 Variation guidance (do not include this line or the number in the output): seed {diversity_seed}
 """
         
-        response = self.llm.invoke(ca_prompt)
-        return self.format_questions(response.content.strip())
+        out = ""
+        try:
+            response = self.llm.invoke(ca_prompt)
+            out = response.content.strip()
+        except Exception as e:
+            logger.warning(f"Groq CA generation failed: {e}")
+        if not out:
+            out = self._gen_with_together(ca_prompt)
+        if not out:
+            return f"1. Analyze {topic} in the context of recent developments from the last {months} months."
+        return self.format_questions(out)
 
     def _generate_static_questions(self, subject: str, topic: str, num: int) -> str:
         """Generate questions using static examples from vectorstore"""
@@ -311,8 +365,17 @@ Variation guidance (do not include this line or the number in the output): seed 
                 examples=example_text, 
                 num=num
             ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
-            response = self.llm.invoke(final_prompt)
-            return self.format_questions(response.content.strip())
+            out = ""
+            try:
+                response = self.llm.invoke(final_prompt)
+                out = response.content.strip()
+            except Exception as e:
+                logger.warning(f"Groq static generation failed: {e}")
+            if not out:
+                out = self._gen_with_together(final_prompt)
+            if not out:
+                return f"1. Analyze the significance of {topic} in contemporary India.\n\n2. Discuss the key challenges associated with {topic}."
+            return self.format_questions(out)
         except Exception as e:
             logger.error(f"Error in _generate_static_questions: {e}")
             # Fallback
@@ -346,8 +409,15 @@ Variation guidance (do not include this line or the number in the output): seed 
                 subject=subject, 
                 topic_examples=topic_examples_text
             ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
-            response = self.llm.invoke(final_prompt)
-            formatted_questions = self.format_questions(response.content.strip())
+            out = ""
+            try:
+                response = self.llm.invoke(final_prompt)
+                out = response.content.strip()
+            except Exception as e:
+                logger.warning(f"Groq whole paper generation failed: {e}")
+            if not out:
+                out = self._gen_with_together(final_prompt)
+            formatted_questions = self.format_questions(out or "")
         
         # Create the final paper content with proper UPSC format
         return self._format_final_paper(subject, formatted_questions)
@@ -406,8 +476,17 @@ IMPORTANT INSTRUCTIONS:
 
 Generate the complete 10-question paper now:"""
         
-        response = self.llm.invoke(ca_prompt)
-        return self.format_questions(response.content.strip())
+        out = ""
+        try:
+            response = self.llm.invoke(ca_prompt)
+            out = response.content.strip()
+        except Exception as e:
+            logger.warning(f"Groq CA-paper generation failed: {e}")
+        if not out:
+            out = self._gen_with_together(ca_prompt)
+        if not out:
+            return ""
+        return self.format_questions(out)
 
     def _format_final_paper(self, subject: str, formatted_questions: str) -> str:
         """Format the final paper with proper UPSC format"""
@@ -439,6 +518,6 @@ Maximum Marks:100
         return paper_content
 
 # Factory function
-def create_question_generator(groq_api_key: str, vectorstore: FAISS) -> QuestionGenerator:
+def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS) -> QuestionGenerator:
     """Factory function to create question generator instance"""
-    return QuestionGenerator(groq_api_key, vectorstore)
+    return QuestionGenerator(groq_api_key, together_api_key, vectorstore)

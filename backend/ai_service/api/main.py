@@ -76,7 +76,7 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
-# Allowed origins — include localhost & Vercel in production
+# Allowed origins — include localhost & Vercel frontend URL from env
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
@@ -92,33 +92,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Manual CORS handling — ensures OPTIONS + all responses have headers
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    origin = request.headers.get("origin")
-    if origin and origin in ALLOWED_ORIGINS:
-        allow_origin = origin
-    else:
-        allow_origin = None  # or "*" if you want to allow all
-
-    if request.method == "OPTIONS":
-        response = JSONResponse(content={})
-    else:
-        response = await call_next(request)
-
-    if allow_origin:
-        response.headers["Access-Control-Allow-Origin"] = allow_origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-    # else do not set header or set to "*"
-
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    return response
-
-# Standard CORS middleware as backup
+# Use only CORSMiddleware for CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o for o in ALLOWED_ORIGINS if o],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -151,23 +128,32 @@ def health_check():
     )
 
 @app.get("/test-cors")
-def test_cors():
-    return {"message": "CORS is working!", "status": "success"}
+def test_cors(request: Request):
+    origin = request.headers.get("origin")
+    return {
+        "message": "CORS is working!",
+        "status": "success",
+        "your_origin": origin
+    }
 
-# Error handlers — add CORS headers here too
+# Error handlers — add CORS headers to match allowed origins
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request: Request, exc: HTTPException):
     response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
+    origin = request.headers.get("origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request, exc):
+async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}")
     response = JSONResponse(status_code=500, content={"error": "Internal server error"})
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
+    origin = request.headers.get("origin")
+    if origin in ALLOWED_ORIGINS:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
     return response
 
 if __name__ == "__main__":

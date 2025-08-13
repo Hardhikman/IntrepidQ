@@ -1,6 +1,7 @@
 """
-Main FastAPI application - Render + Vercel Production Ready with CORS Fix & FAISS fallback
+Main FastAPI application - Production Ready with CORS Fix & FAISS fallback
 """
+
 import os
 import logging
 from contextlib import asynccontextmanager
@@ -76,15 +77,32 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
-# Allowed origins — include localhost & Vercel frontend URL from env
-ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
-frontend_url = os.getenv("FRONTEND_URL", "").strip()
-if frontend_url:
-    ALLOWED_ORIGINS.append(frontend_url)
 
-# FastAPI app
+# --------------------------
+# CORS CONFIGURATION
+# --------------------------
+
+# Parse FRONTEND_URL env (comma-separated allowed origins)
+frontend_urls = os.getenv("FRONTEND_URL", "").strip()
+if frontend_urls:
+    allowed_from_env = [url.strip() for url in frontend_urls.split(",") if url.strip()]
+else:
+    allowed_from_env = []
+
+# Default origins (local dev always allowed)
+ALLOWED_ORIGINS = ["http://localhost:3000"] + allowed_from_env
+
+# For extra safety: allow all in development if no env provided
+if os.getenv("DEBUG", "false").lower() == "true" and not allowed_from_env:
+    ALLOWED_ORIGINS = ["*"]
+
+logger.info(f"[CORS] Allowed origins: {ALLOWED_ORIGINS}")
+
+
+# --------------------------
+# FASTAPI APP
+# --------------------------
+
 app = FastAPI(
     title="UPSC Question Generator AI Service",
     version="1.0.0",
@@ -92,7 +110,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Use only CORSMiddleware for CORS
+# Attach CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -101,10 +119,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Routers
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
+
 
 @app.get("/")
 def root():
@@ -114,6 +134,7 @@ def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
+
 
 @app.get("/health", response_model=HealthResponse)
 def health_check():
@@ -127,6 +148,7 @@ def health_check():
         timestamp=datetime.utcnow()
     )
 
+
 @app.get("/test-cors")
 def test_cors(request: Request):
     origin = request.headers.get("origin")
@@ -136,26 +158,29 @@ def test_cors(request: Request):
         "your_origin": origin
     }
 
-# Error handlers — add CORS headers to match allowed origins
+
+# --------------------------
+# ERROR HANDLERS
+# (No need to manually set CORS headers — CORSMiddleware does it)
+# --------------------------
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
-    response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
-    origin = request.headers.get("origin")
-    if origin in ALLOWED_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
+    return JSONResponse(status_code=exc.status_code, content={"error": exc.detail})
+
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}")
-    response = JSONResponse(status_code=500, content={"error": "Internal server error"})
-    origin = request.headers.get("origin")
-    if origin in ALLOWED_ORIGINS:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
+    return JSONResponse(status_code=500, content={"error": "Internal server error"})
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True, log_level="info")
+    uvicorn.run(
+        "api.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

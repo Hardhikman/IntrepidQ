@@ -2,15 +2,14 @@
   "name": "upsc-question-generator-frontend",
   "version": "0.1.0",
   "private": true,
- "scripts": {
-  "generate:types": "openapi-typescript https://intrepidq1-production.up.railway.app/openapi.json -o src/types/api.ts",
-  "dev": "npm run generate:types && next dev",
-  "build": "npm run generate:types && next build",
-  "start": "next start",
-  "lint": "next lint",
-  "test": "jest",
-  "format": "prettier --write"
-},
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "jest",
+    "format": "prettier --write"
+  },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-accordion": "^1.2.11",
@@ -42,8 +41,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^4.0.16",
-    "sonner": "^1.5.0"
+    "zod": "^4.0.16"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.4.8",

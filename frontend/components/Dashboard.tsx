@@ -73,7 +73,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
     try {
       setLoading(true);
       const [statsResp, historyResp]: [UserStats, { history: HistoryItem[] }] = await Promise.all([
-        getUserStats(user.id).catch(() => { throw new Error("Failed to load stats"); }),
+        getUserStats().catch(() => { throw new Error("Failed to load stats"); }),
         getQuestionHistory(100).catch(() => { throw new Error("Failed to load history"); }),
       ]);
       if (!cancelled) {

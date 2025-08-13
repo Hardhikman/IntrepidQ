@@ -81,19 +81,19 @@ async def generate_questions(
         months = request.get('months', 6)
 
         # Enforce trigger-based daily limit
-        if user:
-            try:
-                supabase_service().client.table("user_profiles").update(
-                    {"updated_at": date.today()}
-                ).eq("id", user['id']).execute()
-            except Exception as e:
-                if "Daily generation limit" in str(e):
-                    stats = get_user_stats(user['id'])
-                    raise HTTPException(status_code=429, detail={
-                        "error": str(e),
-                        "stats": stats
-                    })
-                raise
+        #if user:
+         #   try:
+          #      supabase_service().client.table("user_profiles").update(
+           #         {"updated_at": date.today()}
+            #    ).eq("id", user['id']).execute()
+            #except Exception as e:
+             #   if "Daily generation limit" in str(e):
+              #      stats = get_user_stats(user['id'])
+               #     raise HTTPException(status_code=429, detail={
+                #        "error": str(e),
+                 #       "stats": stats
+                  #  })
+                #raise
 
         # Generate questions
         result = question_generator.generate_topic_questions(

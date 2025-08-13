@@ -66,30 +66,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
 
   /* Fetch stats & history */
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoading(true);
-        const [statsResp, historyResp]: [UserStats, { history: HistoryItem[] }] = await Promise.all([
-          getUserStats().catch(() => { throw new Error("Failed to load stats"); }),
-          getQuestionHistory(100).catch(() => { throw new Error("Failed to load history"); }),
-        ]);
-        if (!cancelled) {
-          setStats(statsResp);
-          setHistory(historyResp?.history || []);
-        }
-      } catch (err: any) {
-        toast({
-          title: "Error loading dashboard",
-          description: err.message,
-          variant: "destructive",
-        });
-      } finally {
-        if (!cancelled) setLoading(false);
+  let cancelled = false;
+  if (!user?.id) return; // <-- ensures we wait for login
+
+  (async () => {
+    try {
+      setLoading(true);
+      const [statsResp, historyResp]: [UserStats, { history: HistoryItem[] }] = await Promise.all([
+        getUserStats(user.id).catch(() => { throw new Error("Failed to load stats"); }),
+        getQuestionHistory(100).catch(() => { throw new Error("Failed to load history"); }),
+      ]);
+      if (!cancelled) {
+        setStats(statsResp);
+        setHistory(historyResp?.history || []);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id, toast]);
+    } catch (err: any) {
+      toast({
+        title: "Error loading dashboard",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  })();
+  return () => { cancelled = true; };
+}, [user?.id, toast]);
 
   /* Fetch daily limit from Supabase */
   useEffect(() => {

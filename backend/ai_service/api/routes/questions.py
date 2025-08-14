@@ -45,25 +45,31 @@ def serialize_date_fields(data):
 
 def get_user_stats(user_id: str):
     """Fetch user stats including daily generation count, streak, and serialize dates"""
-    rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
-    if rpc_resp.data:
-        profile = rpc_resp.data[0].get("profile", {})
+    try:
+        rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
+        
+        # FIX: Check if data was returned before trying to access it.
+        # This prevents an IndexError if the RPC call returns an empty list.
+        if rpc_resp.data and len(rpc_resp.data) > 0:
+            profile = rpc_resp.data[0].get("profile", {})
 
-        last_gen_date = profile.get("last_generation_date")
-        if last_gen_date:
-            last_gen_date = last_gen_date.isoformat()
+            last_gen_date = profile.get("last_generation_date")
+            # The RPC function already formats the date as a string, so no conversion needed here.
 
-        generation_count_today = profile.get("generation_count_today", 0)
-        remaining_today = max(DAILY_LIMIT - generation_count_today, 0)
-        streak = profile.get("study_streak", 0)
+            generation_count_today = profile.get("generation_count_today", 0)
+            remaining_today = max(DAILY_LIMIT - generation_count_today, 0)
+            streak = profile.get("study_streak", 0)
 
-        return {
-            "generation_count_today": generation_count_today,
-            "remaining_today": remaining_today,
-            "streak": streak,
-            "last_generation_date": last_gen_date
-        }
+            return {
+                "generation_count_today": generation_count_today,
+                "remaining_today": remaining_today,
+                "streak": streak,
+                "last_generation_date": last_gen_date
+            }
+    except Exception as e:
+        logger.error(f"Error fetching user stats for {user_id}: {e}", exc_info=True)
 
+    # Fallback if RPC fails or returns no data
     return {"generation_count_today": 0, "remaining_today": DAILY_LIMIT, "streak": 0, "last_generation_date": None}
 
 
@@ -80,20 +86,14 @@ async def generate_questions(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # Enforce trigger-based daily limit
-        #if user:
-         #   try:
-          #      supabase_service().client.table("user_profiles").update(
-           #         {"updated_at": date.today()}
-            #    ).eq("id", user['id']).execute()
-            #except Exception as e:
-             #   if "Daily generation limit" in str(e):
-              #      stats = get_user_stats(user['id'])
-               #     raise HTTPException(status_code=429, detail={
-                #        "error": str(e),
-                 #       "stats": stats
-                  #  })
-                #raise
+        if user:
+            limit_ok = supabase_service().check_and_update_generation_limit(user['id'], DAILY_LIMIT)
+            if not limit_ok:
+                stats = get_user_stats(user['id'])
+                raise HTTPException(status_code=429, detail={
+                    "error": f"Daily generation limit of {DAILY_LIMIT} reached.",
+                    "stats": stats
+                })
 
         # Generate questions
         result = question_generator.generate_topic_questions(
@@ -130,7 +130,7 @@ async def generate_questions(
 
             stats = get_user_stats(user['id'])
 
-            questions_serializable = serialize_date_fields(resp.data) if resp else []
+            questions_serializable = serialize_date_fields(resp.data) if resp and resp.data else []
             return {
                 'questions': questions_serializable,
                 'topic': topic,
@@ -145,8 +145,17 @@ async def generate_questions(
             'question_count': num_questions
         }
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        logger.error(f"Error generating questions: {e}")
+        logger.error(f"Error generating questions: {e}", exc_info=True)
+        if user:
+            supabase_service().log_analytics(
+                user_id=user['id'],
+                action='generate_questions',
+                success=False,
+                error_message=str(e)
+            )
         raise HTTPException(status_code=500, detail=f"Failed to generate questions: {str(e)}")
 
 
@@ -162,20 +171,14 @@ async def generate_whole_paper(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
 
-        # Enforce trigger-based daily limit
         if user:
-            try:
-                supabase_service().client.table("user_profiles").update(
-                    {"updated_at": date.today()}
-                ).eq("id", user['id']).execute()
-            except Exception as e:
-                if "Daily generation limit" in str(e):
-                    stats = get_user_stats(user['id'])
-                    raise HTTPException(status_code=429, detail={
-                        "error": str(e),
-                        "stats": stats
-                    })
-                raise
+            limit_ok = supabase_service().check_and_update_generation_limit(user['id'], DAILY_LIMIT)
+            if not limit_ok:
+                stats = get_user_stats(user['id'])
+                raise HTTPException(status_code=429, detail={
+                    "error": f"Daily generation limit of {DAILY_LIMIT} reached.",
+                    "stats": stats
+                })
 
         # Generate the paper
         result = question_generator.generate_whole_paper(
@@ -208,7 +211,7 @@ async def generate_whole_paper(
                 )
 
             stats = get_user_stats(user['id'])
-            questions_serializable = serialize_date_fields(resp.data) if resp else []
+            questions_serializable = serialize_date_fields(resp.data) if resp and resp.data else []
             return {
                 'questions': questions_serializable,
                 'subject': subject,
@@ -223,6 +226,15 @@ async def generate_whole_paper(
             'question_count': 10
         }
 
+    except HTTPException as http_exc:
+        raise http_exc
     except Exception as e:
-        logger.error(f"Error generating whole paper: {e}")
+        logger.error(f"Error generating whole paper: {e}", exc_info=True)
+        if user:
+            supabase_service().log_analytics(
+                user_id=user['id'],
+                action='generate_whole_paper',
+                success=False,
+                error_message=str(e)
+            )
         raise HTTPException(status_code=500, detail=f"Failed to generate whole paper: {str(e)}")

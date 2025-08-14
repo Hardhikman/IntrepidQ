@@ -82,7 +82,7 @@ async def lifespan(app: FastAPI):
 
 # Parse comma-separated list from .env
 # Example in .env:
-# FRONTEND_URL=https://intrepid-q1.vercel.app,https://intrepid-q1-nzmt.vercel.app
+# FRONTEND_URL=https:/1.vercel.app,https://.vercel.app
 ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
 ]

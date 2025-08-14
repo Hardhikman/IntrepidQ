@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 import sys
 sys.path.append('.')
 
+# MODIFIED: Import your Supabase client helper
+from core.supabase_client import get_supabase_service
 from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
 
@@ -41,6 +43,10 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Initializing AI services...")
 
+        # MODIFIED: Get the Supabase client instance first
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+
         # Load Supabase vector store
         try:
             vectorstore = load_index()
@@ -56,7 +62,14 @@ async def lifespan(app: FastAPI):
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
         together_key = os.getenv("TOGETHER_API_KEY")
-        qg = create_question_generator(groq_api_key, together_key, vectorstore)
+
+        # MODIFIED: Pass the supabase_client to the factory function
+        qg = create_question_generator(
+            groq_api_key,
+            together_key,
+            vectorstore,
+            supabase_client  # <-- This is the required argument
+        )
         app_state["question_generator"] = qg
         logger.info("Question generator initialized")
 
@@ -76,8 +89,6 @@ async def lifespan(app: FastAPI):
 # ==========================================
 
 # Parse comma-separated list from .env
-# Example in .env:
-# FRONTEND_URL=https:/1.vercel.app,https://.vercel.app
 ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
 ]

@@ -48,10 +48,10 @@ def get_user_stats(user_id: str):
     try:
         rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
         
-        # FIX: Check if data was returned before trying to access it.
-        # This prevents an IndexError if the RPC call returns an empty list.
-        if rpc_resp.data and len(rpc_resp.data) > 0:
-            profile = rpc_resp.data[0].get("profile", {})
+        # FIX: The RPC returns a single JSON object, not a list.
+        # We access it directly, removing the `[0]` indexer that caused the KeyError.
+        if rpc_resp.data:
+            profile = rpc_resp.data.get("profile", {})
 
             last_gen_date = profile.get("last_generation_date")
             # The RPC function already formats the date as a string, so no conversion needed here.

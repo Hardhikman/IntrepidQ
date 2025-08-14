@@ -1,5 +1,5 @@
 """
-Main FastAPI application - Render + Vercel Production Ready with CORS Fix & FAISS fallback
+Main FastAPI application - UPDATED for multi-provider model selection
 """
 import os
 import logging
@@ -14,7 +14,6 @@ from dotenv import load_dotenv
 import sys
 sys.path.append('.')
 
-# MODIFIED: Import your Supabase client helper
 from core.supabase_client import get_supabase_service
 from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
@@ -43,7 +42,7 @@ async def lifespan(app: FastAPI):
     try:
         logger.info("Initializing AI services...")
 
-        # MODIFIED: Get the Supabase client instance first
+        # Get the Supabase client instance first
         supabase_service = get_supabase_service()
         supabase_client = supabase_service._ensure_client()
 
@@ -57,18 +56,22 @@ async def lifespan(app: FastAPI):
 
         app_state["vectorstore"] = vectorstore
 
-        # Init Question Generator
+        # Init Question Generator with all required API keys
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
+        
+        # MODIFIED: Get Google and Together keys for multi-provider support
+        google_api_key = os.getenv("GOOGLE_API_KEY")
         together_key = os.getenv("TOGETHER_API_KEY")
 
-        # MODIFIED: Pass the supabase_client to the factory function
+        # MODIFIED: Pass all keys to the factory function
         qg = create_question_generator(
-            groq_api_key,
-            together_key,
-            vectorstore,
-            supabase_client  # <-- This is the required argument
+            groq_api_key=groq_api_key,
+            google_api_key=google_api_key,
+            together_api_key=together_key,
+            vectorstore=vectorstore,
+            supabase_client=supabase_client
         )
         app_state["question_generator"] = qg
         logger.info("Question generator initialized")
@@ -88,12 +91,10 @@ async def lifespan(app: FastAPI):
 # CORS Setup — supports prod, preview, local
 # ==========================================
 
-# Parse comma-separated list from .env
 ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
 ]
 
-# Always include localhost for dev
 if "http://localhost:3000" not in ALLOWED_ORIGINS:
     ALLOWED_ORIGINS.append("http://localhost:3000")
 
@@ -146,7 +147,7 @@ def health_check():
 def test_cors():
     return {"message": "CORS is working!", "status": "success"}
 
-# Error handlers — add CORS headers here too
+# Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})

@@ -41,6 +41,11 @@ interface Subject {
   topics: string[];
 }
 
+interface ChatMessage {
+  sender: 'user' | 'ai';
+  content: string | GeneratedQuestion[];
+}
+
 export default function UPSCQuestionGenerator() {
   const { user, profile, loading: authLoading, signOut, refreshProfile, applyLocalGenerationIncrement } = useAuth();
   const { toast } = useToast();
@@ -60,9 +65,12 @@ export default function UPSCQuestionGenerator() {
   const [generatingAllAnswers, setGeneratingAllAnswers] = useState<boolean>(false);
   const [subjectsLoading, setSubjectsLoading] = useState<boolean>(true);
   const [selectedModel, setSelectedModel] = useState("llama3-70b");
+  const [availableModels, setAvailableModels] = useState<Record<string, { provider: string; model_id: string }>>({});
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
     fetchSubjects();
+    fetchAvailableModels();
   }, []);
 
   useEffect(() => {
@@ -75,6 +83,24 @@ export default function UPSCQuestionGenerator() {
 
     return () => window.clearInterval(id);
   }, [loading, generatingAllAnswers, refreshProfile]);
+
+  const fetchAvailableModels = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+      const response = await fetch(`${baseUrl}/api/models`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      const data = await response.json();
+      if (!data.models || Object.keys(data.models).length === 0) {
+        throw new Error('No models data received from server');
+      }
+      setAvailableModels(data.models);
+    } catch (error: any) {
+      console.error('Error fetching available models:', error);
+      toast({ title: "Error", description: `❌ Failed to load models: ${error.message}`, variant: "destructive" });
+    }
+  };
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true);
@@ -141,6 +167,11 @@ export default function UPSCQuestionGenerator() {
       return;
     }
 
+    const userMessageContent = mode === 'paper'
+      ? `Generate a whole paper for ${selectedSubject}.`
+      : `Generate ${numQuestions} questions for ${selectedTopic}.`;
+
+    setChatHistory([{ sender: 'user', content: userMessageContent }]);
     setQuestions([]);
     setAnswers({});
     setLoading(true);
@@ -199,6 +230,7 @@ export default function UPSCQuestionGenerator() {
       }
 
       setQuestions(data.questions);
+      setChatHistory(prev => [...prev, { sender: 'ai', content: data.questions }]);
 
       const endTime = Date.now();
       const duration = ((endTime - startTime) / 1000).toFixed(1);
@@ -353,78 +385,30 @@ export default function UPSCQuestionGenerator() {
         </CardHeader>
       </Card>
 
-      {/* Intro Section */}
-      <Card className="max-w-4xl mx-auto mb-6 bg-orange-50/60 border-orange-100">
-        <CardContent className="p-4 sm:p-6 md:p-10 text-center">
-          <TypographyH2 />
-          <div className="mt-6">
-            <TypographyLarge />
-          </div>
-          <div className="mt-4 rounded-lg border border-orange-200 bg-white/80 p-4 lg:p-6 lg:border-l-4 lg:border-l-orange-300 inline-block text-left">
-            <TypographyList />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Mode Selection */}
-      <Card className="max-w-4xl mx-auto mb-6 border-2 border-orange-200 shadow-sm">
-        <CardContent className="text-center py-8 bg-gradient-to-b from-orange-50 to-orange-100 rounded-lg">
-          <h3 className="text-2xl font-bold mb-6 text-orange-800 tracking-wide">
-            🎯 Select Question Generation Mode
-          </h3>
-          <div className="flex flex-wrap justify-center gap-6">
-            <Button
-              variant={mode === 'topic' ? "default" : "outline"}
-              className={cn(
-                "px-6 py-4 rounded-xl font-semibold transition-all shadow-md",
-                mode === 'topic'
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg"
-                  : "border-orange-400 text-orange-700 hover:bg-orange-50"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                setMode('topic');
-                toast({ title: "Mode Switched", description: '📚 Topic-wise mode enabled' });
-              }}
-            >
-              📚 Topic-wise
-            </Button>
-            <Button
-              variant={mode === 'paper' ? "default" : "outline"}
-              className={cn(
-                "px-6 py-4 rounded-xl font-semibold transition-all shadow-md",
-                mode === 'paper'
-                  ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg"
-                  : "border-blue-400 text-blue-700 hover:bg-blue-50"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                setMode('paper');
-                toast({ title: "Mode Switched", description: '📄 Whole Paper mode enabled' });
-              }}
-            >
-              📄 Whole Paper
-            </Button>
-          </div>
-          {mode === 'paper' && (
-            <div className="mt-6 p-4 bg-blue-100 rounded-lg border border-blue-300 shadow-inner">
-              <p className="m-0 text-blue-800 font-semibold">
-                📋 Whole Paper Mode: 10 questions | 10 marks each | 1 Hour | Total: 100 Marks
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Main Content */}
       <Card className="max-w-4xl mx-auto mb-6 shadow-lg border border-gray-200">
         <CardContent>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
             {/* Left Config Section */}
-            <div className="bg-orange-50 rounded-xl p-6 border border-orange-100 shadow-inner">
+            <div className="lg:col-span-1 bg-orange-50 rounded-xl p-6 border border-orange-100 shadow-inner">
               <h3 className="mb-6 text-xl font-bold text-orange-900 border-b pb-2 border-orange-200">
                 ⚙️ Configuration
               </h3>
+
+              {/* Mode Selection */}
+              <div className="mb-6">
+                <Label className="block mb-2 font-bold text-orange-800">🎯 Mode:</Label>
+                <Select value={mode} onValueChange={(value) => setMode(value as 'topic' | 'paper')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="topic">📚 Topic-wise</SelectItem>
+                    <SelectItem value="paper">📄 Whole Paper</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
               {/* Subject Selection */}
               <div className="mb-6">
@@ -507,6 +491,27 @@ export default function UPSCQuestionGenerator() {
                 </div>
               </div>
 
+              {/* Model Selection */}
+              <div className="mb-6">
+                <Label className="block mb-2 font-bold text-orange-800">🧠 Model:</Label>
+                <Select
+                  value={selectedModel}
+                  onValueChange={setSelectedModel}
+                  disabled={Object.keys(availableModels).length === 0}
+                >
+                  <SelectTrigger className={selectedModel ? "border-green-500" : ""}>
+                    <SelectValue placeholder="Select a model" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(availableModels).map(([key, model]) => (
+                      <SelectItem key={key} value={key}>
+                        {key} ({model.provider})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Generate Button */}
               <Button
                 className="w-full text-lg py-6 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg"
@@ -517,41 +522,43 @@ export default function UPSCQuestionGenerator() {
               </Button>
             </div>
 
-            {/* Right Results Section */}
-            <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-inner">
+            {/* Right Chat Section */}
+            <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-200 shadow-inner flex flex-col">
               <h3 className="mb-6 text-xl font-bold text-gray-900 border-b pb-2 border-gray-300">
-                📄 Generated Questions
+                💬 Chat
               </h3>
-              {questions.length > 0 ? (
-                <div>
-                  <Button
-                    className="w-full mb-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
-                    onClick={handleGenerateAllAnswers}
-                    disabled={generatingAllAnswers}
-                  >
-                    {generatingAllAnswers ? 'Generating Answers...' : 'Generate Answers for All'}
-                  </Button>
-                  <div className="max-h-[60vh] overflow-y-auto pr-2">
-                    {questions.map((question, index) => (
-                      <QuestionDisplay
-                        key={question.id || index}
-                        question={question}
-                        answer={answers[index]}
-                        index={index}
-                      />
-                    ))}
+              <div className="flex-grow overflow-y-auto pr-2 space-y-4">
+                {chatHistory.length > 0 ? (
+                  chatHistory.map((message, index) => (
+                    <div key={index} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`rounded-lg px-4 py-2 ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                        {typeof message.content === 'string' ? (
+                          <p>{message.content}</p>
+                        ) : (
+                          <div>
+                            {message.content.map((q, qIndex) => (
+                              <QuestionDisplay
+                                key={q.id || qIndex}
+                                question={q}
+                                answer={answers[qIndex]}
+                                index={qIndex}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                    <p>Welcome to the new chat interface!</p>
+                    <p>Configure your settings and generate questions to start the conversation.</p>
                   </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-                  {loading
-                    ? "Generating..."
-                    : subjectsLoading
-                      ? "Loading subjects..."
-                      : "Configure settings and generate questions"
-                  }
-                </div>
-              )}
+                )}
+              </div>
+              <div className="mt-4">
+                {/* Input for chat will go here */}
+              </div>
             </div>
           </div>
         </CardContent>

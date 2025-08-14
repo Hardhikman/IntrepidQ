@@ -69,6 +69,19 @@ def get_user_stats(user_id: str):
     return {"generation_count_today": 0, "remaining_today": DAILY_LIMIT, "streak": 0, "last_generation_date": None}
 
 
+@router.get("/models")
+async def get_models():
+    """Return a list of available models"""
+    try:
+        question_generator = get_question_generator()
+        return {"models": question_generator.available_models}
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error fetching available models: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch models")
+
+
 @router.post("/generate_questions")
 async def generate_questions(
     request: Dict[str, Any],

@@ -1,17 +1,65 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/lib/supabase";
+
+// We will load the Supabase client dynamically to avoid build errors.
+let createClient;
 
 export default function FloatingFeedbackButton() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [comment, setComment] = useState("");
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [supabase, setSupabase] = useState(null);
   const { toast } = useToast();
 
-  const submitFeedback = async (rating?: number) => {
+  // Initialize the Supabase client dynamically on component mount.
+  useEffect(() => {
+    const initializeSupabase = async () => {
+      try {
+        if (!createClient) {
+          const supabaseModule = await import("https://esm.sh/@supabase/supabase-js");
+          createClient = supabaseModule.createClient;
+        }
+        // IMPORTANT: Replace these with your actual Supabase URL and Anon Key.
+        // It's best practice to use environment variables for these values.
+        const supabaseUrl = "https://your-project-id.supabase.co";
+        const supabaseAnonKey = "your-supabase-anon-key";
+        setSupabase(createClient(supabaseUrl, supabaseAnonKey));
+      } catch (error) {
+        console.error("Error initializing Supabase client:", error);
+        toast({
+          title: "Initialization Error",
+          description: "Could not connect to the feedback service.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    initializeSupabase();
+  }, [toast]);
+
+  const submitFeedback = async () => {
+    if (selectedRating === null) {
+      toast({
+        title: "Rating required",
+        description: "Please select 'Good' or 'Bad' before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!supabase) {
+      toast({
+        title: "Service Unavailable",
+        description: "The feedback service is not ready. Please try again in a moment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setSubmitting(true);
       const sessionResponse = await supabase.auth.getSession();
@@ -34,18 +82,19 @@ export default function FloatingFeedbackButton() {
         },
         body: JSON.stringify({
           generation_id: "website_feedback",
-          rating,
+          rating: selectedRating,
           comment: comment?.trim() || undefined,
         }),
       });
 
       if (!res.ok) {
-        throw new Error(`Failed (${res.status})`);
+        throw new Error(`Failed to submit feedback (${res.status})`);
       }
 
       toast({ title: "Thanks!", description: "Feedback submitted." });
       setOpen(false);
       setComment("");
+      setSelectedRating(null);
     } catch (e: any) {
       toast({
         title: "Error",
@@ -60,23 +109,23 @@ export default function FloatingFeedbackButton() {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {open && (
-        <Card className="mb-2 shadow-xl">
-          <CardContent className="p-3 space-y-2">
-            <div className="text-sm">Rate your experience</div>
+        <Card className="mb-2 w-64 shadow-xl">
+          <CardContent className="p-3 space-y-3">
+            <div className="text-sm font-medium">Rate your experience</div>
             <div className="flex gap-2">
               <Button
-                variant="outline"
+                variant={selectedRating === 5 ? "default" : "outline"}
                 disabled={submitting}
-                onClick={() => submitFeedback(5)}
-                title="Thumbs up"
+                onClick={() => setSelectedRating(5)}
+                className="w-full"
               >
                 👍 Good
               </Button>
               <Button
-                variant="outline"
+                variant={selectedRating === 1 ? "default" : "outline"}
                 disabled={submitting}
-                onClick={() => submitFeedback(1)}
-                title="Thumbs down"
+                onClick={() => setSelectedRating(1)}
+                className="w-full"
               >
                 👎 Bad
               </Button>
@@ -91,10 +140,10 @@ export default function FloatingFeedbackButton() {
             <div className="flex justify-end">
               <Button
                 variant="default"
-                disabled={submitting}
-                onClick={() => submitFeedback(undefined)}
+                disabled={submitting || selectedRating === null || !supabase}
+                onClick={submitFeedback}
               >
-                Submit Comment
+                Submit
               </Button>
             </div>
           </CardContent>

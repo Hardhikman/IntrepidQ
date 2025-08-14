@@ -29,6 +29,7 @@ class SupabaseService:
         if self.client is None:
             if not self.url or not self.key:
                 raise ValueError("SUPABASE_URL and SUPABASE_ANON_KEY must be set")
+            # Use the service key for all backend operations for elevated privileges
             self.client = create_client(self.url, self.service_key or self.key)
         return self.client
 
@@ -46,6 +47,42 @@ class SupabaseService:
             'generation_average_rating': 0.0,
             'overall_average_rating': 0.0
         }
+
+    # ----------------- Analytics (NOW CORRECTED) -----------------
+    def log_analytics(self, user_id: str, action: str, **kwargs):
+        """
+        Log an analytics event to the database.
+        
+        Args:
+            user_id: The ID of the user performing the action.
+            action: The name of the action (e.g., 'generate_questions').
+            **kwargs: A dictionary of additional metadata matching the table columns.
+        """
+        try:
+            client = self._ensure_client()
+            
+            # Prepare the data to be inserted, matching the schema.
+            log_data = {
+                'user_id': user_id,
+                'action': action,
+                'subject': kwargs.get('subject'),
+                'topic': kwargs.get('topic'),
+                'success': kwargs.get('success', True),
+                'error_message': kwargs.get('error_message')
+            }
+            
+            # Corrected table name to 'usage_analytics'
+            response = client.table('usage_analytics').insert(log_data).execute()
+            
+            if response.data:
+                logger.info(f"Analytics event '{action}' logged for user {user_id}")
+            else:
+                error_info = getattr(response, 'error', str(response))
+                logger.warning(f"Failed to log analytics event, no data returned. Error: {error_info}")
+
+        except Exception as e:
+            logger.error(f"Error logging analytics event for user {user_id}: {e}", exc_info=True)
+
 
     # ----------------- Auth -----------------
     def verify_user(self, token: str) -> Optional[Dict[str, Any]]:
@@ -67,19 +104,19 @@ class SupabaseService:
             logger.error(f"Failed to get user profile: {e}")
             return None
 
-    def check_and_update_generation_limit(self, user_id: str, daily_limit: int = 5) -> bool:
+    def check_and_update_generation_.limit(self, user_id: str, daily_limit: int = 5) -> bool:
         """Check and update daily generation limit for a user. Auto-create profile if missing."""
         try:
-            profile_resp = self.client.table("user_profiles").select(
+            client = self._ensure_client()
+            profile_resp = client.table("user_profiles").select(
                 "generation_count_today, last_generation_date"
             ).eq("id", user_id).execute()
 
             today = datetime.utcnow().date()
 
-            # ✅ Auto-create profile if missing
             if not profile_resp.data:
                 logger.info(f"[Supabase] Creating new profile for user {user_id}")
-                self.client.table("user_profiles").insert({
+                client.table("user_profiles").insert({
                     "id": user_id,
                     "generation_count_today": 1,
                     "last_generation_date": str(today)
@@ -88,18 +125,24 @@ class SupabaseService:
 
             profile = profile_resp.data[0]
             gen_count = profile.get("generation_count_today", 0)
-            last_date = profile.get("last_generation_date")
+            last_date_str = profile.get("last_generation_date")
+            
+            last_date = None
+            if last_date_str:
+                try:
+                    last_date = datetime.fromisoformat(last_date_str).date()
+                except ValueError:
+                    logger.warning(f"Could not parse date: {last_date_str}")
 
-            # Reset counter if new day
-            if last_date != str(today):
+
+            if last_date != today:
                 gen_count = 0
 
             if gen_count >= daily_limit:
                 logger.info(f"[Supabase] Daily limit reached for user {user_id}")
-                return False  # Limit reached
+                return False
 
-            # Increment counter
-            self.client.table("user_profiles").update({
+            client.table("user_profiles").update({
                 "generation_count_today": gen_count + 1,
                 "last_generation_date": str(today)
             }).eq("id", user_id).execute()
@@ -114,7 +157,7 @@ class SupabaseService:
 
     # ----------------- User Stats -----------------
     def get_user_stats(self, user_id: str, admin_mode: bool = False,
-                       target_user_id: Optional[str] = None) -> Dict[str, Any]:
+                           target_user_id: Optional[str] = None) -> Dict[str, Any]:
         target_id = target_user_id if (admin_mode and target_user_id) else user_id
         try:
             client = self._ensure_client()
@@ -132,7 +175,7 @@ class SupabaseService:
             return self._empty_stats()
 
     def get_user_dashboard_data(self, user_id: str, admin_mode: bool = False,
-                                target_user_id: Optional[str] = None) -> Dict[str, Any]:
+                                      target_user_id: Optional[str] = None) -> Dict[str, Any]:
         target_id = target_user_id if (admin_mode and target_user_id) else user_id
         try:
             client = self._ensure_client()
@@ -149,8 +192,8 @@ class SupabaseService:
 
     # ----------------- Generated Questions -----------------
     def save_generated_questions(self, user_id: str, subject: str, topic: Optional[str],
-                                  mode: str, questions: str, use_ca: bool,
-                                  months: Optional[int], question_count: int) -> bool:
+                                     mode: str, questions: str, use_ca: bool,
+                                     months: Optional[int], question_count: int) -> bool:
         try:
             client = self._ensure_client()
             data = {
@@ -185,7 +228,7 @@ class SupabaseService:
 
     # ----------------- Feedback -----------------
     def save_question_feedback(self, user_id: str, question_id: Optional[str],
-                                rating: Optional[int], comment: Optional[str] = None) -> bool:
+                                   rating: Optional[int], comment: Optional[str] = None) -> bool:
         try:
             client = self._ensure_client()
             data = {'user_id': user_id, 'rating': rating, 'comment': comment}
@@ -212,7 +255,6 @@ class SupabaseService:
             logger.error(f"Failed to get question history: {e}", exc_info=True)
             return []
             
-
 
 # Global accessor
 _supabase_service = None

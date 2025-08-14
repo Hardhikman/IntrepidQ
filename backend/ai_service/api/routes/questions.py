@@ -1,5 +1,5 @@
 """
-Question generation API routes - FULLY FIXED VERSION
+Question generation API routes - UPDATED for multi-provider model selection
 """
 import logging
 from fastapi import APIRouter, Depends, HTTPException
@@ -48,14 +48,10 @@ def get_user_stats(user_id: str):
     try:
         rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
         
-        # FIX: The RPC returns a single JSON object, not a list.
-        # We access it directly, removing the `[0]` indexer that caused the KeyError.
         if rpc_resp.data:
             profile = rpc_resp.data.get("profile", {})
 
             last_gen_date = profile.get("last_generation_date")
-            # The RPC function already formats the date as a string, so no conversion needed here.
-
             generation_count_today = profile.get("generation_count_today", 0)
             remaining_today = max(DAILY_LIMIT - generation_count_today, 0)
             streak = profile.get("study_streak", 0)
@@ -85,6 +81,8 @@ async def generate_questions(
         num_questions = request.get('num', 5)
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
+        # MODIFIED: Get the selected model from the request
+        model = request.get('model', 'llama3-70b') # Default to llama3-70b
 
         if user:
             limit_ok = supabase_service().check_and_update_generation_limit(user['id'], DAILY_LIMIT)
@@ -95,13 +93,14 @@ async def generate_questions(
                     "stats": stats
                 })
 
-        # Generate questions
+        # MODIFIED: Pass the model to the generation function
         result = question_generator.generate_topic_questions(
             subject=question_generator.get_subject_from_topic(topic),
             topic=topic,
             num=num_questions,
             use_ca=use_ca,
-            months=months
+            months=months,
+            model=model
         )
 
         # Save to database if user is logged in
@@ -114,7 +113,8 @@ async def generate_questions(
                 'questions': q_text,
                 'mode': 'topic',
                 'use_current_affairs': use_ca,
-                'question_count': 1
+                'question_count': 1,
+                'model': model # MODIFIED: Log the model used
             } for q_text in question_list]
 
             resp = None
@@ -125,7 +125,8 @@ async def generate_questions(
                     action='generate_questions',
                     subject=question_generator.get_subject_from_topic(topic),
                     topic=topic,
-                    success=True
+                    success=True,
+                    metadata={'model': model} # MODIFIED: Log model in analytics
                 )
 
             stats = get_user_stats(user['id'])
@@ -170,6 +171,8 @@ async def generate_whole_paper(
         subject = request.get('subject', 'GS1')
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
+        # MODIFIED: Get the selected model from the request
+        model = request.get('model', 'llama3-70b') # Default to llama3-70b
 
         if user:
             limit_ok = supabase_service().check_and_update_generation_limit(user['id'], DAILY_LIMIT)
@@ -180,11 +183,12 @@ async def generate_whole_paper(
                     "stats": stats
                 })
 
-        # Generate the paper
+        # MODIFIED: Pass the model to the generation function
         result = question_generator.generate_whole_paper(
             subject=subject,
             use_ca=use_ca,
-            months=months
+            months=months,
+            model=model
         )
 
         if user:
@@ -196,7 +200,8 @@ async def generate_whole_paper(
                 'questions': q_text,
                 'mode': 'paper',
                 'use_current_affairs': use_ca,
-                'question_count': 1
+                'question_count': 1,
+                'model': model # MODIFIED: Log the model used
             } for q_text in question_list]
 
             resp = None
@@ -207,7 +212,8 @@ async def generate_whole_paper(
                     action='generate_whole_paper',
                     subject=subject,
                     topic=None,
-                    success=True
+                    success=True,
+                    metadata={'model': model} # MODIFIED: Log model in analytics
                 )
 
             stats = get_user_stats(user['id'])

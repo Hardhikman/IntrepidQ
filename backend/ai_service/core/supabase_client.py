@@ -104,7 +104,7 @@ class SupabaseService:
             logger.error(f"Failed to get user profile: {e}")
             return None
 
-    def check_and_update_generation_.limit(self, user_id: str, daily_limit: int = 5) -> bool:
+    def check_and_update_generation_limit(self, user_id: str, daily_limit: int = 5) -> bool:
         """Check and update daily generation limit for a user. Auto-create profile if missing."""
         try:
             client = self._ensure_client()

@@ -181,7 +181,7 @@ export default function Profile({ session }: ProfileProps) {
                     onClick={() => router.push('/')}
                     className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
                   >
-                    Back to Dashboard
+                    Back to Main page
                   </Button>
                 </div>
       </div>

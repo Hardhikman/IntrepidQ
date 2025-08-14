@@ -4,7 +4,7 @@ A minimalistic AI that curates context-aware Q&A designed to make you think - fo
 
 Currently introducing IQ 1.0 for GS preparation 
 
-**Transform your UPSC preparation with our cutting-edge AI question generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware ,and contemproary exam questions directly from PYQ based materials.
+**Transform your UPSC preparation with our cutting-edge AI Q&A generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware ,and contemproary exam questions directly from PYQ based materials.
 
 [**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
 

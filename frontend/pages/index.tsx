@@ -34,7 +34,7 @@ import { Slider } from "@/components/ui/slider";
 import { TypographyH2, TypographyLarge, TypographyList } from "@/components/ui/typography";
 
 // Type Definitions
-import { GeneratedQuestion } from '@/lib/supabase'; // Assuming a type like: { id: number; question: string; ... }
+import { GeneratedQuestion } from '@/lib/supabase';
 
 interface Subject {
   name: string;
@@ -230,9 +230,8 @@ export default function UPSCQuestionGenerator() {
     toast({ title: 'Generating Answers', description: 'Generating answers for all questions...' });
 
     try {
-      // FIX: Changed q.questions to q.question. The API likely expects an array of question strings.
-      // The 'GeneratedQuestion' object holds the text in a 'question' property, not 'questions'.
-      const questionList = questions.map(q => q.question);
+      // FIX: Reverted to q.questions as indicated by the TypeScript compiler error.
+      const questionList = questions.map(q => q.questions);
 
       const sessionResponse = await supabase.auth.getSession();
       const token = sessionResponse.data.session?.access_token;
@@ -333,7 +332,6 @@ export default function UPSCQuestionGenerator() {
                     <DropdownMenuItem onClick={() => setShowDashboard(true)}>
                       📊 Dashboard
                     </DropdownMenuItem>
-                    {/* FIX: Use Next.js router for client-side navigation instead of a full page reload. */}
                     <DropdownMenuItem onClick={() => router.push('/profile')}>
                       👤 Profile
                     </DropdownMenuItem>

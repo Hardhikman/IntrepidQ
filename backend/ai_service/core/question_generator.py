@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
-from langchain_community.vectorstores import FAISS
+from langchain_core.vectorstores import VectorStore
+from langchain_community.vectorstores import SupabaseVectorStore
 import requests
 from diskcache import Cache
 import logging
@@ -22,7 +23,7 @@ except Exception:
 logger = logging.getLogger(__name__)
 
 class QuestionGenerator:
-    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS, cache_dir: str = "news_cache"):
+    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore], cache_dir: str = "news_cache"):
         self.llm = ChatGroq(
             model=os.getenv("GROQ_MODEL", "llama3-70b-8192"),
             groq_api_key=groq_api_key,
@@ -38,7 +39,10 @@ class QuestionGenerator:
                 logger.warning(f"Together client init failed: {e}")
         self.vectorstore = vectorstore
         self.cache = Cache(cache_dir)
-        self.topics_by_subject = self._build_topics_by_subject()
+        if vectorstore:
+            self.topics_by_subject = self._build_topics_by_subject()
+        else:
+            self.topics_by_subject = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
         self._setup_templates()
 
     def _setup_templates(self):
@@ -117,9 +121,18 @@ Generate the complete 10-question paper now:"""
         topics_by_subject = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
         
         try:
-            for _doc_id, doc in self.vectorstore.docstore._dict.items():
-                if getattr(doc, "metadata", None) and "topic" in doc.metadata:
-                    topic_name = doc.metadata["topic"]
+            all_metadata = []
+            if isinstance(self.vectorstore, SupabaseVectorStore):
+                # Use the supabase client to get all documents' metadata
+                response = self.vectorstore.client.table("documents").select("metadata").execute()
+                if response.data:
+                    all_metadata = [item['metadata'] for item in response.data]
+            elif hasattr(self.vectorstore, 'docstore'): # Fallback for FAISS
+                all_metadata = [doc.metadata for doc in self.vectorstore.docstore._dict.values() if getattr(doc, "metadata", None)]
+
+            for metadata in all_metadata:
+                if "topic" in metadata:
+                    topic_name = metadata["topic"]
                     
                     # Categorize based on GS prefix in topic name
                     for gs_num in ["GS1", "GS2", "GS3", "GS4"]:
@@ -345,14 +358,25 @@ Variation guidance (do not include this line or the number in the output): seed 
     def _generate_static_questions(self, subject: str, topic: str, num: int) -> str:
         """Generate questions using static examples from vectorstore"""
         try:
-            filtered_docs = [
-                doc for doc in self.vectorstore.docstore._dict.values() 
-                if doc.metadata.get("topic") == topic
-            ]
-            # Shuffle examples for variety across runs
-            random.shuffle(filtered_docs)
-            # Use up to 8 examples, but at least num to provide context diversity
-            examples = [doc.page_content for doc in filtered_docs[:max(1, min(max(num, 3), 8))]]
+            examples = []
+            if isinstance(self.vectorstore, SupabaseVectorStore):
+                # Fetch examples directly from Supabase table
+                response = self.vectorstore.client.table("documents") \
+                    .select("content") \
+                    .eq("metadata->>topic", topic) \
+                    .limit(8) \
+                    .execute()
+                if response.data:
+                    examples = [item['content'] for item in response.data]
+            elif hasattr(self.vectorstore, 'docstore'): # Fallback for FAISS
+                filtered_docs = [
+                    doc for doc in self.vectorstore.docstore._dict.values()
+                    if doc.metadata.get("topic") == topic
+                ]
+                # Shuffle examples for variety across runs
+                random.shuffle(filtered_docs)
+                # Use up to 8 examples, but at least num to provide context diversity
+                examples = [doc.page_content for doc in filtered_docs[:max(1, min(max(num, 3), 8))]]
 
             if not examples:
                 return f"No questions found for topic: {topic}"
@@ -428,11 +452,21 @@ Variation guidance (do not include this line or the number in the output): seed 
         
         for topic in selected_topics:
             try:
-                filtered_docs = [
-                    doc for doc in self.vectorstore.docstore._dict.values() 
-                    if doc.metadata.get("topic") == topic
-                ]
-                examples = [doc.page_content for doc in filtered_docs[:3]]
+                examples = []
+                if isinstance(self.vectorstore, SupabaseVectorStore):
+                    response = self.vectorstore.client.table("documents") \
+                        .select("content") \
+                        .eq("metadata->>topic", topic) \
+                        .limit(3) \
+                        .execute()
+                    if response.data:
+                        examples = [item['content'] for item in response.data]
+                elif hasattr(self.vectorstore, 'docstore'): # Fallback for FAISS
+                    filtered_docs = [
+                        doc for doc in self.vectorstore.docstore._dict.values()
+                        if doc.metadata.get("topic") == topic
+                    ]
+                    examples = [doc.page_content for doc in filtered_docs[:3]]
                 
                 if examples:
                     display_topic = topic.replace(f"{subject} - ", "")
@@ -518,6 +552,6 @@ Maximum Marks:100
         return paper_content
 
 # Factory function
-def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS) -> QuestionGenerator:
+def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore]) -> QuestionGenerator:
     """Factory function to create question generator instance"""
     return QuestionGenerator(groq_api_key, together_api_key, vectorstore)

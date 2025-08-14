@@ -37,21 +37,16 @@ app_state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan management with FAISS fallback"""
+    """Application lifespan management with Supabase vector store"""
     try:
         logger.info("Initializing AI services...")
 
-        # Load FAISS — allow startup even if missing
-        persist_dir = os.getenv("FAISS_DIR", "data/faiss_db")
+        # Load Supabase vector store
         try:
-            if not os.path.exists(persist_dir):
-                logger.warning(f"FAISS directory {persist_dir} not found. Starting without it.")
-                vectorstore = None
-            else:
-                vectorstore = load_index(persist_dir)
-                logger.info("FAISS vectorstore loaded successfully")
+            vectorstore = load_index()
+            logger.info("Supabase vectorstore loaded successfully")
         except Exception as e:
-            logger.error(f"FAISS load failed: {e}")
+            logger.error(f"Supabase vectorstore load failed: {e}")
             vectorstore = None
 
         app_state["vectorstore"] = vectorstore

@@ -12,7 +12,8 @@ export default function FloatingFeedbackButton() {
   const [submitting, setSubmitting] = useState(false);
   const [comment, setComment] = useState("");
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [supabase, setSupabase] = useState(null);
+  // Explicitly type supabase state as `any` to avoid potential type errors
+  const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
 
   // Initialize the Supabase client dynamically on component mount.
@@ -20,6 +21,8 @@ export default function FloatingFeedbackButton() {
     const initializeSupabase = async () => {
       try {
         if (!createClient) {
+          // Ignore TypeScript error for this dynamic URL import
+          // @ts-ignore
           const supabaseModule = await import("https://esm.sh/@supabase/supabase-js");
           createClient = supabaseModule.createClient;
         }

@@ -1,30 +1,72 @@
-# UPSC Question Generator
+# AI-Powered UPSC Question Generator
 
-An AI-powered application that generates UPSC exam questions from PDF documents using advanced NLP and vector search technologies.
+**Transform your UPSC preparation with our cutting-edge AI question generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware exam questions directly from your PDF study materials.
 
-## 🚀 Features
+[**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/your-repo/issues/new) | [**Request a Feature**](https://github.com/your-repo/issues/new)
 
-- **PDF Processing**: Extract and parse content from UPSC study materials
-- **AI Question Generation**: Generate contextual questions using Groq's fast LLM models
-- **Vector Search**: Efficient content indexing and retrieval using FAISS
-- **User Authentication**: Secure user management with Supabase Auth
-- **Modern UI**: Clean, responsive interface built with Next.js and Tailwind CSS
-- **Question History**: Track and manage generated questions
-- **Subject Organization**: Organize content by subjects and topics
+## 🚀 Key Features
+
+- **Automated Question Generation**: Instantly create high-quality UPSC questions from your PDF documents.
+- **Advanced AI-Powered Engine**: Utilizes Groq's lightning-fast LLM and FAISS vector search for contextual accuracy.
+- **Secure User Management**: Robust authentication and user management powered by Supabase.
+- **Sleek & Modern UI**: A clean, responsive, and intuitive interface built with Next.js and Tailwind CSS.
+- **Comprehensive Question Management**: Easily track, manage, and organize your generated questions by subject.
+- **Customizable & Extensible**: Built with a modular architecture, making it easy to extend and customize.
+
+## ⚙️ Tech Stack
+
+### Frontend
+- **Next.js**: React framework for server-rendered applications
+- **TypeScript**: Typed superset of JavaScript
+- **Tailwind CSS**: Utility-first CSS framework
+- **shadcn/ui**: Re-usable components built using Radix UI and Tailwind CSS
+- **Supabase**: Authentication and database client
+
+### Backend
+- **FastAPI**: High-performance Python web framework
+- **Python**: Core programming language
+- **Langchain**: Framework for developing applications powered by language models
+- **Groq**: Fast LLM inference API
+- **FAISS**: Library for efficient similarity search
+
+### Database
+- **PostgreSQL**: Open source object-relational database (via Supabase)
+- **pgvector**: PostgreSQL extension for vector similarity search
 
 ## 🏗️ Architecture
 
-### Backend (FastAPI)
-- **API Layer**: RESTful APIs for question generation and user management
-- **Core Services**: PDF parsing, vector indexing, and question generation
-- **Database**: Supabase for user data and question storage
-- **Vector Store**: FAISS for efficient similarity search
-
-### Frontend (Next.js)
-- **React Components**: Modern UI components with shadcn/ui
-- **Authentication**: Supabase Auth integration
-- **State Management**: React hooks for local state
-- **Styling**: Tailwind CSS for responsive design
+```
+                               +-----------------+
+                               |      User       |
+                               +-----------------+
+                                       |
+                                       | Browser (HTTPS)
+                                       v
+                         +---------------------------+
+                         |     Frontend (Next.js)    |
+                         | - UI Components           |
+                         | - User Authentication     |
+                         +---------------------------+
+                               |                 ^
+                               | REST API Calls  | JWT Token
+                               v                 |
+                         +---------------------------+
+                         |      Backend (FastAPI)    |
+                         | - PDF Parsing             |
+                         | - Question Generation     |
+                         | - Vector Search           |
+                         +---------------------------+
+                           |          |           |
+                           |          |           |
+  +------------------------+          |           +------------------------+
+  |                                   |                                    |
+  v                                   v                                    v
++-----------------+         +-----------------+         +--------------------------+
+| Supabase        |         | Groq API        |         | FAISS Vector Store       |
+| - Auth          |         | - LLM Inference |         | - Content Indexing       |
+| - PostgreSQL DB |         +-----------------+         +--------------------------+
++-----------------+
+```
 
 ## 📦 Project Structure
 

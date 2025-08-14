@@ -2,7 +2,7 @@
 
 **Transform your UPSC preparation with our cutting-edge AI question generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware exam questions directly from PYQ based materials.
 
-[**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/your-repo/issues/new) | [**Request a Feature**](https://github.com/your-repo/issues/new)
+[**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
 
 ## 🚀 Key Features
 

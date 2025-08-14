@@ -102,8 +102,10 @@ upsc-question-generator/
 - Python 3.8+
 - Node.js 16+
 - Docker (optional)
-- Supabase account
-- Groq API key
+- Supabase Acc(Any other DB)
+- API keys(Any other API keys)
+- Vector DB and Embeddings
+- Langchain
 
 ### Backend Setup
 
@@ -187,7 +189,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ### Supabase Setup
 
 1. Create a new Supabase project
-2. Set up authentication (enable email/password)
+2. Set up authentication (Gmail)
 3. Create the required database tables by running the SQL scripts in the `scripts/db` directory in the Supabase SQL Editor.
    - `profiles` - User profiles
    - `questions` - Generated questions

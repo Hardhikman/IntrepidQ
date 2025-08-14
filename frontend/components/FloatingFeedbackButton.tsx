@@ -4,35 +4,32 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-// We will load the Supabase client dynamically to avoid build errors.
-let createClient;
+// Extend the Window interface to inform TypeScript about the global supabase object
+declare global {
+  interface Window {
+    supabase: any;
+  }
+}
 
 export default function FloatingFeedbackButton() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [comment, setComment] = useState("");
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  // Explicitly type supabase state as `any` to avoid potential type errors
   const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
 
-  // Initialize the Supabase client dynamically on component mount.
+  // Initialize the Supabase client by dynamically loading the script
   useEffect(() => {
-    const initializeSupabase = async () => {
-      try {
-        if (!createClient) {
-          // Ignore TypeScript error for this dynamic URL import
-          // @ts-ignore
-          const supabaseModule = await import("https://esm.sh/@supabase/supabase-js");
-          createClient = supabaseModule.createClient;
-        }
+    // Function to initialize the client once the script is loaded
+    const initializeClient = () => {
+      if (window.supabase) {
         // IMPORTANT: Replace these with your actual Supabase URL and Anon Key.
-        // It's best practice to use environment variables for these values.
         const supabaseUrl = "https://your-project-id.supabase.co";
         const supabaseAnonKey = "your-supabase-anon-key";
-        setSupabase(createClient(supabaseUrl, supabaseAnonKey));
-      } catch (error) {
-        console.error("Error initializing Supabase client:", error);
+        setSupabase(window.supabase.createClient(supabaseUrl, supabaseAnonKey));
+      } else {
+        console.error("Supabase client not found on window object.");
         toast({
           title: "Initialization Error",
           description: "Could not connect to the feedback service.",
@@ -41,7 +38,37 @@ export default function FloatingFeedbackButton() {
       }
     };
 
-    initializeSupabase();
+    // Check if the script is already on the page
+    if (document.querySelector('script[src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"]')) {
+      initializeClient();
+      return;
+    }
+
+    // If not, create and append the script tag
+    const script = document.createElement('script');
+    script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+    script.async = true;
+
+    script.onload = initializeClient;
+
+    script.onerror = () => {
+      console.error("Failed to load Supabase script.");
+      toast({
+        title: "Script Load Error",
+        description: "Could not load the feedback service script.",
+        variant: "destructive",
+      });
+    };
+
+    document.body.appendChild(script);
+
+    // Cleanup function to remove the script if the component unmounts
+    return () => {
+      const existingScript = document.querySelector('script[src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
   }, [toast]);
 
   const submitFeedback = async () => {
@@ -65,15 +92,15 @@ export default function FloatingFeedbackButton() {
 
     try {
       setSubmitting(true);
-      const sessionResponse = await supabase.auth.getSession();
-      const token = sessionResponse.data.session?.access_token;
+      const { data: { session } } = await supabase.auth.getSession();
 
-      if (!token) {
+      if (!session) {
         toast({
           title: "Login required",
           description: "Please sign in to submit feedback.",
           variant: "destructive",
         });
+        setSubmitting(false);
         return;
       }
 
@@ -81,7 +108,7 @@ export default function FloatingFeedbackButton() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           generation_id: "website_feedback",

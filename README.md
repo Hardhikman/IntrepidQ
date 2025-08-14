@@ -1,4 +1,4 @@
-# IntrepidQ(IQ)
+# IntrepidQ
 
 A minimalistic AI that curates context-aware Q&A designed to make you think - for UPSC CSE Mains Examination
 

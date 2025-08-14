@@ -7,7 +7,7 @@
 ## 🚀 Key Features
 
 - **Automated Question Generation**: Instantly create high-quality UPSC questions from your PDF documents.
-- **Advanced AI-Powered Engine**: Utilizes Groq's lightning-fast LLM and FAISS vector search for contextual accuracy.
+- **Advanced AI-Powered Engine having Contextual awareness**: Utilizes Groq's lightning-fast LLM and FAISS vector search for contextual accuracy.
 - **Secure User Management**: Robust authentication and user management powered by Supabase.
 - **Sleek & Modern UI**: A clean, responsive, and intuitive interface built with Next.js and Tailwind CSS.
 - **Comprehensive Question Management**: Easily track, manage, and organize your generated questions by subject.

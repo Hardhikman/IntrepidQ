@@ -195,24 +195,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             <div className="text-xs uppercase text-gray-500 mb-1">Feedback Submitted</div>
             <div className="text-3xl font-bold text-purple-600">{stats?.feedback_count ?? 0}</div>
             <div className="text-xs text-gray-500 mt-1">
-              Q: {stats?.individual_feedback_count ?? 0} • Gen: {stats?.generation_feedback_count ?? 0}
+              Questions count: {stats?.individual_feedback_count ?? 0} • Website experience: {stats?.generation_feedback_count ?? 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Avg Ratings</div>
-            <div className="text-lg font-semibold">Questions: {(stats?.individual_average_rating ?? 0).toFixed(1)}</div>
-            <div className="text-xs text-gray-500">Generations: {(stats?.generation_average_rating ?? 0).toFixed(1)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Overall Feedback</div>
+            <div className="text-xs uppercase text-gray-500 mb-1">Avg Feedback Ratings </div>
+            <div className="text-lg font-semibold">By Questions: {(stats?.individual_average_rating ?? 0).toFixed(1)}</div>
+            <div className="text-xs text-gray-500">By Website Experience: {(stats?.generation_average_rating ?? 0).toFixed(1)}</div>
             <div className="text-lg font-semibold text-purple-600">
               Avg: {(stats?.overall_average_rating ?? 0).toFixed(1)}
             </div>
-            <div className="text-xs text-gray-500 mt-1">Total: {stats?.feedback_count ?? 0}</div>
           </CardContent>
         </Card>
       </div>

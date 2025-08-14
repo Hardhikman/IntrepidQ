@@ -1,12 +1,12 @@
-# AI-Powered UPSC Question Generator
+# AI-RAG Powered UPSC CSE Mains Question Generator
 
-**Transform your UPSC preparation with our cutting-edge AI question generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware exam questions directly from your PDF study materials.
+**Transform your UPSC preparation with our cutting-edge AI question generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware exam questions directly from PYQ based materials.
 
 [**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/your-repo/issues/new) | [**Request a Feature**](https://github.com/your-repo/issues/new)
 
 ## 🚀 Key Features
 
-- **Automated Question Generation**: Instantly create high-quality UPSC questions from your PDF documents.
+- **Automated Question Generation**: Instantly create high-quality UPSC questions from PYQ PDF documents.
 - **Advanced AI-Powered Engine having Contextual awareness**: Utilizes Groq's lightning-fast LLM and FAISS vector search for contextual accuracy.
 - **Secure User Management**: Robust authentication and user management powered by Supabase.
 - **Sleek & Modern UI**: A clean, responsive, and intuitive interface built with Next.js and Tailwind CSS.
@@ -104,8 +104,6 @@ upsc-question-generator/
 - Docker (optional)
 - Supabase Acc(Any other DB)
 - API keys(Any other API keys)
-- Vector DB and Embeddings
-- Langchain
 
 ### Backend Setup
 
@@ -269,7 +267,7 @@ For support, please open an issue on GitHub or contact the development team.
 
 ## 🙏 Acknowledgments
 
-- Groq for fast LLM inference
+- Groq/Together/Google for fast LLM inference
 - Supabase for backend services
-- Vercel for hosting
+- Vercel/Railway for hosting
 - The UPSC community for inspiration

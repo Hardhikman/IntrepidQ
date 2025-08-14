@@ -4,12 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-// Extend the Window interface to inform TypeScript about the global supabase object
+// Extend the Window interface to inform TypeScript about the global supabase object.
+// This helps avoid TypeScript errors when accessing window.supabase.
 declare global {
   interface Window {
     supabase: any;
   }
 }
+
+// This is the recommended and secure way to handle client-side keys in Next.js.
+// Next.js replaces these variables with their actual values at build time.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export default function FloatingFeedbackButton() {
   const [open, setOpen] = useState(false);
@@ -19,15 +25,24 @@ export default function FloatingFeedbackButton() {
   const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
 
-  // Initialize the Supabase client by dynamically loading the script
+  // This useEffect hook dynamically loads the Supabase library via a script tag.
+  // This method bypasses the Next.js build process for this library,
+  // which should finally resolve the "Could not resolve" compilation error.
   useEffect(() => {
-    // Function to initialize the client once the script is loaded
+    // This function initializes the Supabase client once the script is loaded.
     const initializeClient = () => {
       if (window.supabase) {
-        // IMPORTANT: Replace these with your actual Supabase URL and Anon Key.
-        const supabaseUrl = "https://your-project-id.supabase.co";
-        const supabaseAnonKey = "your-supabase-anon-key";
-        setSupabase(window.supabase.createClient(supabaseUrl, supabaseAnonKey));
+        // Use the keys read from the environment variables at the top of the file.
+        if (supabaseUrl && supabaseAnonKey) {
+            setSupabase(window.supabase.createClient(supabaseUrl, supabaseAnonKey));
+        } else {
+            console.error("Supabase environment variables are not set. Make sure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are configured and the server has been restarted.");
+             toast({
+              title: "Configuration Error",
+              description: "Feedback service is not configured.",
+              variant: "destructive",
+            });
+        }
       } else {
         console.error("Supabase client not found on window object.");
         toast({
@@ -38,19 +53,22 @@ export default function FloatingFeedbackButton() {
       }
     };
 
-    // Check if the script is already on the page
-    if (document.querySelector('script[src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"]')) {
-      initializeClient();
+    // Check if the script is already on the page to avoid adding it multiple times.
+    const existingScript = document.querySelector('script[src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"]');
+    if (existingScript) {
+      if (window.supabase) {
+        initializeClient();
+      } else {
+        existingScript.addEventListener('load', initializeClient);
+      }
       return;
     }
 
-    // If not, create and append the script tag
+    // If the script isn't there, create it and add it to the page.
     const script = document.createElement('script');
     script.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
     script.async = true;
-
-    script.onload = initializeClient;
-
+    script.onload = initializeClient; // Initialize the client after the script loads.
     script.onerror = () => {
       console.error("Failed to load Supabase script.");
       toast({
@@ -62,13 +80,6 @@ export default function FloatingFeedbackButton() {
 
     document.body.appendChild(script);
 
-    // Cleanup function to remove the script if the component unmounts
-    return () => {
-      const existingScript = document.querySelector('script[src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"]');
-      if (existingScript) {
-        document.body.removeChild(existingScript);
-      }
-    };
   }, [toast]);
 
   const submitFeedback = async () => {
@@ -135,6 +146,22 @@ export default function FloatingFeedbackButton() {
       setSubmitting(false);
     }
   };
+
+  // If the component is not configured correctly, render a disabled button.
+  if (!supabaseUrl || !supabaseAnonKey) {
+     return (
+        <div className="fixed bottom-4 right-4 z-50">
+             <Button
+                className="rounded-full shadow-lg"
+                variant={"destructive"}
+                disabled
+                title="Feedback component is not configured correctly. Check environment variables."
+             >
+                🗣️ Feedback (Error)
+            </Button>
+        </div>
+    );
+  }
 
   return (
     <div className="fixed bottom-4 right-4 z-50">

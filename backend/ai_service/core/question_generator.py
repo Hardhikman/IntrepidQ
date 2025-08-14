@@ -14,6 +14,7 @@ from langchain_community.vectorstores import SupabaseVectorStore
 import requests
 from diskcache import Cache
 import logging
+from supabase import Client  # MODIFIED: Ensure Client is imported
 
 try:
     from together import Together
@@ -23,26 +24,30 @@ except Exception:
 logger = logging.getLogger(__name__)
 
 class QuestionGenerator:
-    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore], cache_dir: str = "news_cache"):
+    # MODIFIED: Added 'supabase_client' to the constructor
+    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore], supabase_client: Optional[Client], cache_dir: str = "news_cache"):
         self.llm = ChatGroq(
             model=os.getenv("GROQ_MODEL", "llama3-70b-8192"),
             groq_api_key=groq_api_key,
-            # Slightly higher default temperature for more variety; can be overridden via env
             temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7"))
         )
-        # Optional Together client for fallback
         self.together = None
         if together_api_key and Together is not None:
             try:
                 self.together = Together(api_key=together_api_key)
             except Exception as e:
                 logger.warning(f"Together client init failed: {e}")
+        
         self.vectorstore = vectorstore
+        self.supabase_client = supabase_client  # MODIFIED: Store the client instance
         self.cache = Cache(cache_dir)
-        if vectorstore:
+        
+        if vectorstore and self.supabase_client: # MODIFIED: Check for client
             self.topics_by_subject = self._build_topics_by_subject()
         else:
             self.topics_by_subject = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
+            logger.warning("Could not build topics by subject; vectorstore or supabase_client missing.")
+        
         self._setup_templates()
 
     def _setup_templates(self):
@@ -122,19 +127,17 @@ Generate the complete 10-question paper now:"""
         
         try:
             all_metadata = []
-            if isinstance(self.vectorstore, SupabaseVectorStore):
-                # Use the supabase client to get all documents' metadata
-                response = self.vectorstore.client.table("documents").select("metadata").execute()
+            # MODIFIED: Use the stored client, not the vectorstore's client
+            if isinstance(self.vectorstore, SupabaseVectorStore) and self.supabase_client:
+                response = self.supabase_client.table("documents").select("metadata").execute()
                 if response.data:
-                    all_metadata = [item['metadata'] for item in response.data]
-            elif hasattr(self.vectorstore, 'docstore'): # Fallback for FAISS
+                    all_metadata = [item['metadata'] for item in response.data if item.get('metadata')]
+            elif hasattr(self.vectorstore, 'docstore'):  # Fallback for FAISS
                 all_metadata = [doc.metadata for doc in self.vectorstore.docstore._dict.values() if getattr(doc, "metadata", None)]
 
             for metadata in all_metadata:
                 if "topic" in metadata:
                     topic_name = metadata["topic"]
-                    
-                    # Categorize based on GS prefix in topic name
                     for gs_num in ["GS1", "GS2", "GS3", "GS4"]:
                         if topic_name.startswith(gs_num):
                             topics_by_subject[gs_num].append(topic_name)
@@ -142,7 +145,6 @@ Generate the complete 10-question paper now:"""
         except Exception as e:
             logger.warning(f"Error building topics from vectorstore: {e}")
         
-        # Remove duplicates and sort
         for gs_paper in topics_by_subject:
             topics_by_subject[gs_paper] = sorted(list(set(topics_by_subject[gs_paper])))
         
@@ -159,22 +161,16 @@ Generate the complete 10-question paper now:"""
                 return subject
         return "GS1"  # default
 
-    # ✅ ADD: Missing API methods that your routes expect
     def generate_questions(self, topic: str, num_questions: int = 5) -> List[str]:
         """Generate questions for a topic - API compatibility method"""
         try:
-            # Determine subject from topic
             subject = self.get_subject_from_topic(topic)
-            
-            # Use existing method
             result = self._generate_static_questions(subject, topic, num_questions)
             
-            # Parse the formatted result back to a list
             questions = []
             for line in result.split('\n\n'):
                 line = line.strip()
                 if line and re.match(r'^\d+\.', line):
-                    # Remove numbering and clean
                     clean_question = re.sub(r'^\d+\.\s*', '', line).strip()
                     if clean_question:
                         questions.append(clean_question)
@@ -183,7 +179,6 @@ Generate the complete 10-question paper now:"""
             
         except Exception as e:
             logger.error(f"Error in generate_questions: {e}")
-            # Fallback
             return [f"Analyze the significance of {topic} in contemporary India."]
 
     def generate_questions_with_ca(self, topic: str, num_questions: int, months: int) -> List[str]:
@@ -192,7 +187,6 @@ Generate the complete 10-question paper now:"""
             subject = self.get_subject_from_topic(topic)
             result = self._generate_current_affairs_questions(subject, topic, num_questions, months)
             
-            # Parse the formatted result back to a list
             questions = []
             for line in result.split('\n\n'):
                 line = line.strip()
@@ -212,7 +206,6 @@ Generate the complete 10-question paper now:"""
         try:
             result = self.generate_whole_paper(subject, use_ca=True, months=months)
             
-            # Extract just the questions part (after "## Questions:")
             questions_section = result.split("## Questions:")[-1].split("---")[0].strip()
             
             questions = []
@@ -245,7 +238,6 @@ Generate the complete 10-question paper now:"""
         ]
         return fallback_templates
 
-    # ✅ Keep all your existing methods unchanged
     def fetch_recent_news(self, topic: str, months: int = 6) -> str:
         """Fetch recent news for current affairs integration"""
         cache_key = f"{topic}_{months}"
@@ -293,20 +285,16 @@ Generate the complete 10-question paper now:"""
             line = line.strip()
             if not line:
                 continue
-                
-            # Remove bold formatting
+            
             line = re.sub(r'\*\*(.*?)\*\*', r'\1', line)
             
-            # Skip commentary lines
             if line.lower().startswith(('these questions', 'the questions', 'note:', 'instruction', 'this paper')):
                 continue
             
-            # Check if this is a question line
             if (re.match(r'^\d+\.', line) or 
                 line.endswith('?') or 
                 any(word in line.lower() for word in ['analyze', 'examine', 'discuss', 'evaluate', 'critically', 'assess'])):
                 
-                # Remove existing numbering and add proper numbering
                 clean_line = re.sub(r'^\d+\.\s*', '', line)
                 if clean_line:
                     formatted_lines.append(f"{question_counter}. {clean_line}")
@@ -359,9 +347,9 @@ Variation guidance (do not include this line or the number in the output): seed 
         """Generate questions using static examples from vectorstore"""
         try:
             examples = []
-            if isinstance(self.vectorstore, SupabaseVectorStore):
-                # Fetch examples directly from Supabase table
-                response = self.vectorstore.client.table("documents") \
+            # MODIFIED: Use the stored client, not the vectorstore's client
+            if isinstance(self.vectorstore, SupabaseVectorStore) and self.supabase_client:
+                response = self.supabase_client.table("documents") \
                     .select("content") \
                     .eq("metadata->>topic", topic) \
                     .limit(8) \
@@ -373,9 +361,7 @@ Variation guidance (do not include this line or the number in the output): seed 
                     doc for doc in self.vectorstore.docstore._dict.values()
                     if doc.metadata.get("topic") == topic
                 ]
-                # Shuffle examples for variety across runs
                 random.shuffle(filtered_docs)
-                # Use up to 8 examples, but at least num to provide context diversity
                 examples = [doc.page_content for doc in filtered_docs[:max(1, min(max(num, 3), 8))]]
 
             if not examples:
@@ -402,7 +388,6 @@ Variation guidance (do not include this line or the number in the output): seed 
             return self.format_questions(out)
         except Exception as e:
             logger.error(f"Error in _generate_static_questions: {e}")
-            # Fallback
             return f"1. Analyze the significance of {topic} in contemporary India.\n\n2. Discuss the key challenges associated with {topic}."
 
     def generate_whole_paper(self, subject: str, use_ca: bool, months: int) -> str:
@@ -411,11 +396,9 @@ Variation guidance (do not include this line or the number in the output): seed 
         if not subject_topics:
             return f"No topics found for {subject}"
 
-        # Randomly select topics for variety
         num_topics = min(len(subject_topics), 6)
         selected_topics = random.sample(subject_topics, num_topics)
         
-        # Gather example questions from selected topics
         topic_examples = self._gather_topic_examples(selected_topics, subject)
         
         if not topic_examples:
@@ -443,7 +426,6 @@ Variation guidance (do not include this line or the number in the output): seed 
                 out = self._gen_with_together(final_prompt)
             formatted_questions = self.format_questions(out or "")
         
-        # Create the final paper content with proper UPSC format
         return self._format_final_paper(subject, formatted_questions)
 
     def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
@@ -453,8 +435,9 @@ Variation guidance (do not include this line or the number in the output): seed 
         for topic in selected_topics:
             try:
                 examples = []
-                if isinstance(self.vectorstore, SupabaseVectorStore):
-                    response = self.vectorstore.client.table("documents") \
+                # MODIFIED: Use the stored client, not the vectorstore's client
+                if isinstance(self.vectorstore, SupabaseVectorStore) and self.supabase_client:
+                    response = self.supabase_client.table("documents") \
                         .select("content") \
                         .eq("metadata->>topic", topic) \
                         .limit(3) \
@@ -473,14 +456,14 @@ Variation guidance (do not include this line or the number in the output): seed 
                     topic_examples.append(f"**{display_topic}:**")
                     for i, example in enumerate(examples, 1):
                         topic_examples.append(f"{i}. {example}")
-                    topic_examples.append("")  # Empty line for separation
+                    topic_examples.append("")
             except Exception as e:
                 logger.warning(f"Error gathering examples for topic {topic}: {e}")
         
         return topic_examples
 
     def _generate_current_affairs_paper(self, subject: str, selected_topics: List[str], 
-                                      topic_examples_text: str, months: int) -> str:
+                                          topic_examples_text: str, months: int) -> str:
         """Generate whole paper with current affairs integration"""
         news_contexts = []
         for topic in selected_topics[:3]:
@@ -551,7 +534,7 @@ Maximum Marks:100
         
         return paper_content
 
-# Factory function
-def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore]) -> QuestionGenerator:
+# MODIFIED: Update the factory function to accept and pass the client
+def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: Optional[VectorStore], supabase_client: Optional[Client]) -> QuestionGenerator:
     """Factory function to create question generator instance"""
-    return QuestionGenerator(groq_api_key, together_api_key, vectorstore)
+    return QuestionGenerator(groq_api_key, together_api_key, vectorstore, supabase_client)

@@ -11,6 +11,7 @@ from langchain.prompts import PromptTemplate
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import SupabaseVectorStore
+from langchain_core.vectorstores import VectorStore
 import requests
 from diskcache import Cache
 import logging

@@ -180,16 +180,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Total Generations</div>
+            <div className="text-xs uppercase text-gray-500 mb-1">Total number of question generation</div>
             <div className="text-3xl font-bold text-blue-600">{stats?.total_generations ?? 0}</div>
           </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Total Questions</div>
-            <div className="text-3xl font-bold text-green-600">{stats?.total_questions ?? 0}</div>
-          </CardContent>
-        </Card>
+        </Card>  
         <Card>
           <CardContent className="py-6 text-center">
             <div className="text-xs uppercase text-gray-500 mb-1">Feedback Submitted</div>

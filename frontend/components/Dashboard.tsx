@@ -8,9 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-/* =====================
-   Types from backend
-===================== */
+
+   //Types from backend
 
 interface UserStats {
   total_generations: number;
@@ -40,9 +39,8 @@ interface HistoryItem {
   created_at: string;
 }
 
-/* =====================
-   Props
-===================== */
+
+   // Props
 
 interface DashboardProps {
   onNavigateToGenerator: () => void;
@@ -184,15 +182,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             <div className="text-3xl font-bold text-blue-600">{stats?.total_generations ?? 0}</div>
           </CardContent>
         </Card>  
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Feedback Submitted</div>
-            <div className="text-3xl font-bold text-purple-600">{stats?.feedback_count ?? 0}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              Questions count: {stats?.individual_feedback_count ?? 0} • Website experience: {stats?.generation_feedback_count ?? 0}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters & History */}

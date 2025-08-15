@@ -507,9 +507,8 @@ export default function UPSCQuestionGenerator() {
                 </div>
               </div>
 
-              {/* =================================================== */}
               {/* ===== START: NEW MODEL SELECTOR SECTION ADDED ===== */}
-              {/* =================================================== */}
+              
               <div className="mb-6">
                 <Label className="block mb-2 font-bold text-orange-800">🧠 AI Model:</Label>
                 <Select
@@ -520,15 +519,14 @@ export default function UPSCQuestionGenerator() {
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="llama3-70b">🤖 Llama 3 (70B)</SelectItem>
-                    <SelectItem value="gpt-4o">✨ GPT-4o</SelectItem>
-                    <SelectItem value="gemini-1.5-pro">💎 Gemini 1.5 Pro</SelectItem>
+                    <SelectItem value="llama3-70b">Llama 3 (70B)</SelectItem>
+                    <SelectItem value="mixtral-8x7b">Mixtral (8x7B)</SelectItem>
+                    <SelectItem value="gemini-1.5-flash">Gemini 1.5 Flash</SelectItem>
+                    <SelectItem value="gemma2-9b">Gemma 2 (9B)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              {/* ================================================= */}
               {/* ===== END: NEW MODEL SELECTOR SECTION ADDED ===== */}
-              {/* ================================================= */}
 
               {/* Generate Button */}
               <Button

@@ -431,7 +431,7 @@ export default function UPSCQuestionGenerator() {
                 <Label className="block mb-2 font-bold text-orange-800">📚 Subject:</Label>
                 <Select
                   value={selectedSubject}
-                  onValuechange={(value) => handleSubjectChange(value)}
+                  onValueChange={(value) => handleSubjectChange(value)}
                   disabled={subjectsLoading}
                 >
                   <SelectTrigger className={selectedSubject ? "border-green-500" : ""}>
@@ -520,7 +520,7 @@ export default function UPSCQuestionGenerator() {
                     <SelectValue placeholder="Select a model" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="llama3-70b">🤖 Llama 3 (70B)</SelectItem>
+                    <SelectItem value="llama3-70b">� Llama 3 (70B)</SelectItem>
                     <SelectItem value="gpt-4o">✨ GPT-4o</SelectItem>
                     <SelectItem value="gemini-1.5-pro">💎 Gemini 1.5 Pro</SelectItem>
                   </SelectContent>
@@ -589,3 +589,4 @@ export default function UPSCQuestionGenerator() {
     </div>
   );
 }
+�

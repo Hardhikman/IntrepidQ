@@ -193,16 +193,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Avg Feedback Ratings </div>
-            <div className="text-lg font-semibold">By Questions: {(stats?.individual_average_rating ?? 0).toFixed(1)}</div>
-            <div className="text-xs text-gray-500">By Website Experience: {(stats?.generation_average_rating ?? 0).toFixed(1)}</div>
-            <div className="text-lg font-semibold text-purple-600">
-              Avg: {(stats?.overall_average_rating ?? 0).toFixed(1)}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters & History */}

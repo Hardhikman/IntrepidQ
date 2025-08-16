@@ -1,6 +1,6 @@
 # IntrepidQ
 
-A minimalistic AI that curates context-aware Q&A designed to make you think - for UPSC CSE Mains Examination
+A minimalistic AI RAG system that curates context-aware Q&A designed to make you think - for UPSC CSE Mains Examination
 
 Currently introducing IQ 1.0 for GS preparation 
 

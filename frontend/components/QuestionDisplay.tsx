@@ -1,16 +1,21 @@
+"use client";
+
 import { Card, CardContent } from "@/components/ui/card";
 import { GeneratedQuestion } from "@/lib/supabase";
 
-
 interface QuestionDisplayProps {
   question: GeneratedQuestion;
-  answer: any; // Or a more specific type if available
+  answer: any; // Or refine type if available
   index: number;
 }
 
-export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answer, index }) => {
+export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
+  question,
+  answer,
+  index,
+}) => {
   return (
-    <Card key={question.id || index} className="mb-5">
+    <Card key={question.id || index} className="mb-5 border border-gray-200 shadow-sm">
       <CardContent className="p-4">
         <div
           onCopy={(e) => e.preventDefault()}
@@ -18,8 +23,20 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answ
           onContextMenu={(e) => e.preventDefault()}
           onDragStart={(e) => e.preventDefault()}
         >
-          <p className="whitespace-pre-wrap font-mono select-none">{question.questions}</p>
+          {/* Thinking reasoning */}
+          {question.thinking && question.thinking.trim() !== "" && (
+            <p className="text-sm text-gray-500 italic mb-2 select-none">
+              💭 {question.thinking}
+            </p>
+          )}
+
+          {/* Final UPSC Question */}
+          <p className="whitespace-pre-wrap font-mono font-semibold select-none text-gray-900">
+            {question.question}
+          </p>
         </div>
+
+        {/* Answer block (if available) */}
         {answer && (
           <div
             className="mt-4 p-3 bg-gray-50 rounded select-none"
@@ -28,11 +45,12 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ question, answ
             onContextMenu={(e) => e.preventDefault()}
             onDragStart={(e) => e.preventDefault()}
           >
-            <h4 className="font-bold">Answer:</h4>
+            <h4 className="font-bold text-gray-800">Answer:</h4>
             <p><strong>Introduction:</strong> {answer.introduction}</p>
-            <div><strong>Body:</strong>
+            <div>
+              <strong>Body:</strong>
               <ul className="list-disc pl-5">
-                {answer.body.map((keyword: string, i: number) => (
+                {answer.body?.map((keyword: string, i: number) => (
                   <li key={i}>{keyword}</li>
                 ))}
               </ul>

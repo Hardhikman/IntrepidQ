@@ -32,10 +32,10 @@ try:
 except ImportError:
     ChatGoogleGenerativeAI = None
 
-#try:
-   # from together import Together
-#except ImportError:
-   # Together = None
+try:
+    from together import Together
+except ImportError:
+    Together = None
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +45,14 @@ class QuestionGenerator:
         self,
         groq_api_key: str,
         google_api_key: Optional[str],
-        #together_api_key: Optional[str],
+        together_api_key: Optional[str],
         vectorstore: Optional[SupabaseVectorStore],
         supabase_client: Optional[Client],
         cache_dir: str = "news_cache"
     ):
         self.groq_api_key = groq_api_key
         self.google_api_key = google_api_key
-        #self.together_api_key = together_api_key
+        self.together_api_key = together_api_key
         self.vectorstore = vectorstore
         self.supabase_client = supabase_client
         self.cache = Cache(cache_dir)
@@ -68,14 +68,14 @@ class QuestionGenerator:
             "llama3-70b": {"provider": "groq", "model_id": "llama3-70b-8192"},
             "llama3-8b": {"provider": "groq", "model_id": "llama3-8b-8192"},
             "gemma2-9b": {"provider": "groq", "model_id": "gemma2-9b-it"},
-            "deepseek-r1": {"provider": "openrouter", "model_id": "deepseek/deepseek-r1:free"},
+            "deepseek-r1-70b": {"provider": "together", "model_id": "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"},
             "gemini-1.5-flash": {"provider": "google", "model_id": "gemini-1.5-flash-latest"},
             "deepseek-v3": {"provider": "openrouter", "model_id": "deepseek/deepseek-chat-v3-0324:free"},
             "moonshot-k2": {"provider": "openrouter", "model_id": "moonshotai/kimi-k2:free"},
         }
 
-        #self.together = Together(api_key=self.together_api_key) if (self.together_api_key and Together) else None
-        self.priority_order = ["gemma2-9b", "deepseek-v3", "llama3-70b", "moonshot-k2","deepseek-r1"]
+        self.together = Together(api_key=self.together_api_key) if (self.together_api_key and Together) else None
+        self.priority_order = ["deepseek-r1-70b", "deepseek-v3", "llama3-70b", "gemini-1.5-flash"]
 
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
@@ -119,32 +119,21 @@ class QuestionGenerator:
 
     # ---------------- Model Selection ----------------
     def select_model(self, requested_model: Optional[str] = None) -> List[str]:
-        """Return ordered list of models: user’s model FIRST, rest as fallback."""
         if requested_model and requested_model in self.available_models:
-        # ✅ Keep user’s choice as first
-            fallback = [m for m in self.priority_order if m != requested_model]
-        
-        # Adaptive re‑ordering only applies to the fallback list
-            if all(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
-                fallback = sorted(
-                    [m for m in fallback if m in self.available_models],
-                    key=lambda m: sum(self.model_speeds.get(m, [float("inf")])) / len(self.model_speeds.get(m, [float("inf")]))
-                )
-                logger.info(f"Adaptive fallback order: {fallback}")
-        
-            return [requested_model] + fallback  # ✅ Chosen model forced at #1
-    
-    # Auto mode (no model selected): full adaptive
-        if all(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
+            ordered = [requested_model] + [m for m in self.priority_order if m != requested_model]
+        else:
+            ordered = self.priority_order
+
+        if any(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
             ordered = sorted(
-                [m for m in self.priority_order if m in self.available_models],
-                key=lambda m: sum(self.model_speeds[m]) / len(self.model_speeds[m])
+                [m for m in ordered if m in self.available_models],
+                key=lambda m: sum(self.model_speeds.get(m, [float("inf")]))
+                / len(self.model_speeds.get(m, [float("inf")]))
             )
-        logger.info(f"Adaptive auto priority order: {ordered}")
+            logger.info(f"Adaptive priority order: {ordered}")
+        else:
+            ordered = [m for m in ordered if m in self.available_models]
         return ordered
-
-        return [m for m in self.priority_order if m in self.available_models]
-
 
     # ---------------- Provider Clients ----------------
     def _get_groq_client(self, model_id: str) -> ChatGroq:
@@ -155,13 +144,13 @@ class QuestionGenerator:
             return None
         return ChatGoogleGenerativeAI(model=model_id, google_api_key=self.google_api_key, temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")))
 
-    #def _get_together_client(self, model_id: str):
-        #if not self.together:
-            #return None
-        #return lambda prompt: self.together.chat.completions.create(
-            #model=model_id, messages=[{"role": "user", "content": prompt}],
-            #max_tokens=800, temperature=0.7
-        #).choices[0].message.content
+    def _get_together_client(self, model_id: str):
+        if not self.together:
+            return None
+        return lambda prompt: self.together.chat.completions.create(
+            model=model_id, messages=[{"role": "user", "content": prompt}],
+            max_tokens=800, temperature=0.7
+        ).choices[0].message.content
 
     def _get_openrouter_client(self, model_id: str):
         key = os.getenv("OPENROUTER_API_KEY")
@@ -194,141 +183,74 @@ class QuestionGenerator:
         return {
             "groq": lambda: self._get_groq_client(model_id),
             "google": lambda: self._get_gemini_client(model_id),
-            #"together": lambda: self._get_together_client(model_id),
+            "together": lambda: self._get_together_client(model_id),
             "openrouter": lambda: self._get_openrouter_client(model_id)
         }.get(provider, lambda: None)()
 
     # ---------------- Retry with Stats ----------------
     def _try_models(self, models: List[str], prompt: str) -> dict:
-        last_error = None
-        first_model = models[0]
-
-        for idx, model_name in enumerate(models):
+        for model_name in models:
             logger.info(f"Attempting model: {model_name}")
             llm = self._get_llm_client(model_name)
             if not llm:
                 continue
-
             start = time.time()
             try:
                 result = self._use_llm(llm, prompt)
                 elapsed = round(time.time() - start, 2)
                 self._log_model_speed(model_name, elapsed, success=True)
-                 # ✅ ADD DEBUG LINE HERE
-                logger.debug(f"[try_models] Raw response from {model_name}:\n{result[:1000]}...\n")
                 avg_speed = sum(self.model_speeds[model_name]) / len(self.model_speeds[model_name])
-                return {
-                "output": result,
-                "model": model_name,
-                "duration": elapsed,
-                "avg_speed": round(avg_speed, 2),
-                "runs": len(self.model_speeds[model_name]),
-                }
+                return {"output": result, "duration": elapsed, "avg_speed": round(avg_speed, 2),
+                        "runs": len(self.model_speeds[model_name])}
             except Exception as e:
                 elapsed = round(time.time() - start, 2)
                 self._log_model_speed(model_name, elapsed, success=False)
-                msg = f"Model {model_name} failed in {elapsed:.2f}s - {e}"
-                logger.warning(msg)
-
-            # Special notice if requested model failed
-                if idx == 0 and model_name == first_model:
-                    logger.warning(f"WARNING Selected model {model_name} failed. Falling back to {models[1:]}")
-                last_error = str(e)
+                logger.warning(f"Model {model_name} failed in {elapsed:.2f}s - {e}")
                 continue
-
-        return {
-                "output": f"Error: All model attempts failed. Last error: {last_error}",
-                "duration": None,
-                "avg_speed": None,
-                "runs": 0
-         }
-
+        return {"output": "Error: All model attempts failed.", "duration": None, "avg_speed": None, "runs": 0}
 
     def _use_llm(self, llm, prompt: str) -> str:
-    # Call the model
-        response = llm(prompt) if callable(llm) else llm.invoke(prompt)
-    # Case 1: LangChain message object (AIMessage with .content)
-        if hasattr(response, "content"):
-            return response.content.strip()
-    # Case 2: Generation object with .text
-        if hasattr(response, "text"):
-            return response.text.strip()
-    # Case 3: Raw string already
-        if isinstance(response, str):
-            return response.strip()
-    # Case 4: Fallback → convert to string
-        return str(response).strip()
-
+        return llm(prompt).strip() if callable(llm) else llm.invoke(prompt).content.strip()
 
     # ---------------- Prompts ----------------
     def _setup_templates(self):
-        # Topic questions w/ thinking + question
+    # Topic questions template
         self.gs_prompt = PromptTemplate.from_template(
         """You are a UPSC Mains question paper designer for {subject}.
 Generate {num} original UPSC-style Mains questions for the topic "{topic}".
 
-Examples (style only):
+Reference examples (for style only):
 {examples}
 
-IMPORTANT:
+IMPORTANT INSTRUCTIONS:
 - Output ONLY in English
-- Output MUST be a valid JSON array of objects
-- Each object must have "thinking" (short rationale) AND "question" (final UPSC-style question)
-- "thinking": max 2-3 sentences
-- "question": one exam-appropriate UPSC question
-- No commentary or text outside JSON
+- Output MUST be a valid JSON array of strings
+- Each item must be one complete numbered UPSC-style question
+- No explanations, no reasoning, no commentary
+- No <think> or meta text
 - Exactly {num} items
 
-Now return ONLY the JSON array:"""
-        )
+Now generate only the JSON array:"""
+    )
 
-        # Whole paper template
+    # Whole paper template
         self.whole_paper_prompt = PromptTemplate.from_template(
         """You are a UPSC Mains paper designer for {subject}.
-Generate a full UPSC paper (10 questions) covering multiple topics.
+Generate a complete UPSC Mains paper with exactly 10 analytical questions across multiple topics.
 
-Examples for style:
+Reference examples:
 {topic_examples}
 
-IMPORTANT:
+IMPORTANT INSTRUCTIONS:
 - Output ONLY in English
-- Output MUST be a valid JSON array of 10 objects
-- Each object must have "thinking" + "question"
-- "thinking": short reasoning (max 2-3 sentences)
-- "question": final numbered UPSC-style question
-- No commentary/reasoning outside JSON
+- Output MUST be a valid JSON array of 10 strings
+- Each string must be a complete numbered UPSC-style question
+- No explanations, no reasoning, no commentary
+- No <think> or meta text
 - Exactly 10 items
 
-Now return ONLY the JSON array:"""
-        )
-
-    def _get_ca_paper_prompt(self, subject: str, selected_topics: List[str], topic_examples_text: str, months: int) -> str:
-        news_contexts = []
-        for topic in selected_topics[:3]:
-            news = self.fetch_recent_news(topic, months)
-            if news and "not configured" not in news:
-                news_contexts.append(f"Recent news for {topic}:\n{news[:200]}...")
-        news_text = "\n\n".join(news_contexts) if news_contexts else ""
-
-        return f"""You are a UPSC Mains paper designer for {subject}.
-Generate 10 analytical UPSC questions incorporating current affairs.
-
-Topics and Example Questions:
-{topic_examples_text}
-
-Recent News Context:
-{news_text}
-
-IMPORTANT:
-- Output ONLY in English
-- Output MUST be a valid JSON array of 10 objects
-- Each object: "thinking" + "question"
-- "thinking": 1-3 sentences of reasoning
-- "question": final exam-style UPSC question
-- No <think>, no meta, no extra commentary
-- Exactly 10 items
-
-Now return ONLY the JSON array:"""
+Now generate only the JSON array:"""
+    )
 
     # ---------------- Data Utils ----------------
     def _build_topics_by_subject(self) -> Dict[str, List[str]]:
@@ -375,61 +297,28 @@ Now return ONLY the JSON array:"""
             return f"Error fetching news: {e}"
 
     # ---------------- Safe Question Parsing ----------------
-    def safe_parse_questions(self, output: str, num: int = None) -> List[dict]:
-        """
-        Tries to safely parse LLM output into a list of {"thinking": ..., "question": ...}.
-        Handles messy outputs, <think> blocks, stray text, and fallback cases.
-        """
-        logger.debug(f"[safe_parse_questions] Raw LLM output:\n{output[:1000]}...\n")  # show first 1000 chars
-    # 1. Remove DeepSeek-style <think> blocks
-        cleaned = re.sub(r"<think>.*?</think>", "", output, flags=re.DOTALL).strip()
-
-    # 2. Try direct JSON parse
+    def safe_parse_questions(self, output: str, num: int = None) -> List[str]:
         try:
-            parsed = json.loads(cleaned)
-            if isinstance(parsed, list):
-                results = []
-                for q in (parsed[:num] if num else parsed):
-                    if isinstance(q, dict) and "question" in q:
-                        results.append({
-                            "thinking": q.get("thinking", "").strip(),
-                            "question": q["question"].strip()
-                        })
-                    elif isinstance(q, str):
-                        results.append({"thinking": "", "question": q.strip()})
-                if results:
-                    return results
-        except Exception as e:
-            logger.warning(f"JSON parsing failed: {e}")
-
-    # 3. Try extracting embedded JSON array (inside text)
-        match = re.search(r"\[[\s\S]*\]", cleaned)
+            parsed = json.loads(output)
+            if isinstance(parsed, list) and all(isinstance(q, str) for q in parsed):
+                return parsed[:num] if num else parsed
+        except Exception:
+            pass
+        match = re.search(r"\[.*\]", output, re.DOTALL)
         if match:
             try:
                 parsed = json.loads(match.group(0))
-                if isinstance(parsed, list):
-                    results = []
-                    for q in (parsed[:num] if num else parsed):
-                        if isinstance(q, dict) and "question" in q:
-                            results.append({
-                                "thinking": q.get("thinking", "").strip(),
-                                "question": q["question"].strip()
-                            })
-                        elif isinstance(q, str):
-                            results.append({"thinking": "", "question": q.strip()})
-                    if results:
-                        return results
-            except Exception as e:
-                logger.warning(f"Embedded JSON parse failed: {e}")
-
-    # 4. Regex fallback: clean free-text questions
-        candidate_questions = self.format_questions(cleaned)
-        if candidate_questions:
-            return [{"thinking": "", "question": q} for q in (candidate_questions[:num] if num else candidate_questions)]
-
-    # 5. Final brute fallback: split by paragraphs
-        fallback = [p.strip() for p in cleaned.split("\n\n") if len(p.strip()) > 10]
-        return [{"thinking": "", "question": f"{i+1}. {txt}"} for i, txt in enumerate(fallback[:num] if num else fallback)]
+                if isinstance(parsed, list) and all(isinstance(q, str) for q in parsed):
+                    return parsed[:num] if num else parsed
+            except Exception:
+                pass
+        questions = self.format_questions(output)
+        if questions:
+            return questions[:num] if num else questions
+        fallback = [p.strip() for p in output.split("\n\n") if len(p.strip()) > 10]
+        if fallback:
+            return [f"{i+1}. {txt}" for i, txt in enumerate(fallback[:num] if num else fallback)]
+        return ["1. ⚠️ Could not parse valid questions. Please retry."]
 
     # ---------------- Generation ----------------
     def generate_topic_questions(self, subject, topic, num, use_ca, months, requested_model):
@@ -444,20 +333,20 @@ Now return ONLY the JSON array:"""
         prompt = self.gs_prompt.format(subject=subject, topic=topic, examples="\n".join(examples), num=num)
         result = self._try_models(models_to_try, prompt)
         return {"questions": self.safe_parse_questions(result["output"], num),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+                "meta": {k: result[k] for k in ("duration", "avg_speed", "runs")}}
 
     def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str]):
         news = self.fetch_recent_news(topic, months)
         prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples='', num=num)}\n\nRecent News:\n{news}"
         result = self._try_models(models_to_try, prompt)
         return {"questions": self.safe_parse_questions(result["output"], num),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+                "meta": {k: result[k] for k in ("duration", "avg_speed", "runs")}}
 
     def generate_whole_paper(self, subject: str, use_ca: bool, months: int, requested_model: str):
         models_to_try = self.select_model(requested_model)
         subject_topics = self.topics_by_subject.get(subject, [])
         if not subject_topics:
-            return {"questions": [{"thinking": "", "question": "[WARNING]No topics found."}], "meta": {"duration": None, "avg_speed": None, "runs": 0}}
+            return {"questions": ["[WARNING] No topics found."], "meta": {"duration": None, "avg_speed": None, "runs": 0}}
         num_topics = min(len(subject_topics), 6)
         selected_topics = random.sample(subject_topics, num_topics)
         topic_examples = self._gather_topic_examples(selected_topics, subject)
@@ -468,7 +357,7 @@ Now return ONLY the JSON array:"""
             prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=topic_examples_text)
         result = self._try_models(models_to_try, prompt)
         return {"questions": self.safe_parse_questions(result["output"], 10),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+                "meta": {k: result[k] for k in ("duration", "avg_speed", "runs")}}
 
     def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
         topic_examples = []
@@ -488,9 +377,38 @@ Now return ONLY the JSON array:"""
                 logger.warning(f"Error gathering examples for topic {topic}: {e}")
         return topic_examples
 
+    def _get_ca_paper_prompt(self, subject: str, selected_topics: List[str], topic_examples_text: str, months: int) -> str:
+        news_contexts = []
+        for topic in selected_topics[:3]:
+            news = self.fetch_recent_news(topic, months)
+            if news and "not configured" not in news:
+                news_contexts.append(f"Recent news for {topic}:\n{news[:200]}...")
+        news_text = "\n\n".join(news_contexts) if news_contexts else ""
+
+        return f"""You are a UPSC Mains paper designer for {subject}.
+Generate a UPSC Mains question paper with exactly 10 analytical questions, incorporating current affairs where appropriate.
+
+Topics and Example Questions:
+{topic_examples_text}
+
+Recent News Context:
+{news_text}
+
+IMPORTANT INSTRUCTIONS:
+- Output ONLY in English
+- Output MUST be a valid JSON array of 10 strings
+- Each string should be one analytical UPSC-style question, numbered
+- No explanations, no reasoning, no commentary
+- No <think> or thought process text
+- Exactly 10 questions
+
+Now generate only the JSON array:"""
+
+
     def format_questions(self, raw: str) -> List[str]:
         """
-        Regex fallback cleaner for legacy free-text outputs
+        Regex/heuristic cleaner used as fallback when JSON parsing fails.
+        Removes reasoning text, keeps proper UPSC-style questions.
         """
         parts = raw.strip().split("\n\n")
         out, n = [], 1
@@ -507,5 +425,5 @@ Now return ONLY the JSON array:"""
 
 
 # Factory
-def create_question_generator(groq_api_key, google_api_key, vectorstore, supabase_client):
-    return QuestionGenerator(groq_api_key, google_api_key, vectorstore, supabase_client)
+def create_question_generator(groq_api_key, google_api_key, together_api_key, vectorstore, supabase_client):
+    return QuestionGenerator(groq_api_key, google_api_key, together_api_key, vectorstore, supabase_client)

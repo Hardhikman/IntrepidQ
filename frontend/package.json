@@ -3,8 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "generate:types": "openapi-typescript http://localhost:8000/openapi.json -o src/types/api.ts",
-    "dev": "npm run generate:types && next dev",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

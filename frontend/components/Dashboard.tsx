@@ -8,9 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 
-/* =====================
-   Types from backend
-===================== */
+
+   //Types from backend
 
 interface UserStats {
   total_generations: number;
@@ -40,9 +39,8 @@ interface HistoryItem {
   created_at: string;
 }
 
-/* =====================
-   Props
-===================== */
+
+   // Props
 
 interface DashboardProps {
   onNavigateToGenerator: () => void;
@@ -66,30 +64,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
 
   /* Fetch stats & history */
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoading(true);
-        const [statsResp, historyResp]: [UserStats, { history: HistoryItem[] }] = await Promise.all([
-          getUserStats().catch(() => { throw new Error("Failed to load stats"); }),
-          getQuestionHistory(100).catch(() => { throw new Error("Failed to load history"); }),
-        ]);
-        if (!cancelled) {
-          setStats(statsResp);
-          setHistory(historyResp?.history || []);
-        }
-      } catch (err: any) {
-        toast({
-          title: "Error loading dashboard",
-          description: err.message,
-          variant: "destructive",
-        });
-      } finally {
-        if (!cancelled) setLoading(false);
+  let cancelled = false;
+  if (!user?.id) return; // <-- ensures we wait for login
+
+  (async () => {
+    try {
+      setLoading(true);
+      const [statsResp, historyResp]: [UserStats, { history: HistoryItem[] }] = await Promise.all([
+        getUserStats().catch(() => { throw new Error("Failed to load stats"); }),
+        getQuestionHistory(100).catch(() => { throw new Error("Failed to load history"); }),
+      ]);
+      if (!cancelled) {
+        setStats(statsResp);
+        setHistory(historyResp?.history || []);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [user?.id, toast]);
+    } catch (err: any) {
+      toast({
+        title: "Error loading dashboard",
+        description: err.message,
+        variant: "destructive",
+      });
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  })();
+  return () => { cancelled = true; };
+}, [user?.id, toast]);
 
   /* Fetch daily limit from Supabase */
   useEffect(() => {
@@ -178,41 +178,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Total Generations</div>
+            <div className="text-xs uppercase text-gray-500 mb-1">Total number of question generation</div>
             <div className="text-3xl font-bold text-blue-600">{stats?.total_generations ?? 0}</div>
           </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Total Questions</div>
-            <div className="text-3xl font-bold text-green-600">{stats?.total_questions ?? 0}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Feedback Submitted</div>
-            <div className="text-3xl font-bold text-purple-600">{stats?.feedback_count ?? 0}</div>
-            <div className="text-xs text-gray-500 mt-1">
-              Q: {stats?.individual_feedback_count ?? 0} • Gen: {stats?.generation_feedback_count ?? 0}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Avg Ratings</div>
-            <div className="text-lg font-semibold">Questions: {(stats?.individual_average_rating ?? 0).toFixed(1)}</div>
-            <div className="text-xs text-gray-500">Generations: {(stats?.generation_average_rating ?? 0).toFixed(1)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="py-6 text-center">
-            <div className="text-xs uppercase text-gray-500 mb-1">Overall Feedback</div>
-            <div className="text-lg font-semibold text-purple-600">
-              Avg: {(stats?.overall_average_rating ?? 0).toFixed(1)}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">Total: {stats?.feedback_count ?? 0}</div>
-          </CardContent>
-        </Card>
+        </Card>  
       </div>
 
       {/* Filters & History */}

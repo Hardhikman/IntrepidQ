@@ -29,7 +29,8 @@ export interface GeneratedQuestion {
   subject: string
   topic?: string
   mode: 'topic' | 'paper'
-  questions: string
+  question: string
+  thinking?: string  
   use_current_affairs: boolean
   months?: number
   question_count: number

@@ -443,15 +443,17 @@ Now return ONLY the JSON array:"""
         examples = [item["content"] for item in resp.data] if resp.data else []
         prompt = self.gs_prompt.format(subject=subject, topic=topic, examples="\n".join(examples), num=num)
         result = self._try_models(models_to_try, prompt)
-        return {"questions": self.safe_parse_questions(result["output"], num),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+        return {"questions": self.safe_parse_questions(result.get("output", ""), num),
+        "meta": {k: result.get(k, 0 if k != "model" else "unknown") for k in ("model","duration", "avg_speed", "runs")}}
+
 
     def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str]):
         news = self.fetch_recent_news(topic, months)
         prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples='', num=num)}\n\nRecent News:\n{news}"
         result = self._try_models(models_to_try, prompt)
-        return {"questions": self.safe_parse_questions(result["output"], num),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+        return {"questions": self.safe_parse_questions(result.get("output", ""), num),
+        "meta": {k: result.get(k, 0 if k != "model" else "unknown") for k in ("model","duration", "avg_speed", "runs")}}
+
 
     def generate_whole_paper(self, subject: str, use_ca: bool, months: int, requested_model: str):
         models_to_try = self.select_model(requested_model)
@@ -467,8 +469,8 @@ Now return ONLY the JSON array:"""
         else:
             prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=topic_examples_text)
         result = self._try_models(models_to_try, prompt)
-        return {"questions": self.safe_parse_questions(result["output"], 10),
-                "meta": {k: result[k] for k in ("model","duration", "avg_speed", "runs")}}
+        return {"questions": self.safe_parse_questions(result.get("output", ""), 10),
+        "meta": {k: result.get(k, 0 if k != "model" else "unknown") for k in ("model","duration", "avg_speed", "runs")}}
 
     def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
         topic_examples = []

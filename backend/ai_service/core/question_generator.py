@@ -8,6 +8,7 @@ Features:
 - Adaptive model prioritisation at runtime
 - Persistent model performance in Supabase
 - Consistent stats output for topic & paper generation
+- Generated questions caching with random example selection
 """
 import os
 import time
@@ -16,6 +17,7 @@ import re
 import json
 import requests
 import logging
+import hashlib
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from diskcache import Cache
@@ -39,13 +41,18 @@ class QuestionGenerator:
         google_api_key: Optional[str],
         vectorstore: Optional[SupabaseVectorStore],
         supabase_client: Optional[Client],
-        cache_dir: str = "news_cache"
+        cache_dir: str = "news_cache",
+        questions_cache_dir: str = "questions_cache"
     ):
         self.groq_api_key = groq_api_key
         self.google_api_key = google_api_key
         self.vectorstore = vectorstore
         self.supabase_client = supabase_client
         self.cache = Cache(cache_dir)
+        
+        # Separate cache for generated questions
+        self.questions_cache = Cache(questions_cache_dir)
+        
         self.topics_by_subject = (
             self._build_topics_by_subject()
             if (vectorstore and supabase_client)
@@ -65,6 +72,137 @@ class QuestionGenerator:
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
         self._load_model_performance()
+
+    # ---------------- Questions Cache Management ----------------
+    def _get_cache_key(self, subject: str, topic: str, num: int, use_ca: bool = False, months: int = 6) -> str:
+        """Generate cache key for questions"""
+        key_data = f"{subject}_{topic}_{num}_{use_ca}_{months}"
+        return hashlib.md5(key_data.encode()).hexdigest()
+
+    def _cache_questions(self, cache_key: str, questions: List[dict], subject: str, topic: str):
+        """Cache generated questions with metadata"""
+        cache_data = {
+            "questions": questions,
+            "subject": subject,
+            "topic": topic,
+            "timestamp": time.time(),
+            "generated_at": datetime.now().isoformat()
+        }
+        
+        # Cache with 7 days expiry (7 * 24 * 3600 seconds)
+        self.questions_cache.set(cache_key, cache_data, expire=604800)
+        
+        # Also store in a topic-based index for easy retrieval
+        topic_key = f"topic_{subject}_{topic}"
+        existing_questions = self.questions_cache.get(topic_key, [])
+        
+        # Add new questions to the topic cache, avoiding duplicates
+        for q in questions:
+            if q not in existing_questions:
+                existing_questions.append(q)
+        
+        # Keep only last 50 questions per topic to prevent unlimited growth
+        if len(existing_questions) > 50:
+            existing_questions = existing_questions[-50:]
+        
+        self.questions_cache.set(topic_key, existing_questions, expire=604800)
+        logger.info(f"Cached {len(questions)} questions for {subject} - {topic}")
+
+    def _get_cached_questions_as_examples(self, subject: str, topic: str, max_examples: int = 3) -> List[str]:
+        """Get random cached questions to use as examples"""
+        topic_key = f"topic_{subject}_{topic}"
+        cached_questions = self.questions_cache.get(topic_key, [])
+        
+        if not cached_questions:
+            return []
+        
+        # Select random questions as examples
+        num_examples = min(len(cached_questions), max_examples)
+        selected_questions = random.sample(cached_questions, num_examples)
+        
+        # Format as examples (just the question text)
+        examples = []
+        for i, q in enumerate(selected_questions, 1):
+            question_text = q.get("question", str(q))
+            examples.append(f"{i}. {question_text}")
+        
+        logger.info(f"Using {len(examples)} cached questions as examples for {subject} - {topic}")
+        return examples
+
+    def _get_all_cached_questions_for_examples(self, subject: str, max_examples: int = 5) -> List[str]:
+        """Get random cached questions from any topic in the subject for whole paper examples"""
+        all_questions = []
+        
+        # Collect questions from all topics in the subject
+        for topic in self.topics_by_subject.get(subject, []):
+            topic_key = f"topic_{subject}_{topic}"
+            cached_questions = self.questions_cache.get(topic_key, [])
+            all_questions.extend(cached_questions)
+        
+        if not all_questions:
+            return []
+        
+        # Select random questions as examples
+        num_examples = min(len(all_questions), max_examples)
+        selected_questions = random.sample(all_questions, num_examples)
+        
+        # Format as examples
+        examples = []
+        for i, q in enumerate(selected_questions, 1):
+            question_text = q.get("question", str(q))
+            examples.append(f"{i}. {question_text}")
+        
+        logger.info(f"Using {len(examples)} cached questions as examples for whole paper generation")
+        return examples
+
+    def get_cache_stats(self) -> dict:
+        """Get statistics about cached questions"""
+        stats = {
+            "total_cache_entries": len(list(self.questions_cache)),
+            "subjects": {},
+            "total_questions": 0
+        }
+        
+        for subject in ["GS1", "GS2", "GS3", "GS4"]:
+            subject_questions = 0
+            topics_with_cache = 0
+            
+            for topic in self.topics_by_subject.get(subject, []):
+                topic_key = f"topic_{subject}_{topic}"
+                cached_questions = self.questions_cache.get(topic_key, [])
+                if cached_questions:
+                    subject_questions += len(cached_questions)
+                    topics_with_cache += 1
+            
+            stats["subjects"][subject] = {
+                "total_questions": subject_questions,
+                "topics_with_cache": topics_with_cache
+            }
+            stats["total_questions"] += subject_questions
+        
+        return stats
+
+    def clear_cache(self, subject: str = None, topic: str = None):
+        """Clear cache - all, by subject, or by specific topic"""
+        if topic and subject:
+            # Clear specific topic
+            topic_key = f"topic_{subject}_{topic}"
+            if topic_key in self.questions_cache:
+                del self.questions_cache[topic_key]
+                logger.info(f"Cleared cache for {subject} - {topic}")
+        elif subject:
+            # Clear all topics in subject
+            cleared_count = 0
+            for topic in self.topics_by_subject.get(subject, []):
+                topic_key = f"topic_{subject}_{topic}"
+                if topic_key in self.questions_cache:
+                    del self.questions_cache[topic_key]
+                    cleared_count += 1
+            logger.info(f"Cleared cache for {cleared_count} topics in {subject}")
+        else:
+            # Clear all cache
+            self.questions_cache.clear()
+            logger.info("Cleared all questions cache")
 
     # ---------------- Supabase Model Speed Persistence ----------------
     def _load_model_performance(self):
@@ -244,7 +382,8 @@ class QuestionGenerator:
         self.gs_prompt = PromptTemplate.from_template(
             """You are a UPSC Mains question paper designer for {subject}.
 Generate {num} original UPSC-style Mains questions for the topic "{topic}".
-Examples (style only):
+
+Examples from database and previous generations:
 {examples}
 
 IMPORTANT:
@@ -255,6 +394,7 @@ IMPORTANT:
 - "question": one exam-appropriate UPSC question
 - No commentary or text outside JSON
 - Exactly {num} items
+- Generate NEW questions, don't copy the examples
 
 Now return ONLY the JSON array:"""
         )
@@ -263,7 +403,8 @@ Now return ONLY the JSON array:"""
         self.whole_paper_prompt = PromptTemplate.from_template(
             """You are a UPSC Mains paper designer for {subject}.
 Generate a full UPSC paper (10 questions) covering multiple topics.
-Examples for style:
+
+Examples from database and previous generations:
 {topic_examples}
 
 IMPORTANT:
@@ -274,6 +415,7 @@ IMPORTANT:
 - "question": final numbered UPSC-style question
 - No commentary/reasoning outside JSON
 - Exactly 10 items
+- Generate NEW questions, don't copy the examples
 
 Now return ONLY the JSON array:"""
         )
@@ -303,6 +445,7 @@ IMPORTANT:
 - "question": final exam-style UPSC question
 - No <think>, no meta, no extra commentary
 - Exactly 10 items
+- Generate NEW questions based on current affairs
 
 Now return ONLY the JSON array:"""
 
@@ -356,7 +499,7 @@ Now return ONLY the JSON array:"""
         Tries to safely parse LLM output into a list of {"thinking": ..., "question": ...}.
         Handles messy outputs, <think> blocks, stray text, and fallback cases.
         """
-        logger.debug(f"[safe_parse_questions] Raw LLM output:\n{output[:1000]}...\n")  # show first 1000 chars
+        logger.debug(f"[safe_parse_questions] Raw LLM output:\n{output[:1000]}...\n")
         
         # 1. Remove DeepSeek-style <think> blocks
         cleaned = re.sub(r"<think>.*?</think>", "", output, flags=re.DOTALL).strip()
@@ -417,21 +560,38 @@ Now return ONLY the JSON array:"""
 
     def _generate_static_questions(self, subject, topic, num, models_to_try: List[str]):
         try:
-            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(8).execute()
-            examples = [item["content"] for item in resp.data] if resp.data else []
-            prompt = self.gs_prompt.format(subject=subject, topic=topic, examples="\n".join(examples), num=num)
+            # Get database examples
+            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(5).execute()
+            db_examples = [item["content"] for item in resp.data] if resp.data else []
             
+            # Get cached questions as examples
+            cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=3)
+            
+            # Combine examples
+            all_examples = db_examples + cached_examples
+            examples_text = "\n".join(all_examples) if all_examples else "No examples available."
+            
+            prompt = self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)
             result = self._try_models(models_to_try, prompt)
             
-            # Ensure result has all required keys
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), num)
+            
+            # Cache the new questions if generation was successful
+            if questions and result.get("status") == "success":
+                cache_key = self._get_cache_key(subject, topic, num, False, 0)
+                self._cache_questions(cache_key, questions, subject, topic)
+            
             return {
-                "questions": self.safe_parse_questions(result.get("output", ""), num),
+                "questions": questions,
                 "meta": {
                     "model": result.get("model", "unknown"),
                     "duration": result.get("duration", 0.0),
                     "avg_speed": result.get("avg_speed", 0.0),
                     "runs": result.get("runs", 0),
-                    "status": result.get("status", "unknown")
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples)
                 }
             }
         except Exception as e:
@@ -449,19 +609,40 @@ Now return ONLY the JSON array:"""
 
     def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str]):
         try:
+            # Get database examples
+            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(3).execute()
+            db_examples = [item["content"] for item in resp.data] if resp.data else []
+            
+            # Get cached questions as examples
+            cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=2)
+            
+            # Combine examples
+            all_examples = db_examples + cached_examples
+            examples_text = "\n".join(all_examples) if all_examples else "No examples available."
+            
             news = self.fetch_recent_news(topic, months)
-            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples='', num=num)}\n\nRecent News:\n{news}"
+            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)}\n\nRecent News:\n{news}"
             
             result = self._try_models(models_to_try, prompt)
             
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), num)
+            
+            # Cache the new questions if generation was successful
+            if questions and result.get("status") == "success":
+                cache_key = self._get_cache_key(subject, topic, num, True, months)
+                self._cache_questions(cache_key, questions, subject, topic)
+            
             return {
-                "questions": self.safe_parse_questions(result.get("output", ""), num),
+                "questions": questions,
                 "meta": {
                     "model": result.get("model", "unknown"),
                     "duration": result.get("duration", 0.0),
                     "avg_speed": result.get("avg_speed", 0.0),
                     "runs": result.get("runs", 0),
-                    "status": result.get("status", "unknown")
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples)
                 }
             }
         except Exception as e:
@@ -496,8 +677,16 @@ Now return ONLY the JSON array:"""
             
             num_topics = min(len(subject_topics), 6)
             selected_topics = random.sample(subject_topics, num_topics)
+            
+            # Get database examples
             topic_examples = self._gather_topic_examples(selected_topics, subject)
-            topic_examples_text = "\n".join(topic_examples)
+            
+            # Get cached questions as examples
+            cached_examples = self._get_all_cached_questions_for_examples(subject, max_examples=5)
+            
+            # Combine examples
+            all_examples = topic_examples + cached_examples
+            topic_examples_text = "\n".join(all_examples)
             
             if use_ca:
                 prompt = self._get_ca_paper_prompt(subject, selected_topics, topic_examples_text, months)
@@ -506,14 +695,33 @@ Now return ONLY the JSON array:"""
             
             result = self._try_models(models_to_try, prompt)
             
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), 10)
+            
+            # Cache questions by distributing them to topics (for future use)
+            if questions and result.get("status") == "success" and len(questions) >= 5:
+                # Distribute questions among selected topics for caching
+                questions_per_topic = len(questions) // len(selected_topics)
+                for i, topic in enumerate(selected_topics):
+                    start_idx = i * questions_per_topic
+                    end_idx = start_idx + questions_per_topic if i < len(selected_topics) - 1 else len(questions)
+                    topic_questions = questions[start_idx:end_idx]
+                    
+                    if topic_questions:
+                        cache_key = f"paper_{subject}_{topic}_{int(time.time())}"
+                        self._cache_questions(cache_key, topic_questions, subject, topic)
+            
             return {
-                "questions": self.safe_parse_questions(result.get("output", ""), 10),
+                "questions": questions,
                 "meta": {
                     "model": result.get("model", "unknown"),
                     "duration": result.get("duration", 0.0),
                     "avg_speed": result.get("avg_speed", 0.0),
                     "runs": result.get("runs", 0),
-                    "status": result.get("status", "unknown")
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples),
+                    "topics_covered": len(selected_topics)
                 }
             }
         except Exception as e:
@@ -536,7 +744,7 @@ Now return ONLY the JSON array:"""
         
         for topic in selected_topics:
             try:
-                resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(3).execute()
+                resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(2).execute()
                 if resp.data:
                     examples = [item["content"] for item in resp.data]
                     display_topic = topic.replace(f"{subject} - ", "")

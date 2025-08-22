@@ -1,10 +1,10 @@
 """
-Question generation API routes - UPDATED for multi-provider model selection,
-fixed daily limit logic, and QuestionGenerator stats passthrough.
+API routes for question generation - with multi-provider model selection, fixed daily limit logic, 
+and QuestionGenerator stats passthrough.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from typing import Dict, Any, Optional
 from datetime import date
 import sys
@@ -17,6 +17,23 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 DAILY_LIMIT = 5  # Matches trigger limit
+GUEST_DAILY_LIMIT = 2  # Daily limit for guest users
+
+
+def get_client_ip(request: Request) -> str:
+    """Extract client IP address from request, handling proxies"""
+    # Check for forwarded headers first (for proxy/load balancer setups)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        # Take the first IP in the chain
+        return forwarded_for.split(",")[0].strip()
+    
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    
+    # Fallback to direct client IP
+    return request.client.host if request.client else "unknown"
 
 
 def get_question_generator():
@@ -71,6 +88,7 @@ def get_user_stats(user_id: str):
 @router.post("/generate_questions")
 async def generate_questions(
     request: Dict[str, Any],
+    http_request: Request,
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """Generate UPSC questions for a topic with stats from QuestionGenerator"""
@@ -82,12 +100,27 @@ async def generate_questions(
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
 
-        # Limit check
-        if user and not supabase_service().check_generation_limit(user['id'], DAILY_LIMIT):
-            raise HTTPException(
-                status_code=429,
-                detail={"error": f"Daily generation limit of {DAILY_LIMIT} reached.", "stats": get_user_stats(user['id'])}
-            )
+        # Rate limiting logic
+        if user:
+            # Authenticated user - check user limit
+            if not supabase_service().check_generation_limit(user['id'], DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={"error": f"Daily generation limit of {DAILY_LIMIT} reached.", "stats": get_user_stats(user['id'])}
+                )
+        else:
+            # Guest user - check IP-based limit
+            client_ip = get_client_ip(http_request)
+            if not supabase_service().check_guest_generation_limit(client_ip, GUEST_DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": f"Daily question generation limit of {GUEST_DAILY_LIMIT} reached for guest users. Sign in to get {DAILY_LIMIT} question generations per day. You can still generate unlimited answers!",
+                        "guest_limit_reached": True,
+                        "guest_daily_limit": GUEST_DAILY_LIMIT,
+                        "user_daily_limit": DAILY_LIMIT
+                    }
+                )
 
         # ✅ New: Now returns dict with questions + meta
         result = qg.generate_topic_questions(
@@ -124,6 +157,10 @@ async def generate_questions(
                 "question_count": len(result["questions"]),
                 "stats": get_user_stats(user['id'])
             }
+        else:
+            # Guest user - increment IP-based counter
+            client_ip = get_client_ip(http_request)
+            supabase_service().increment_guest_generation_count(client_ip)
 
         # Guest fallback
         return {
@@ -143,6 +180,7 @@ async def generate_questions(
 @router.post("/generate_whole_paper")
 async def generate_whole_paper(
     request: Dict[str, Any],
+    http_request: Request,
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """Generate a whole UPSC paper with stats from QuestionGenerator"""
@@ -153,12 +191,27 @@ async def generate_whole_paper(
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
 
-        # Limit check
-        if user and not supabase_service().check_generation_limit(user['id'], DAILY_LIMIT):
-            raise HTTPException(
-                status_code=429,
-                detail={"error": f"Daily generation limit of {DAILY_LIMIT} reached.", "stats": get_user_stats(user['id'])}
-            )
+        # Rate limiting logic
+        if user:
+            # Authenticated user - check user limit
+            if not supabase_service().check_generation_limit(user['id'], DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={"error": f"Daily generation limit of {DAILY_LIMIT} reached.", "stats": get_user_stats(user['id'])}
+                )
+        else:
+            # Guest user - check IP-based limit
+            client_ip = get_client_ip(http_request)
+            if not supabase_service().check_guest_generation_limit(client_ip, GUEST_DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": f"Daily question generation limit of {GUEST_DAILY_LIMIT} reached for guest users. Sign in to get {DAILY_LIMIT} question generations per day. You can still generate unlimited answers!",
+                        "guest_limit_reached": True,
+                        "guest_daily_limit": GUEST_DAILY_LIMIT,
+                        "user_daily_limit": DAILY_LIMIT
+                    }
+                )
 
         result = qg.generate_whole_paper(
             subject=subject,
@@ -191,6 +244,10 @@ async def generate_whole_paper(
                 "question_count": len(result["questions"]),
                 "stats": get_user_stats(user['id'])
             }
+        else:
+            # Guest user - increment IP-based counter
+            client_ip = get_client_ip(http_request)
+            supabase_service().increment_guest_generation_count(client_ip)
 
         return {
             "questions": result["questions"],

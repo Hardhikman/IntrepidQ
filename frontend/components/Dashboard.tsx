@@ -7,6 +7,8 @@ import { getUserStats, getQuestionHistory } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
+import { AnalyticsCard } from "./AnalyticsCard";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 
    //Types from backend
@@ -39,16 +41,10 @@ interface HistoryItem {
   created_at: string;
 }
 
-
-   // Props
-
 interface DashboardProps {
   onNavigateToGenerator: () => void;
 }
 
-/* =====================
-   Component
-===================== */
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) => {
   const { user, profile } = useAuth();
@@ -184,90 +180,39 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
         </Card>  
       </div>
 
-      {/* Filters & History */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Subjects */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Subjects</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {subjects.length === 0 && <div className="text-sm text-gray-500">No subject data yet.</div>}
-            <div className="space-y-4">
-              {subjects.map((subj) => {
-                const count = stats?.subject_breakdown?.[subj] || 0;
-                const pct = (count / Math.max(1, stats?.total_generations || 1)) * 100;
-                const selected = selectedSubject === subj;
-                return (
-                  <div key={subj} className={`p-2 rounded border ${selected ? "border-blue-500 bg-blue-50" : "border-transparent"}`}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <div className="font-medium">{subj}</div>
-                      <div>{count}</div>
-                    </div>
-                    <Progress value={pct} className="h-2 mb-2" />
-                    <div className="flex gap-2">
-                      <Button size="sm" variant={selected ? "default" : "outline"} onClick={() => setSelectedSubject(selected ? null : subj)}>
-                        {selected ? "Clear Filter" : "Filter by Subject"}
-                      </Button>
-                      <Button size="sm" variant="ghost" onClick={() => { setSelectedSubject(null); setSelectedMode(null); }}>
-                        Reset All
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Modes */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Modes & Current Affairs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-5">
-              {["topic", "paper"].map((mode) => (
-                <div key={mode}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <div className="font-medium">{mode === "topic" ? "Topic-wise" : "Whole Paper"}</div>
-                    <div>{stats?.mode_breakdown?.[mode] ?? 0}</div>
-                  </div>
-                  <Progress
-                    value={((stats?.mode_breakdown?.[mode] || 0) / Math.max(1, stats?.total_generations || 1)) * 100}
-                    className="h-2 mb-2"
-                  />
-                  <Button
-                    size="sm"
-                    variant={selectedMode === mode ? "default" : "outline"}
-                    onClick={() => setSelectedMode(selectedMode === mode ? null : mode as "topic" | "paper")}
-                  >
-                    {selectedMode === mode ? "Clear Filter" : `Filter ${mode === "topic" ? "Topic-wise" : "Whole Paper"}`}
-                  </Button>
-                </div>
-              ))}
-              <div className="pt-2 border-t">
-                <div className="flex justify-between text-sm mb-1">
-                  <div className="font-medium">Current Affairs Used</div>
-                  <div>{stats?.current_affairs_usage ?? 0}</div>
-                </div>
-                <Progress
-                  value={((stats?.current_affairs_usage || 0) / Math.max(1, stats?.total_generations || 1)) * 100}
-                  className="h-2"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Analytics */}
+      <AnalyticsCard stats={stats} />
 
       {/* History */}
       <Card className="max-w-6xl mx-auto">
-        <CardHeader className="flex items-center justify-between">
+        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <CardTitle>Recent History</CardTitle>
-          <Button size="sm" variant="outline" onClick={() => { setSelectedSubject(null); setSelectedMode(null); }}>
-            Clear All Filters
-          </Button>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <Select value={selectedSubject || "all"} onValueChange={(value) => setSelectedSubject(value === "all" ? null : value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by Subject" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Subjects</SelectItem>
+                {subjects.map((subj) => (
+                  <SelectItem key={subj} value={subj}>{subj}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper"))}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by Mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                <SelectItem value="topic">Topic-wise</SelectItem>
+                <SelectItem value="paper">Whole Paper</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={() => { setSelectedSubject(null); setSelectedMode(null); }}>
+              Clear
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {filteredHistory.length === 0 ? (
@@ -318,7 +263,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
 
       {/* Footer */}
       <div className="max-w-6xl mx-auto flex items-center justify-end">
-        <Button onClick={onNavigateToGenerator} className="text-lg py-6 px-8">
+        <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white">
           🚀 Back to Generator
         </Button>
       </div>

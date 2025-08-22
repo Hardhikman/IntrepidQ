@@ -1,5 +1,5 @@
 """
-Subject management API routes
+API routes for Subject management - with multi-provider model selection
 """
 import logging
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,9 +16,7 @@ from core.supabase_client import supabase_service
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# ------------------------------------------
 # INTERNAL HELPERS
-# ------------------------------------------
 
 def _send_feedback_email(user: Dict[str, Any], feedback_data: Dict[str, Any]) -> None:
     """Send feedback via SMTP (best-effort)."""
@@ -83,10 +81,8 @@ def get_question_generator():
     except ImportError:
         raise HTTPException(status_code=503, detail="AI service not available")
 
-# ------------------------------------------
-# ROUTES
-# ------------------------------------------
 
+# ROUTES
 @router.get("/subjects", response_model=SubjectsResponse)
 async def get_subjects(user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
     """Get all available subjects and topics"""
@@ -126,7 +122,7 @@ async def get_user_profile(user: Dict[str, Any] = Depends(get_current_user)):
 
 
 @router.post("/question_feedback")
-async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
+async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):#tells FastAPI to automatically call the get_current_user function and pass its result as the user argument when this endpoint is called.
     """Submit feedback for a generated question or overall UX"""
     try:
         gen_id = feedback_data.get('generation_id')
@@ -200,7 +196,6 @@ async def delete_question(question_id: str, user: Dict[str, Any] = Depends(get_c
 
 @router.put("/user_profile")
 async def update_user_profile(profile_data: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):
-    """Update user profile"""
     try:
         allowed_fields = ['username', 'full_name', 'preferred_subjects']
         update_data = {k: v for k, v in profile_data.items() if k in allowed_fields}
@@ -222,13 +217,11 @@ async def update_user_profile(profile_data: Dict[str, Any], user: Dict[str, Any]
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
 
-# ---------------------------
 # User Stats Routes
-# ---------------------------
 
 @router.get("/user_stats", response_model=UserStatsResponse)
 async def get_user_stats(user: Dict[str, Any] = Depends(get_current_user)):
-    """Get detailed user statistics (safe, no NoneType errors)"""
+    """detailed user statistics- with safe no NoneType errors)"""
     try:
         stats = supabase_service().get_user_stats(user['id'])
         # Python-side safety net
@@ -248,7 +241,7 @@ async def get_user_stats(user: Dict[str, Any] = Depends(get_current_user)):
 
 @router.get("/admin/user_stats/{target_user_id}", response_model=UserStatsResponse)
 async def admin_get_user_stats(target_user_id: str, user: Dict[str, Any] = Depends(get_current_user)):
-    """Admin: Fetch detailed stats for any user (requires admin role)"""
+    """Admin: Fetch detailed stats for any user -requires admin role"""
     if user.get("role") != "admin":
         raise HTTPException(status_code=403, detail="Forbidden: Admin access required")
     try:

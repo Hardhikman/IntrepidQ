@@ -48,7 +48,7 @@ class SupabaseService:
             'overall_average_rating': 0.0
         }
 
-    # ----------------- Analytics -----------------
+    #Analytics
     def log_analytics(self, user_id: str, action: str, **kwargs):
         try:
             client = self._ensure_client()
@@ -68,7 +68,7 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"Error logging analytics event for user {user_id}: {e}", exc_info=True)
 
-    # ----------------- Auth -----------------
+    # Auth
     def verify_user(self, token: str) -> Optional[Dict[str, Any]]:
         try:
             client = self._ensure_client()
@@ -78,7 +78,7 @@ class SupabaseService:
             logger.error(f"Token verification failed: {e}")
             return None
 
-    # ----------------- Profile -----------------
+    #Profile
     def get_user_profile(self, user_id: str) -> Optional[Dict[str, Any]]:
         try:
             client = self._ensure_client()
@@ -156,7 +156,88 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"[Supabase] Increment generation count failed for user {user_id}: {e}")
 
-    # ----------------- User Stats -----------------
+    # Guest rate limiting methods
+    def check_guest_generation_limit(self, ip_address: str, daily_limit: int = 2) -> bool:
+        """Check if guest user (by IP) is under daily generation limit."""
+        try:
+            client = self._ensure_client()
+            today = datetime.utcnow().date()
+            
+            # Get guest generation record for this IP
+            response = client.table("guest_generations").select(
+                "generation_count, last_generation_date"
+            ).eq("ip_address", ip_address).execute()
+
+            if not response.data:
+                # No record found, allow generation
+                return True
+
+            record = response.data[0]
+            generation_count = record.get("generation_count", 0)
+            last_date_str = record.get("last_generation_date")
+            
+            last_date = None
+            if last_date_str:
+                try:
+                    last_date = datetime.fromisoformat(last_date_str).date()
+                except ValueError:
+                    logger.warning(f"Could not parse guest date: {last_date_str}")
+
+            # Reset count if it's a new day
+            if last_date != today:
+                generation_count = 0
+
+            return generation_count < daily_limit
+        except Exception as e:
+            logger.error(f"[Supabase] Guest limit check failed for IP {ip_address}: {e}")
+            return False
+
+    def increment_guest_generation_count(self, ip_address: str):
+        """Increment generation count for a guest user by IP."""
+        try:
+            client = self._ensure_client()
+            today = datetime.utcnow().date()
+            
+            # Check if record exists
+            response = client.table("guest_generations").select(
+                "id, generation_count, last_generation_date"
+            ).eq("ip_address", ip_address).execute()
+
+            if not response.data:
+                # Create new record
+                client.table("guest_generations").insert({
+                    "ip_address": ip_address,
+                    "generation_count": 1,
+                    "last_generation_date": str(today)
+                }).execute()
+                return
+
+            # Update existing record
+            record = response.data[0]
+            generation_count = record.get("generation_count", 0)
+            last_date_str = record.get("last_generation_date")
+            
+            last_date = None
+            if last_date_str:
+                try:
+                    last_date = datetime.fromisoformat(last_date_str).date()
+                except ValueError:
+                    logger.warning(f"Could not parse guest date: {last_date_str}")
+
+            # Reset count if it's a new day
+            if last_date != today:
+                generation_count = 0
+
+            client.table("guest_generations").update({
+                "generation_count": generation_count + 1,
+                "last_generation_date": str(today),
+                "updated_at": datetime.utcnow().isoformat()
+            }).eq("id", record["id"]).execute()
+            
+        except Exception as e:
+            logger.error(f"[Supabase] Increment guest generation count failed for IP {ip_address}: {e}")
+
+    #User Stats 
     def get_user_stats(self, user_id: str, admin_mode: bool = False,
                        target_user_id: Optional[str] = None) -> Dict[str, Any]:
         target_id = target_user_id if (admin_mode and target_user_id) else user_id
@@ -189,7 +270,7 @@ class SupabaseService:
             logger.error(f"Failed to get dashboard data: {e}", exc_info=True)
             return {"profile": {}, "stats": self._empty_stats()}
 
-    # ----------------- Generated Questions -----------------
+    #Generated Questions
     def save_generated_questions(self, user_id: str, subject: str, topic: Optional[str],
                                   mode: str, questions: str, use_ca: bool,
                                   months: Optional[int], question_count: int) -> bool:
@@ -211,7 +292,7 @@ class SupabaseService:
             logger.error(f"Failed to save questions: {e}")
             return False
 
-    # ----------------- Question History -----------------
+    #Question History 
     def get_user_question_history(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Fetch the latest generated questions for the given user."""
         try:

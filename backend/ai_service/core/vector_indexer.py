@@ -1,5 +1,5 @@
 """
-Vector indexing functionality - refactored from indexing.py
+Vector indexing functionality(from old gradio indexing file)
 """
 import os
 import json

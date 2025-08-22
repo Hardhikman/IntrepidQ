@@ -1,3 +1,4 @@
+
 """
 Question generation functionality - multi-provider
 Supports: Groq, Gemini, Together, OpenRouter
@@ -8,7 +9,7 @@ Features:
 - Adaptive model prioritisation at runtime
 - Persistent model performance in Supabase
 - Consistent stats output for topic & paper generation
-- Generated questions caching with random example selection
+- Generated questions caching with random example selection to get reliable questions
 """
 import os
 import time
@@ -73,7 +74,7 @@ class QuestionGenerator:
         self.min_attempts_for_avg = 3
         self._load_model_performance()
 
-    # ---------------- Questions Cache Management ----------------
+    # Questions Cache Management
     def _get_cache_key(self, subject: str, topic: str, num: int, use_ca: bool = False, months: int = 6) -> str:
         """Generate cache key for questions"""
         key_data = f"{subject}_{topic}_{num}_{use_ca}_{months}"
@@ -204,7 +205,7 @@ class QuestionGenerator:
             self.questions_cache.clear()
             logger.info("Cleared all questions cache")
 
-    # ---------------- Supabase Model Speed Persistence ----------------
+    #Supabase Model Speed Persistence
     def _load_model_performance(self):
         if not self.supabase_client:
             return
@@ -240,7 +241,7 @@ class QuestionGenerator:
         status = "SUCCESS" if success else "FAIL"
         logger.info(f"[{status}] {model_name} took {elapsed:.2f}s (avg {avg_speed:.2f}s over {len(self.model_speeds[model_name])} runs)")
 
-    # ---------------- Model Selection ----------------
+    #Model Selection
     def select_model(self, requested_model: Optional[str] = None) -> List[str]:
         """Return ordered list of models: user's model FIRST, rest as fallback."""
         if requested_model and requested_model in self.available_models:
@@ -268,7 +269,7 @@ class QuestionGenerator:
         
         return [m for m in self.priority_order if m in self.available_models]
 
-    # ---------------- Provider Clients ----------------
+    #LLM Provider Clients
     def _get_groq_client(self, model_id: str) -> ChatGroq:
         return ChatGroq(model=model_id, groq_api_key=self.groq_api_key, temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7")))
 
@@ -309,7 +310,7 @@ class QuestionGenerator:
             "openrouter": lambda: self._get_openrouter_client(model_id)
         }.get(provider, lambda: None)()
 
-    # ---------------- Retry with Stats ----------------
+    #Model Retry with Stats 
     def _try_models(self, models: List[str], prompt: str) -> dict:
         last_error = None
         first_model = models[0] if models else "unknown"
@@ -449,7 +450,7 @@ IMPORTANT:
 
 Now return ONLY the JSON array:"""
 
-    # ---------------- Data Utils ----------------
+    #Data Utils
     def _build_topics_by_subject(self) -> Dict[str, List[str]]:
         topics = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
         if not self.supabase_client:
@@ -493,7 +494,7 @@ Now return ONLY the JSON array:"""
         except Exception as e:
             return f"Error fetching news: {e}"
 
-    # ---------------- Safe Question Parsing ----------------
+    # Safe Question Parsing
     def safe_parse_questions(self, output: str, num: int = None) -> List[dict]:
         """
         Tries to safely parse LLM output into a list of {"thinking": ..., "question": ...}.
@@ -551,7 +552,7 @@ Now return ONLY the JSON array:"""
         fallback = [p.strip() for p in cleaned.split("\n\n") if len(p.strip()) > 10]
         return [{"thinking": "", "question": f"{i+1}. {txt}"} for i, txt in enumerate(fallback[:num] if num else fallback)]
 
-    # ---------------- Generation ----------------
+    #Generation Qs
     def generate_topic_questions(self, subject, topic, num, use_ca, months, requested_model):
         models_to_try = self.select_model(requested_model)
         if use_ca:

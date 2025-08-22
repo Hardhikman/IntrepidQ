@@ -6,7 +6,7 @@ Currently introducing IQ 1.0 for GS preparation
 
 **Transform your UPSC preparation with our cutting-edge AI Q&A generator.** This powerful tool leverages advanced NLP and vector search to create high-quality, context-aware ,and contemproary exam questions directly from PYQ based materials.
 
-[**Live Demo**](https://intrepid-q1-nzmt.vercel.app) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
+[**Live Demo**](https://your-demo-link.com) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
 
 ## 🚀 Key Features
 

@@ -2,7 +2,7 @@ import json
 import os
 import logging
 import google.generativeai as genai
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
@@ -13,6 +13,10 @@ load_dotenv()
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Constants
+DAILY_LIMIT = 5
+GUEST_DAILY_LIMIT = 2
+
 # Google API Key setup
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
@@ -22,7 +26,23 @@ genai.configure(api_key=GOOGLE_API_KEY)
 # Model selection
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
 
-# ----------------------------- Schemas -----------------------------
+
+def get_client_ip(request: Request) -> str:
+    """Extract client IP address from request, handling proxies"""
+    # Check for forwarded headers first (for proxy/load balancer setups)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        # Take the first IP in the chain
+        return forwarded_for.split(",")[0].strip()
+    
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    
+    # Fallback to direct client IP
+    return request.client.host if request.client else "unknown"
+
+#Schemas
 
 class AnswerRequest(BaseModel):
     question: str
@@ -41,7 +61,7 @@ class BatchAnswerResponse(BaseModel):
 from api.auth import get_optional_user
 from core.supabase_client import supabase_service
 
-# ----------------------------- Helpers -----------------------------
+#Helpers
 
 def extract_text_from_response(response) -> str:
     """
@@ -79,15 +99,16 @@ Notes:
 Question: {question}
 """
 
-# ----------------------------- Single Answer -----------------------------
-
+#Single Answer
 @router.post("/generate_answer", response_model=AnswerResponse)
-async def generate_answer(request: AnswerRequest, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
+async def generate_answer(
+    request: AnswerRequest, 
+    http_request: Request,
+    user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
     try:
-        if user:
-            if not supabase_service().check_generation_limit(user['id'], daily_limit=5):
-                raise HTTPException(status_code=429, detail="Daily generation limit reached.")
-
+        # No rate limiting for answer generation - unlimited for all users
+        
         logger.info(f"Generating answer for question: {request.question}")
 
         model = genai.GenerativeModel(
@@ -104,6 +125,8 @@ async def generate_answer(request: AnswerRequest, user: Optional[Dict[str, Any]]
             logger.warning("AI did not return valid JSON. Returning raw output.")
             data = {"introduction": f"AI Output (unparsed): {raw_text}", "body": [], "conclusion": ""}
 
+        # No counter increment for answer generation
+
         return AnswerResponse(
             introduction=data.get("introduction", ""),
             body=data.get("body", []),
@@ -114,14 +137,17 @@ async def generate_answer(request: AnswerRequest, user: Optional[Dict[str, Any]]
         logger.error(f"Error generating answer: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate answer: {e}")
 
-# ----------------------------- Batch Answers -----------------------------
+#Batch Answers
 
 @router.post("/generate_answers", response_model=BatchAnswerResponse)
-async def generate_answers(request: BatchAnswerRequest, user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
+async def generate_answers(
+    request: BatchAnswerRequest, 
+    http_request: Request,
+    user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
     try:
-        if user:
-            if not supabase_service().check_generation_limit(user['id'], daily_limit=5):
-                raise HTTPException(status_code=429, detail="Daily generation limit reached.")
+        # No rate limiting for answer generation - unlimited for all users
+        
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")
 
@@ -152,6 +178,8 @@ async def generate_answers(request: BatchAnswerRequest, user: Optional[Dict[str,
             except Exception as inner_error:
                 logger.error(f"Failed to generate answer for question: {q}, error: {inner_error}")
                 answers.append(AnswerResponse(introduction="", body=[], conclusion=""))
+
+        # No counter increment for answer generation
 
         return BatchAnswerResponse(answers=answers)
 

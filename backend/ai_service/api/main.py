@@ -1,5 +1,5 @@
 """
-Main FastAPI application - UPDATED for multi-provider model selection
+Main FastAPI application for multi-provider model selection
 """
 import os
 import logging
@@ -23,6 +23,7 @@ from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
 from api.routes.answer import router as answer_router
 from api.routes.model_performance import router as performance_router
+from api.routes.cleanup import router as cleanup_router
 
 # Load environment variables
 load_dotenv()
@@ -88,9 +89,7 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
-# ==========================================
 # CORS Setup — supports prod, preview, local
-# ==========================================
 
 ALLOWED_ORIGINS = [
     o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
@@ -123,6 +122,7 @@ app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
 app.include_router(performance_router, prefix="/api", tags=["performance"])
+app.include_router(cleanup_router, prefix="/api/admin", tags=["cleanup"])
 
 
 @app.get("/")

@@ -206,7 +206,7 @@ export default function FloatingFeedbackButton() {
         </Card>
       )}
       <Button
-        className="rounded-full shadow-lg"
+        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
         onClick={() => setOpen((v) => !v)}
         variant={open ? "secondary" : "default"}
       >

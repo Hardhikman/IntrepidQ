@@ -14,7 +14,7 @@ class HealthResponse(BaseModel):
 
 # Subject models
 class SubjectInfo(BaseModel):
-    """Information about a subject"""
+    """Topics in subject"""
     name: str = Field(..., description="Full name of the subject")
     topics: List[str] = Field(..., description="List of topics in this subject")
 

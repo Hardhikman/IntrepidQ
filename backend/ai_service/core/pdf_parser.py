@@ -1,5 +1,5 @@
 """
-PDF parsing functionality - refactored from parsing_pdfs.py
+PDF parsing functionality (from old parsing_pdfs file)
 """
 import os
 import json

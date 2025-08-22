@@ -14,7 +14,7 @@ class HealthResponse(BaseModel):
 
 # Subject models
 class SubjectInfo(BaseModel):
-    """Information about a subject"""
+    """Topics in subject"""
     name: str = Field(..., description="Full name of the subject")
     topics: List[str] = Field(..., description="List of topics in this subject")
 
@@ -88,8 +88,8 @@ class DeleteQuestionRequest(BaseModel):
 
 class FeedbackCreate(BaseModel):
     """Request model for submitting feedback"""
-    question_id: str = Field(..., description="ID of the question being reviewed")
-    rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5")
+    question_id: Optional[str] = Field(None, description="ID of the question being reviewed (optional)")
+    rating: Optional[int] = Field(None, ge=1, le=5, description="Rating from 1 to 5 (optional)")
     comment: Optional[str] = Field(None, description="Optional free-text comment")
 
 # Error response models

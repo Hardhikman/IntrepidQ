@@ -1,523 +1,779 @@
+
 """
-Question generation functionality - extracted from app.py
+Question generation functionality - multi-provider
+Supports: Groq, Gemini, Together, OpenRouter
+Features:
+- Provider-agnostic model calls
+- Automatic retry-on-failure with fallback list
+- Model speed logging
+- Adaptive model prioritisation at runtime
+- Persistent model performance in Supabase
+- Consistent stats output for topic & paper generation
+- Generated questions caching with random example selection to get reliable questions
 """
 import os
 import time
 import random
 import re
+import json
+import requests
+import logging
+import hashlib
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
+from diskcache import Cache
+from supabase import Client
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
-from langchain_community.vectorstores import FAISS
-import requests
-from diskcache import Cache
-import logging
+from langchain_community.vectorstores import SupabaseVectorStore
 
+# Optional providers
 try:
-    from together import Together
-except Exception:
-    Together = None  # type: ignore
+    from langchain_google_genai import ChatGoogleGenerativeAI
+except ImportError:
+    ChatGoogleGenerativeAI = None
 
 logger = logging.getLogger(__name__)
 
 class QuestionGenerator:
-    def __init__(self, groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS, cache_dir: str = "news_cache"):
-        self.llm = ChatGroq(
-            model=os.getenv("GROQ_MODEL", "llama3-70b-8192"),
-            groq_api_key=groq_api_key,
-            # Slightly higher default temperature for more variety; can be overridden via env
-            temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7"))
-        )
-        # Optional Together client for fallback
-        self.together = None
-        if together_api_key and Together is not None:
-            try:
-                self.together = Together(api_key=together_api_key)
-            except Exception as e:
-                logger.warning(f"Together client init failed: {e}")
+    def __init__(
+        self,
+        groq_api_key: str,
+        google_api_key: Optional[str],
+        vectorstore: Optional[SupabaseVectorStore],
+        supabase_client: Optional[Client],
+        cache_dir: str = "news_cache",
+        questions_cache_dir: str = "questions_cache"
+    ):
+        self.groq_api_key = groq_api_key
+        self.google_api_key = google_api_key
         self.vectorstore = vectorstore
+        self.supabase_client = supabase_client
         self.cache = Cache(cache_dir)
-        self.topics_by_subject = self._build_topics_by_subject()
+        
+        # Separate cache for generated questions
+        self.questions_cache = Cache(questions_cache_dir)
+        
+        self.topics_by_subject = (
+            self._build_topics_by_subject()
+            if (vectorstore and supabase_client)
+            else {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
+        )
         self._setup_templates()
+        self.available_models = {
+            "llama3-70b": {"provider": "groq", "model_id": "llama3-70b-8192"},
+            "llama3-8b": {"provider": "groq", "model_id": "llama3-8b-8192"},
+            "gemma2-9b": {"provider": "groq", "model_id": "gemma2-9b-it"},
+            "deepseek-r1": {"provider": "openrouter", "model_id": "deepseek/deepseek-r1:free"},
+            "gemini-1.5-flash": {"provider": "google", "model_id": "gemini-1.5-flash-latest"},
+            "deepseek-v3": {"provider": "openrouter", "model_id": "deepseek/deepseek-chat-v3-0324:free"},
+            "moonshot-k2": {"provider": "openrouter", "model_id": "moonshotai/kimi-k2:free"},
+        }
+        self.priority_order = ["gemma2-9b", "deepseek-v3", "llama3-70b", "moonshot-k2", "deepseek-r1"]
+        self.model_speeds: Dict[str, List[float]] = {}
+        self.min_attempts_for_avg = 3
+        self._load_model_performance()
 
-    def _setup_templates(self):
-        """Setup prompt templates for question generation"""
-        self.gs_template = """You are a UPSC Mains question paper designer for {subject}.
-Given the following example questions from the topic: "{topic}", generate {num} new high-quality, original UPSC Mains-style questions.
+    # Questions Cache Management
+    def _get_cache_key(self, subject: str, topic: str, num: int, use_ca: bool = False, months: int = 6) -> str:
+        """Generate cache key for questions"""
+        key_data = f"{subject}_{topic}_{num}_{use_ca}_{months}"
+        return hashlib.md5(key_data.encode()).hexdigest()
 
-Examples:
-{examples}
+    def _cache_questions(self, cache_key: str, questions: List[dict], subject: str, topic: str):
+        """Cache generated questions with metadata"""
+        cache_data = {
+            "questions": questions,
+            "subject": subject,
+            "topic": topic,
+            "timestamp": time.time(),
+            "generated_at": datetime.now().isoformat()
+        }
+        
+        # Cache with 7 days expiry (7 * 24 * 3600 seconds)
+        self.questions_cache.set(cache_key, cache_data, expire=604800)
+        
+        # Also store in a topic-based index for easy retrieval
+        topic_key = f"topic_{subject}_{topic}"
+        existing_questions = self.questions_cache.get(topic_key, [])
+        
+        # Add new questions to the topic cache, avoiding duplicates
+        for q in questions:
+            if q not in existing_questions:
+                existing_questions.append(q)
+        
+        # Keep only last 50 questions per topic to prevent unlimited growth
+        if len(existing_questions) > 50:
+            existing_questions = existing_questions[-50:]
+        
+        self.questions_cache.set(topic_key, existing_questions, expire=604800)
+        logger.info(f"Cached {len(questions)} questions for {subject} - {topic}")
 
-IMPORTANT INSTRUCTIONS:
-1. Generate ONLY {num} questions
-2. Number each question as: 1., 2., 3., etc.
-3. Do NOT use bold formatting (**text**)
-4. Do NOT add any commentary or explanatory text
-5. Each question should be a single clear sentence
-6. Focus on analytical and critical thinking aspects
+    def _get_cached_questions_as_examples(self, subject: str, topic: str, max_examples: int = 3) -> List[str]:
+        """Get random cached questions to use as examples"""
+        topic_key = f"topic_{subject}_{topic}"
+        cached_questions = self.questions_cache.get(topic_key, [])
+        
+        if not cached_questions:
+            return []
+        
+        # Select random questions as examples
+        num_examples = min(len(cached_questions), max_examples)
+        selected_questions = random.sample(cached_questions, num_examples)
+        
+        # Format as examples (just the question text)
+        examples = []
+        for i, q in enumerate(selected_questions, 1):
+            question_text = q.get("question", str(q))
+            examples.append(f"{i}. {question_text}")
+        
+        logger.info(f"Using {len(examples)} cached questions as examples for {subject} - {topic}")
+        return examples
 
-Generate exactly {num} questions now:"""
+    def _get_all_cached_questions_for_examples(self, subject: str, max_examples: int = 5) -> List[str]:
+        """Get random cached questions from any topic in the subject for whole paper examples"""
+        all_questions = []
+        
+        # Collect questions from all topics in the subject
+        for topic in self.topics_by_subject.get(subject, []):
+            topic_key = f"topic_{subject}_{topic}"
+            cached_questions = self.questions_cache.get(topic_key, [])
+            all_questions.extend(cached_questions)
+        
+        if not all_questions:
+            return []
+        
+        # Select random questions as examples
+        num_examples = min(len(all_questions), max_examples)
+        selected_questions = random.sample(all_questions, num_examples)
+        
+        # Format as examples
+        examples = []
+        for i, q in enumerate(selected_questions, 1):
+            question_text = q.get("question", str(q))
+            examples.append(f"{i}. {question_text}")
+        
+        logger.info(f"Using {len(examples)} cached questions as examples for whole paper generation")
+        return examples
 
-        self.whole_paper_template = """You are a UPSC Mains question paper designer for {subject}.
-Based on the following topics and example questions, create a complete question paper with exactly 10 high-quality questions.
+    def get_cache_stats(self) -> dict:
+        """Get statistics about cached questions"""
+        stats = {
+            "total_cache_entries": len(list(self.questions_cache)),
+            "subjects": {},
+            "total_questions": 0
+        }
+        
+        for subject in ["GS1", "GS2", "GS3", "GS4"]:
+            subject_questions = 0
+            topics_with_cache = 0
+            
+            for topic in self.topics_by_subject.get(subject, []):
+                topic_key = f"topic_{subject}_{topic}"
+                cached_questions = self.questions_cache.get(topic_key, [])
+                if cached_questions:
+                    subject_questions += len(cached_questions)
+                    topics_with_cache += 1
+            
+            stats["subjects"][subject] = {
+                "total_questions": subject_questions,
+                "topics_with_cache": topics_with_cache
+            }
+            stats["total_questions"] += subject_questions
+        
+        return stats
 
-Topics and Examples:
-{topic_examples}
+    def clear_cache(self, subject: str = None, topic: str = None):
+        """Clear cache - all, by subject, or by specific topic"""
+        if topic and subject:
+            # Clear specific topic
+            topic_key = f"topic_{subject}_{topic}"
+            if topic_key in self.questions_cache:
+                del self.questions_cache[topic_key]
+                logger.info(f"Cleared cache for {subject} - {topic}")
+        elif subject:
+            # Clear all topics in subject
+            cleared_count = 0
+            for topic in self.topics_by_subject.get(subject, []):
+                topic_key = f"topic_{subject}_{topic}"
+                if topic_key in self.questions_cache:
+                    del self.questions_cache[topic_key]
+                    cleared_count += 1
+            logger.info(f"Cleared cache for {cleared_count} topics in {subject}")
+        else:
+            # Clear all cache
+            self.questions_cache.clear()
+            logger.info("Cleared all questions cache")
 
-IMPORTANT INSTRUCTIONS:
-1. Generate exactly 10 questions total
-2. Number all questions sequentially (1., 2., 3., ..., 10.)
-3. Do NOT use bold formatting (**text**)
-4. Do NOT add commentary or explanatory text
-5. Mix questions from different topics naturally
-6. Each question should be analytical and exam-appropriate
-7. Generate ONLY the questions, no additional text
-
-Generate the complete 10-question paper now:"""
-
-        self.gs_prompt = PromptTemplate.from_template(self.gs_template)
-        self.whole_paper_prompt = PromptTemplate.from_template(self.whole_paper_template)
-
-    def _gen_with_together(self, prompt: str) -> str:
-        """Generate text using Together as a fallback, streaming tokens."""
-        if not getattr(self, "together", None):
-            return ""
+    #Supabase Model Speed Persistence
+    def _load_model_performance(self):
+        if not self.supabase_client:
+            return
         try:
-            messages = [{"role": "user", "content": prompt}]
-            resp = self.together.chat.completions.create(
-                model="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-                messages=messages,
-                stream=True,
+            resp = self.supabase_client.table("model_performance").select("*").execute()
+            for row in resp.data or []:
+                name = row["model_name"]
+                if row.get("avg_speed") and row.get("num_runs"):
+                    avg_speed = row["avg_speed"]
+                    self.model_speeds[name] = [avg_speed] * row["num_runs"]
+            logger.info(f"Loaded model performance history: {self.model_speeds}")
+        except Exception as e:
+            logger.warning(f"Could not load model performance: {e}")
+
+    def _save_model_performance(self, model_name: str):
+        if not self.supabase_client:
+            return
+        try:
+            avg_speed = sum(self.model_speeds[model_name]) / len(self.model_speeds[model_name])
+            num_runs = len(self.model_speeds[model_name])
+            self.supabase_client.table("model_performance").upsert({
+                "model_name": model_name,
+                "avg_speed": avg_speed,
+                "num_runs": num_runs
+            }).execute()
+        except Exception as e:
+            logger.warning(f"Failed saving model performance: {e}")
+
+    def _log_model_speed(self, model_name: str, elapsed: float, success: bool):
+        self.model_speeds.setdefault(model_name, []).append(elapsed)
+        self._save_model_performance(model_name)
+        avg_speed = sum(self.model_speeds[model_name]) / len(self.model_speeds[model_name])
+        status = "SUCCESS" if success else "FAIL"
+        logger.info(f"[{status}] {model_name} took {elapsed:.2f}s (avg {avg_speed:.2f}s over {len(self.model_speeds[model_name])} runs)")
+
+    #Model Selection
+    def select_model(self, requested_model: Optional[str] = None) -> List[str]:
+        """Return ordered list of models: user's model FIRST, rest as fallback."""
+        if requested_model and requested_model in self.available_models:
+            # Keep user's choice as first
+            fallback = [m for m in self.priority_order if m != requested_model]
+            
+            # Adaptive re-ordering only applies to the fallback list
+            if all(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
+                fallback = sorted(
+                    [m for m in fallback if m in self.available_models],
+                    key=lambda m: sum(self.model_speeds.get(m, [float("inf")])) / len(self.model_speeds.get(m, [float("inf")]))
+                )
+                logger.info(f"Adaptive fallback order: {fallback}")
+            
+            return [requested_model] + fallback  # Chosen model forced at #1
+        
+        # Auto mode (no model selected): full adaptive
+        if all(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
+            ordered = sorted(
+                [m for m in self.priority_order if m in self.available_models],
+                key=lambda m: sum(self.model_speeds[m]) / len(self.model_speeds[m])
             )
-            parts: List[str] = []
-            for token in resp:
-                try:
-                    delta_content = None
-                    if hasattr(token, "choices"):
-                        delta = getattr(token.choices[0], "delta", None)
-                        delta_content = getattr(delta, "content", None) if delta is not None else None
-                    else:
-                        delta_content = (
-                            token.get("choices", [{}])[0]
-                                .get("delta", {})
-                                .get("content")
-                        )
-                    if delta_content:
-                        parts.append(delta_content)
-                except Exception:
-                    continue
-            return "".join(parts).strip()
-        except Exception as e:
-            logger.error(f"Together generation failed: {e}")
-            return ""
-
-    def _build_topics_by_subject(self) -> Dict[str, List[str]]:
-        """Build topics categorized by GS papers from vectorstore"""
-        topics_by_subject = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
+            logger.info(f"Adaptive auto priority order: {ordered}")
+            return ordered
         
-        try:
-            for _doc_id, doc in self.vectorstore.docstore._dict.items():
-                if getattr(doc, "metadata", None) and "topic" in doc.metadata:
-                    topic_name = doc.metadata["topic"]
-                    
-                    # Categorize based on GS prefix in topic name
-                    for gs_num in ["GS1", "GS2", "GS3", "GS4"]:
-                        if topic_name.startswith(gs_num):
-                            topics_by_subject[gs_num].append(topic_name)
-                            break
-        except Exception as e:
-            logger.warning(f"Error building topics from vectorstore: {e}")
+        return [m for m in self.priority_order if m in self.available_models]
+
+    #LLM Provider Clients
+    def _get_groq_client(self, model_id: str) -> ChatGroq:
+        return ChatGroq(model=model_id, groq_api_key=self.groq_api_key, temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7")))
+
+    def _get_gemini_client(self, model_id: str):
+        if not self.google_api_key or ChatGoogleGenerativeAI is None:
+            return None
+        return ChatGoogleGenerativeAI(model=model_id, google_api_key=self.google_api_key, temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")))
+
+    def _get_openrouter_client(self, model_id: str):
+        key = os.getenv("OPENROUTER_API_KEY")
+        if not key:
+            return None
+        def run(prompt: str):
+            url = "https://openrouter.ai/api/v1/chat/completions"
+            headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+            data = {
+                "model": model_id,
+                "messages": [
+                    {"role": "system", "content": "You are a helpful UPSC assistant. Answer only in English."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 800,
+                "temperature": 0.7
+            }
+            resp = requests.post(url, headers=headers, json=data, timeout=30)
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+        return run
+
+    def _get_llm_client(self, model_name: str):
+        info = self.available_models.get(model_name)
+        if not info:
+            return None
+        provider, model_id = info["provider"], info["model_id"]
+        return {
+            "groq": lambda: self._get_groq_client(model_id),
+            "google": lambda: self._get_gemini_client(model_id),
+            "openrouter": lambda: self._get_openrouter_client(model_id)
+        }.get(provider, lambda: None)()
+
+    #Model Retry with Stats 
+    def _try_models(self, models: List[str], prompt: str) -> dict:
+        last_error = None
+        first_model = models[0] if models else "unknown"
         
-        # Remove duplicates and sort
-        for gs_paper in topics_by_subject:
-            topics_by_subject[gs_paper] = sorted(list(set(topics_by_subject[gs_paper])))
+        for idx, model_name in enumerate(models):
+            logger.info(f"Attempting model: {model_name}")
+            llm = self._get_llm_client(model_name)
+            if not llm:
+                continue
+                
+            start = time.time()
+            try:
+                result = self._use_llm(llm, prompt)
+                elapsed = round(time.time() - start, 2)
+                self._log_model_speed(model_name, elapsed, success=True)
+                
+                # DEBUG LINE HERE
+                logger.debug(f"[try_models] Raw response from {model_name}:\n{result[:1000]}...\n")
+                
+                avg_speed = sum(self.model_speeds[model_name]) / len(self.model_speeds[model_name])
+                return {
+                    "output": result,
+                    "model": model_name,
+                    "duration": elapsed,
+                    "avg_speed": round(avg_speed, 2),
+                    "runs": len(self.model_speeds[model_name]),
+                    "status": "success"
+                }
+            except Exception as e:
+                elapsed = round(time.time() - start, 2)
+                self._log_model_speed(model_name, elapsed, success=False)
+                msg = f"Model {model_name} failed in {elapsed:.2f}s - {e}"
+                logger.warning(msg)
+                
+                # Special notice if requested model failed
+                if idx == 0 and model_name == first_model:
+                    logger.warning(f"WARNING Selected model {model_name} failed. Falling back to {models[1:]}")
+                last_error = str(e)
+                continue
         
-        return topics_by_subject
-
-    def get_topics_for_subject(self, subject: str) -> List[str]:
-        """Get all topics for a specific subject"""
-        return self.topics_by_subject.get(subject, [])
-
-    def get_subject_from_topic(self, topic: str) -> str:
-        """Determine which subject a topic belongs to"""
-        for subject, topics in self.topics_by_subject.items():
-            if topic in topics:
-                return subject
-        return "GS1"  # default
-
-    # ✅ ADD: Missing API methods that your routes expect
-    def generate_questions(self, topic: str, num_questions: int = 5) -> List[str]:
-        """Generate questions for a topic - API compatibility method"""
-        try:
-            # Determine subject from topic
-            subject = self.get_subject_from_topic(topic)
-            
-            # Use existing method
-            result = self._generate_static_questions(subject, topic, num_questions)
-            
-            # Parse the formatted result back to a list
-            questions = []
-            for line in result.split('\n\n'):
-                line = line.strip()
-                if line and re.match(r'^\d+\.', line):
-                    # Remove numbering and clean
-                    clean_question = re.sub(r'^\d+\.\s*', '', line).strip()
-                    if clean_question:
-                        questions.append(clean_question)
-            
-            return questions[:num_questions]
-            
-        except Exception as e:
-            logger.error(f"Error in generate_questions: {e}")
-            # Fallback
-            return [f"Analyze the significance of {topic} in contemporary India."]
-
-    def generate_questions_with_ca(self, topic: str, num_questions: int, months: int) -> List[str]:
-        """Generate questions with current affairs - API compatibility method"""
-        try:
-            subject = self.get_subject_from_topic(topic)
-            result = self._generate_current_affairs_questions(subject, topic, num_questions, months)
-            
-            # Parse the formatted result back to a list
-            questions = []
-            for line in result.split('\n\n'):
-                line = line.strip()
-                if line and re.match(r'^\d+\.', line):
-                    clean_question = re.sub(r'^\d+\.\s*', '', line).strip()
-                    if clean_question:
-                        questions.append(clean_question)
-            
-            return questions[:num_questions]
-            
-        except Exception as e:
-            logger.error(f"Error in generate_questions_with_ca: {e}")
-            return [f"Analyze {topic} in the context of recent developments from the last {months} months."]
-
-    def generate_whole_paper_with_ca(self, subject: str, months: int) -> List[str]:
-        """Generate whole paper with current affairs - API compatibility method"""
-        try:
-            result = self.generate_whole_paper(subject, use_ca=True, months=months)
-            
-            # Extract just the questions part (after "## Questions:")
-            questions_section = result.split("## Questions:")[-1].split("---")[0].strip()
-            
-            questions = []
-            for line in questions_section.split('\n\n'):
-                line = line.strip()
-                if line and re.match(r'^\d+\.', line):
-                    clean_question = re.sub(r'^\d+\.\s*', '', line).strip()
-                    if clean_question:
-                        questions.append(clean_question)
-            
-            return questions[:10]
-            
-        except Exception as e:
-            logger.error(f"Error in generate_whole_paper_with_ca: {e}")
-            return self._fallback_paper_questions(subject)
-
-    def _fallback_paper_questions(self, subject: str) -> List[str]:
-        """Generate fallback questions for whole paper"""
-        fallback_templates = [
-            f"Analyze the contemporary relevance of {subject} in Indian governance.",
-            f"Discuss the key challenges facing {subject} in modern India.",
-            f"Evaluate the impact of recent policy changes in {subject}.",
-            f"Examine the role of {subject} in India's development strategy.",
-            f"Critically assess the effectiveness of {subject} related initiatives.",
-            f"Comment on the future prospects of {subject} in India.",
-            f"Discuss the interconnections between {subject} and other policy areas.",
-            f"Analyze the historical evolution of {subject} in post-independence India.",
-            f"Evaluate the implementation challenges in {subject}.",
-            f"Examine the role of stakeholders in {subject} governance."
-        ]
-        return fallback_templates
-
-    # ✅ Keep all your existing methods unchanged
-    def fetch_recent_news(self, topic: str, months: int = 6) -> str:
-        """Fetch recent news for current affairs integration"""
-        cache_key = f"{topic}_{months}"
-        cached = self.cache.get(cache_key)
-        if cached and time.time() - cached["timestamp"] < 3600:
-            return cached["news"]
-
-        api_key = os.getenv("NEWSAPI_KEY")
-        if not api_key:
-            return "NEWSAPI_KEY not configured; skipping news fetch."
-
-        url = "https://newsapi.org/v2/everything"
-        to_date = datetime.utcnow().date()
-        from_date = to_date - timedelta(days=30 * int(months))
-
-        params = {
-            "q": topic, "language": "en",
-            "from": from_date.isoformat(), "to": to_date.isoformat(),
-            "sortBy": "relevancy", "pageSize": 5, "apiKey": api_key
+        # Return consistent structure when all models fail
+        return {
+            "output": f"Error: All model attempts failed. Last error: {last_error}",
+            "model": "failed",
+            "duration": 0.0,
+            "avg_speed": 0.0,
+            "runs": 0,
+            "status": "all_failed"
         }
 
-        try:
-            response = requests.get(url, params=params, timeout=20)
-            response.raise_for_status()
-            data = response.json()
-            if "articles" in data and data["articles"]:
-                news = "\n".join([
-                    f"- {a.get('title','').strip()}: {a.get('description','').strip()}" 
-                    for a in data["articles"]
-                ])
-                self.cache.set(cache_key, {"news": news, "timestamp": time.time()})
-                return news
-            else:
-                return "No news articles found for this topic."
-        except Exception as e:
-            return f"Error fetching news: {str(e)}"
-
-    def format_questions(self, raw_output: str) -> str:
-        """Clean and format the question output"""
-        lines = raw_output.strip().split('\n')
-        formatted_lines = []
-        question_counter = 1
+    def _use_llm(self, llm, prompt: str) -> str:
+        # Fix the deprecated call - use invoke() instead of __call__()
+        response = llm.invoke(prompt) if hasattr(llm, 'invoke') else llm(prompt)
         
-        for line in lines:
-            line = line.strip()
-            if not line:
-                continue
-                
-            # Remove bold formatting
-            line = re.sub(r'\*\*(.*?)\*\*', r'\1', line)
-            
-            # Skip commentary lines
-            if line.lower().startswith(('these questions', 'the questions', 'note:', 'instruction', 'this paper')):
-                continue
-            
-            # Check if this is a question line
-            if (re.match(r'^\d+\.', line) or 
-                line.endswith('?') or 
-                any(word in line.lower() for word in ['analyze', 'examine', 'discuss', 'evaluate', 'critically', 'assess'])):
-                
-                # Remove existing numbering and add proper numbering
-                clean_line = re.sub(r'^\d+\.\s*', '', line)
-                if clean_line:
-                    formatted_lines.append(f"{question_counter}. {clean_line}")
-                    question_counter += 1
+        # Case 1: LangChain message object (AIMessage with .content)
+        if hasattr(response, "content"):
+            return response.content.strip()
+        # Case 2: Generation object with .text
+        if hasattr(response, "text"):
+            return response.text.strip()
+        # Case 3: Raw string already
+        if isinstance(response, str):
+            return response.strip()
+        # Case 4: Fallback → convert to string
+        return str(response).strip()
+
+    # ---------------- Prompts ----------------
+    def _setup_templates(self):
+        # Topic questions w/ thinking + question
+        self.gs_prompt = PromptTemplate.from_template(
+            """You are a UPSC Mains question paper designer for {subject}.
+Generate {num} original UPSC-style Mains questions for the topic "{topic}".
+
+Examples from database and previous generations:
+{examples}
+
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of objects
+- Each object must have "thinking" (short rationale) AND "question" (final UPSC-style question)
+- "thinking": max 2-3 sentences
+- "question": one exam-appropriate UPSC question
+- No commentary or text outside JSON
+- Exactly {num} items
+- Generate NEW questions, don't copy the examples
+
+Now return ONLY the JSON array:"""
+        )
         
-        return '\n\n'.join(formatted_lines)
+        # Whole paper template
+        self.whole_paper_prompt = PromptTemplate.from_template(
+            """You are a UPSC Mains paper designer for {subject}.
+Generate a full UPSC paper (10 questions) covering multiple topics.
 
-    def generate_topic_questions(self, subject: str, topic: str, num: int, use_ca: bool, months: int) -> str:
-        """Generate questions for a specific topic"""
-        if use_ca:
-            return self._generate_current_affairs_questions(subject, topic, num, months)
-        else:
-            return self._generate_static_questions(subject, topic, num)
+Examples from database and previous generations:
+{topic_examples}
 
-    def _generate_current_affairs_questions(self, subject: str, topic: str, num: int, months: int) -> str:
-        """Generate questions incorporating current affairs"""
-        news_context = self.fetch_recent_news(topic, months)
-        diversity_seed = random.randint(100000, 999999)
-        ca_prompt = f"""You are a UPSC Mains question paper designer for {subject}.
-Based on the topic: "{topic}" and recent news, generate {num} high-quality questions incorporating current affairs.
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of 10 objects
+- Each object must have "thinking" + "question"
+- "thinking": short reasoning (max 2-3 sentences)
+- "question": final numbered UPSC-style question
+- No commentary/reasoning outside JSON
+- Exactly 10 items
+- Generate NEW questions, don't copy the examples
 
-Recent News (Last {months} months):
-{news_context}
+Now return ONLY the JSON array:"""
+        )
 
-IMPORTANT INSTRUCTIONS:
-1. Generate ONLY {num} questions
-2. Number each question as: 1., 2., 3., etc.
-3. Do NOT use bold formatting (**text**)
-4. Do NOT add any commentary or explanatory text
-5. Focus on analytical aspects related to current events
-
-Generate exactly {num} questions now.
-
-Variation guidance (do not include this line or the number in the output): seed {diversity_seed}
-"""
-        
-        out = ""
-        try:
-            response = self.llm.invoke(ca_prompt)
-            out = response.content.strip()
-        except Exception as e:
-            logger.warning(f"Groq CA generation failed: {e}")
-        if not out:
-            out = self._gen_with_together(ca_prompt)
-        if not out:
-            return f"1. Analyze {topic} in the context of recent developments from the last {months} months."
-        return self.format_questions(out)
-
-    def _generate_static_questions(self, subject: str, topic: str, num: int) -> str:
-        """Generate questions using static examples from vectorstore"""
-        try:
-            filtered_docs = [
-                doc for doc in self.vectorstore.docstore._dict.values() 
-                if doc.metadata.get("topic") == topic
-            ]
-            # Shuffle examples for variety across runs
-            random.shuffle(filtered_docs)
-            # Use up to 8 examples, but at least num to provide context diversity
-            examples = [doc.page_content for doc in filtered_docs[:max(1, min(max(num, 3), 8))]]
-
-            if not examples:
-                return f"No questions found for topic: {topic}"
-
-            example_text = "\n".join([f"{i+1}. {q}" for i, q in enumerate(examples)])
-            diversity_seed = random.randint(100000, 999999)
-            final_prompt = self.gs_prompt.format(
-                subject=subject, 
-                topic=topic, 
-                examples=example_text, 
-                num=num
-            ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
-            out = ""
-            try:
-                response = self.llm.invoke(final_prompt)
-                out = response.content.strip()
-            except Exception as e:
-                logger.warning(f"Groq static generation failed: {e}")
-            if not out:
-                out = self._gen_with_together(final_prompt)
-            if not out:
-                return f"1. Analyze the significance of {topic} in contemporary India.\n\n2. Discuss the key challenges associated with {topic}."
-            return self.format_questions(out)
-        except Exception as e:
-            logger.error(f"Error in _generate_static_questions: {e}")
-            # Fallback
-            return f"1. Analyze the significance of {topic} in contemporary India.\n\n2. Discuss the key challenges associated with {topic}."
-
-    def generate_whole_paper(self, subject: str, use_ca: bool, months: int) -> str:
-        """Generate a complete paper with 10 questions from random topics"""
-        subject_topics = self.topics_by_subject.get(subject, [])
-        if not subject_topics:
-            return f"No topics found for {subject}"
-
-        # Randomly select topics for variety
-        num_topics = min(len(subject_topics), 6)
-        selected_topics = random.sample(subject_topics, num_topics)
-        
-        # Gather example questions from selected topics
-        topic_examples = self._gather_topic_examples(selected_topics, subject)
-        
-        if not topic_examples:
-            return f"No example questions found for {subject}"
-        
-        topic_examples_text = "\n".join(topic_examples)
-        
-        if use_ca:
-            formatted_questions = self._generate_current_affairs_paper(
-                subject, selected_topics, topic_examples_text, months
-            )
-        else:
-            diversity_seed = random.randint(100000, 999999)
-            final_prompt = self.whole_paper_prompt.format(
-                subject=subject, 
-                topic_examples=topic_examples_text
-            ) + f"\n\nVariation guidance (do not include this line or the number in the output): seed {diversity_seed}"
-            out = ""
-            try:
-                response = self.llm.invoke(final_prompt)
-                out = response.content.strip()
-            except Exception as e:
-                logger.warning(f"Groq whole paper generation failed: {e}")
-            if not out:
-                out = self._gen_with_together(final_prompt)
-            formatted_questions = self.format_questions(out or "")
-        
-        # Create the final paper content with proper UPSC format
-        return self._format_final_paper(subject, formatted_questions)
-
-    def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
-        """Gather example questions from selected topics"""
-        topic_examples = []
-        
-        for topic in selected_topics:
-            try:
-                filtered_docs = [
-                    doc for doc in self.vectorstore.docstore._dict.values() 
-                    if doc.metadata.get("topic") == topic
-                ]
-                examples = [doc.page_content for doc in filtered_docs[:3]]
-                
-                if examples:
-                    display_topic = topic.replace(f"{subject} - ", "")
-                    topic_examples.append(f"**{display_topic}:**")
-                    for i, example in enumerate(examples, 1):
-                        topic_examples.append(f"{i}. {example}")
-                    topic_examples.append("")  # Empty line for separation
-            except Exception as e:
-                logger.warning(f"Error gathering examples for topic {topic}: {e}")
-        
-        return topic_examples
-
-    def _generate_current_affairs_paper(self, subject: str, selected_topics: List[str], 
-                                      topic_examples_text: str, months: int) -> str:
-        """Generate whole paper with current affairs integration"""
+    def _get_ca_paper_prompt(self, subject: str, selected_topics: List[str], topic_examples_text: str, months: int) -> str:
         news_contexts = []
         for topic in selected_topics[:3]:
             news = self.fetch_recent_news(topic, months)
             if news and "not configured" not in news:
-                news_contexts.append(f"Recent news for {topic}: {news[:200]}...")
-        
+                news_contexts.append(f"Recent news for {topic}:\n{news[:200]}...")
         news_text = "\n\n".join(news_contexts) if news_contexts else ""
         
-        ca_prompt = f"""You are a UPSC Mains question paper designer for {subject}.
-Create a complete question paper with exactly 10 questions incorporating current affairs.
+        return f"""You are a UPSC Mains paper designer for {subject}.
+Generate 10 analytical UPSC questions incorporating current affairs.
 
-Topics and Examples:
+Topics and Example Questions:
 {topic_examples_text}
 
 Recent News Context:
 {news_text}
 
-IMPORTANT INSTRUCTIONS:
-1. Generate exactly 10 questions total
-2. Number all questions sequentially (1., 2., 3., ..., 10.)
-3. Do NOT use bold formatting (**text**)
-4. Do NOT add commentary or explanatory text
-5. Mix questions from different topics naturally
-6. Incorporate current affairs where relevant
-7. Each question should be analytical and exam-appropriate
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of 10 objects
+- Each object: "thinking" + "question"
+- "thinking": 1-3 sentences of reasoning
+- "question": final exam-style UPSC question
+- No <think>, no meta, no extra commentary
+- Exactly 10 items
+- Generate NEW questions based on current affairs
 
-Generate the complete 10-question paper now:"""
-        
-        out = ""
+Now return ONLY the JSON array:"""
+
+    #Data Utils
+    def _build_topics_by_subject(self) -> Dict[str, List[str]]:
+        topics = {"GS1": [], "GS2": [], "GS3": [], "GS4": []}
+        if not self.supabase_client:
+            return topics
+        resp = self.supabase_client.table("documents").select("metadata").execute()
+        for item in resp.data or []:
+            topic = item.get("metadata", {}).get("topic")
+            for gs in topics:
+                if topic and topic.startswith(gs):
+                    topics[gs].append(topic)
+        for gs in topics:
+            topics[gs] = sorted(set(topics[gs]))
+        return topics
+
+    def get_topics_for_subject(self, subject: str) -> List[str]:
+        return self.topics_by_subject.get(subject, [])
+
+    def get_subject_from_topic(self, topic: str) -> str:
+        for subject, topics in self.topics_by_subject.items():
+            if topic in topics:
+                return subject
+        return "GS1"
+
+    def fetch_recent_news(self, topic: str, months: int = 6) -> str:
+        key = os.getenv("NEWSAPI_KEY")
+        if not key:
+            return "NEWSAPI_KEY not configured"
+        cache_key = f"{topic}_{months}"
+        cached = self.cache.get(cache_key)
+        if cached and time.time() - cached["timestamp"] < 3600:
+            return cached["news"]
+        from_date = (datetime.utcnow() - timedelta(days=30 * months)).date()
+        params = {"q": topic, "from": from_date.isoformat(), "to": datetime.utcnow().date().isoformat(),
+                  "sortBy": "relevancy", "language": "en", "pageSize": 5, "apiKey": key}
         try:
-            response = self.llm.invoke(ca_prompt)
-            out = response.content.strip()
+            resp = requests.get("https://newsapi.org/v2/everything", params=params, timeout=20)
+            data = resp.json()
+            news = "\n".join([f"- {a['title']}: {a['description']}" for a in data.get("articles", [])])
+            self.cache.set(cache_key, {"news": news, "timestamp": time.time()})
+            return news or "No news found"
         except Exception as e:
-            logger.warning(f"Groq CA-paper generation failed: {e}")
-        if not out:
-            out = self._gen_with_together(ca_prompt)
-        if not out:
-            return ""
-        return self.format_questions(out)
+            return f"Error fetching news: {e}"
 
-    def _format_final_paper(self, subject: str, formatted_questions: str) -> str:
-        """Format the final paper with proper UPSC format"""
-        paper_content = f"""# UPSC Civil Services Mains Examination - {subject}
-
-Time Allowed:1 Hours  
-Maximum Marks:100
-
----
-
-## Instructions:
-- Answer ALL questions
-- All questions carry equal marks(10 marks each)
-- Word limit: 2 A4 size pages per question
-- Candidates should attempt questions in a methodical manner
-
----
-
-## Questions:
-
-{formatted_questions}
-
----
-
-**END OF PAPER**
-
-*Note: This paper has been generated using AI and is for practice purposes only.*"""
+    # Safe Question Parsing
+    def safe_parse_questions(self, output: str, num: int = None) -> List[dict]:
+        """
+        Tries to safely parse LLM output into a list of {"thinking": ..., "question": ...}.
+        Handles messy outputs, <think> blocks, stray text, and fallback cases.
+        """
+        logger.debug(f"[safe_parse_questions] Raw LLM output:\n{output[:1000]}...\n")
         
-        return paper_content
+        # 1. Remove DeepSeek-style <think> blocks
+        cleaned = re.sub(r"<think>.*?</think>", "", output, flags=re.DOTALL).strip()
+        
+        # 2. Try direct JSON parse
+        try:
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, list):
+                results = []
+                for q in (parsed[:num] if num else parsed):
+                    if isinstance(q, dict) and "question" in q:
+                        results.append({
+                            "thinking": q.get("thinking", "").strip(),
+                            "question": q["question"].strip()
+                        })
+                    elif isinstance(q, str):
+                        results.append({"thinking": "", "question": q.strip()})
+                if results:
+                    return results
+        except Exception as e:
+            logger.warning(f"JSON parsing failed: {e}")
+        
+        # 3. Try extracting embedded JSON array (inside text)
+        match = re.search(r"\[[\s\S]*\]", cleaned)
+        if match:
+            try:
+                parsed = json.loads(match.group(0))
+                if isinstance(parsed, list):
+                    results = []
+                    for q in (parsed[:num] if num else parsed):
+                        if isinstance(q, dict) and "question" in q:
+                            results.append({
+                                "thinking": q.get("thinking", "").strip(),
+                                "question": q["question"].strip()
+                            })
+                        elif isinstance(q, str):
+                            results.append({"thinking": "", "question": q.strip()})
+                    if results:
+                        return results
+            except Exception as e:
+                logger.warning(f"Embedded JSON parse failed: {e}")
+        
+        # 4. Regex fallback: clean free-text questions
+        candidate_questions = self.format_questions(cleaned)
+        if candidate_questions:
+            return [{"thinking": "", "question": q} for q in (candidate_questions[:num] if num else candidate_questions)]
+        
+        # 5. Final brute fallback: split by paragraphs
+        fallback = [p.strip() for p in cleaned.split("\n\n") if len(p.strip()) > 10]
+        return [{"thinking": "", "question": f"{i+1}. {txt}"} for i, txt in enumerate(fallback[:num] if num else fallback)]
 
-# Factory function
-def create_question_generator(groq_api_key: str, together_api_key: Optional[str], vectorstore: FAISS) -> QuestionGenerator:
-    """Factory function to create question generator instance"""
-    return QuestionGenerator(groq_api_key, together_api_key, vectorstore)
+    #Generation Qs
+    def generate_topic_questions(self, subject, topic, num, use_ca, months, requested_model):
+        models_to_try = self.select_model(requested_model)
+        if use_ca:
+            return self._generate_current_affairs_questions(subject, topic, num, months, models_to_try)
+        return self._generate_static_questions(subject, topic, num, models_to_try)
+
+    def _generate_static_questions(self, subject, topic, num, models_to_try: List[str]):
+        try:
+            # Get database examples
+            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(5).execute()
+            db_examples = [item["content"] for item in resp.data] if resp.data else []
+            
+            # Get cached questions as examples
+            cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=3)
+            
+            # Combine examples
+            all_examples = db_examples + cached_examples
+            examples_text = "\n".join(all_examples) if all_examples else "No examples available."
+            
+            prompt = self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)
+            result = self._try_models(models_to_try, prompt)
+            
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), num)
+            
+            # Cache the new questions if generation was successful
+            if questions and result.get("status") == "success":
+                cache_key = self._get_cache_key(subject, topic, num, False, 0)
+                self._cache_questions(cache_key, questions, subject, topic)
+            
+            return {
+                "questions": questions,
+                "meta": {
+                    "model": result.get("model", "unknown"),
+                    "duration": result.get("duration", 0.0),
+                    "avg_speed": result.get("avg_speed", 0.0),
+                    "runs": result.get("runs", 0),
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error in _generate_static_questions: {e}")
+            return {
+                "questions": [{"thinking": "", "question": f"Error generating questions: {str(e)}"}],
+                "meta": {
+                    "model": "error",
+                    "duration": 0.0,
+                    "avg_speed": 0.0,
+                    "runs": 0,
+                    "status": "error"
+                }
+            }
+
+    def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str]):
+        try:
+            # Get database examples
+            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(3).execute()
+            db_examples = [item["content"] for item in resp.data] if resp.data else []
+            
+            # Get cached questions as examples
+            cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=2)
+            
+            # Combine examples
+            all_examples = db_examples + cached_examples
+            examples_text = "\n".join(all_examples) if all_examples else "No examples available."
+            
+            news = self.fetch_recent_news(topic, months)
+            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)}\n\nRecent News:\n{news}"
+            
+            result = self._try_models(models_to_try, prompt)
+            
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), num)
+            
+            # Cache the new questions if generation was successful
+            if questions and result.get("status") == "success":
+                cache_key = self._get_cache_key(subject, topic, num, True, months)
+                self._cache_questions(cache_key, questions, subject, topic)
+            
+            return {
+                "questions": questions,
+                "meta": {
+                    "model": result.get("model", "unknown"),
+                    "duration": result.get("duration", 0.0),
+                    "avg_speed": result.get("avg_speed", 0.0),
+                    "runs": result.get("runs", 0),
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error in _generate_current_affairs_questions: {e}")
+            return {
+                "questions": [{"thinking": "", "question": f"Error generating questions: {str(e)}"}],
+                "meta": {
+                    "model": "error",
+                    "duration": 0.0,
+                    "avg_speed": 0.0,
+                    "runs": 0,
+                    "status": "error"
+                }
+            }
+
+    def generate_whole_paper(self, subject: str, use_ca: bool, months: int, requested_model: str):
+        try:
+            models_to_try = self.select_model(requested_model)
+            subject_topics = self.topics_by_subject.get(subject, [])
+            
+            if not subject_topics:
+                return {
+                    "questions": [{"thinking": "", "question": "[WARNING] No topics found."}], 
+                    "meta": {
+                        "model": "none",
+                        "duration": 0.0,
+                        "avg_speed": 0.0,
+                        "runs": 0,
+                        "status": "no_topics"
+                    }
+                }
+            
+            num_topics = min(len(subject_topics), 6)
+            selected_topics = random.sample(subject_topics, num_topics)
+            
+            # Get database examples
+            topic_examples = self._gather_topic_examples(selected_topics, subject)
+            
+            # Get cached questions as examples
+            cached_examples = self._get_all_cached_questions_for_examples(subject, max_examples=5)
+            
+            # Combine examples
+            all_examples = topic_examples + cached_examples
+            topic_examples_text = "\n".join(all_examples)
+            
+            if use_ca:
+                prompt = self._get_ca_paper_prompt(subject, selected_topics, topic_examples_text, months)
+            else:
+                prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=topic_examples_text)
+            
+            result = self._try_models(models_to_try, prompt)
+            
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), 10)
+            
+            # Cache questions by distributing them to topics (for future use)
+            if questions and result.get("status") == "success" and len(questions) >= 5:
+                # Distribute questions among selected topics for caching
+                questions_per_topic = len(questions) // len(selected_topics)
+                for i, topic in enumerate(selected_topics):
+                    start_idx = i * questions_per_topic
+                    end_idx = start_idx + questions_per_topic if i < len(selected_topics) - 1 else len(questions)
+                    topic_questions = questions[start_idx:end_idx]
+                    
+                    if topic_questions:
+                        cache_key = f"paper_{subject}_{topic}_{int(time.time())}"
+                        self._cache_questions(cache_key, topic_questions, subject, topic)
+            
+            return {
+                "questions": questions,
+                "meta": {
+                    "model": result.get("model", "unknown"),
+                    "duration": result.get("duration", 0.0),
+                    "avg_speed": result.get("avg_speed", 0.0),
+                    "runs": result.get("runs", 0),
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples),
+                    "topics_covered": len(selected_topics)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error in generate_whole_paper: {e}")
+            return {
+                "questions": [{"thinking": "", "question": f"Error generating paper: {str(e)}"}],
+                "meta": {
+                    "model": "error",
+                    "duration": 0.0,
+                    "avg_speed": 0.0,
+                    "runs": 0,
+                    "status": "error"
+                }
+            }
+
+    def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
+        topic_examples = []
+        if not self.supabase_client:
+            return ["Error: Supabase client not available."]
+        
+        for topic in selected_topics:
+            try:
+                resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(2).execute()
+                if resp.data:
+                    examples = [item["content"] for item in resp.data]
+                    display_topic = topic.replace(f"{subject} - ", "")
+                    topic_examples.append(f"{display_topic}:")
+                    for i, example in enumerate(examples, 1):
+                        topic_examples.append(f"{i}. {example}")
+                    topic_examples.append("")
+            except Exception as e:
+                logger.warning(f"Error gathering examples for topic {topic}: {e}")
+        return topic_examples
+
+    def format_questions(self, raw: str) -> List[str]:
+        """
+        Regex fallback cleaner for legacy free-text outputs
+        """
+        parts = raw.strip().split("\n\n")
+        out, n = [], 1
+        for p in parts:
+            line = p.strip()
+            if not line or re.search(r"(note|instruction|thinking|reasoning|let's|alright)", line.lower()):
+                continue
+            if (line.endswith("?")
+                or re.match(r"^(Discuss|Explain|Analyze|Evaluate|Critically|Examine|Comment|Elucidate|Illustrate|"
+                            r"Describe|Assess|Justify|Outline|Compare|Contrast|What|Why|How|To what extent)", line)):
+                out.append(f"{n}. {line}")
+                n += 1
+        return out
+
+# Factory
+def create_question_generator(groq_api_key, google_api_key, vectorstore, supabase_client):
+    return QuestionGenerator(groq_api_key, google_api_key, vectorstore, supabase_client)

@@ -1,13 +1,14 @@
 """
-Vector indexing functionality - refactored from indexing.py
+Vector indexing functionality(from old gradio indexing file)
 """
 import os
 import json
-from typing import List, Dict, Optional
-from langchain_community.vectorstores import FAISS
+from typing import List
+from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.schema import Document
+from core.supabase_client import get_supabase_service
 
 
 class VectorIndexer:
@@ -103,38 +104,49 @@ class VectorIndexer:
                 split_docs.append(doc)
         return split_docs
     
-    def create_faiss_index(self, documents: List[Document], persist_dir: str) -> FAISS:
-        """Create FAISS index from documents"""
-        print(f"Creating FAISS index with {len(documents)} documents")
-        
+    def create_vector_store(self, documents: List[Document]) -> SupabaseVectorStore:
+        """Create Supabase vector store from documents"""
+        print(f"Creating Supabase vector store with {len(documents)} documents")
+
         # Split documents if needed
         split_docs = self.split_documents(documents)
         print(f"After splitting: {len(split_docs)} document chunks")
-        
-        # Create FAISS index
-        vectorstore = FAISS.from_documents(split_docs, self.embeddings)
-        
-        # Save the index
-        os.makedirs(persist_dir, exist_ok=True)
-        vectorstore.save_local(persist_dir)
-        print(f"FAISS index saved to {persist_dir}")
-        
+
+        # Get Supabase client
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+
+        # Create Supabase vector store
+        vectorstore = SupabaseVectorStore.from_documents(
+            documents=split_docs,
+            embedding=self.embeddings,
+            client=supabase_client,
+            table_name="documents",
+            query_name="match_documents"
+        )
+
+        print(f"Supabase vector store created and documents upserted.")
+
         # Print statistics
         self._print_statistics(split_docs)
-        
+
         return vectorstore
-    
-    def load_faiss_index(self, persist_dir: str) -> FAISS:
-        """Load existing FAISS index"""
-        if not os.path.exists(os.path.join(persist_dir, "index.faiss")):
-            raise FileNotFoundError(f"FAISS index not found in {persist_dir}")
-        
-        vectorstore = FAISS.load_local(
-            persist_dir,
-            embeddings=self.embeddings,
-            allow_dangerous_deserialization=True
+
+    def load_vector_store(self) -> SupabaseVectorStore:
+        """Load existing Supabase vector store"""
+        print("Loading Supabase vector store...")
+
+        # Get Supabase client
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+
+        vectorstore = SupabaseVectorStore(
+            client=supabase_client,
+            embedding=self.embeddings,
+            table_name="documents",
+            query_name="match_documents"
         )
-        print(f"FAISS index loaded from {persist_dir}")
+        print("Supabase vector store loaded.")
         return vectorstore
     
     def _print_statistics(self, documents: List[Document]):
@@ -155,17 +167,13 @@ def create_vector_indexer(embedding_model: str = None) -> VectorIndexer:
     model = embedding_model or os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     return VectorIndexer(model)
 
-def create_index(data_dir: str = "data", persist_dir: str = None) -> FAISS:
-    """Create FAISS index from data directory"""
-    persist_dir = persist_dir or os.getenv("FAISS_DIR", os.path.join(data_dir, "faiss_db"))
-    
+def create_index(data_dir: str = "data") -> SupabaseVectorStore:
+    """Create Supabase vector store from data directory"""
     indexer = create_vector_indexer()
     documents = indexer.load_documents(data_dir)
-    return indexer.create_faiss_index(documents, persist_dir)
+    return indexer.create_vector_store(documents)
 
-def load_index(persist_dir: str = None) -> FAISS:
-    """Load existing FAISS index"""
-    persist_dir = persist_dir or os.getenv("FAISS_DIR", "faiss_db")
-    
+def load_index() -> SupabaseVectorStore:
+    """Load existing Supabase vector store"""
     indexer = create_vector_indexer()
-    return indexer.load_faiss_index(persist_dir)
+    return indexer.load_vector_store()

@@ -1,25 +1,25 @@
 export function TypographyH2() {
   return (
     <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
-      Introducing IntrepidQ Exclusively for the smartest UPSC CSE Written examination :
+      Meet IQ 1.0: Your Exclusive AI Partner for GS Preparation.
     </h1>
   )
 }
 
 export function TypographyLarge() {
-  return <div className="text-lg font-semibold">Perhaps you are thinking why ?</div>
+  return <div className="text-lg font-semibold">Here's what sets IQ 1.0 apart:</div>
 }
 
 
 export function TypographyList() {
   return (
     <ul className="my-6 ml-6 list-disc [&>li]:mt-2">
-      <li>customisable prep platform </li>
-      <li>pyq-themed reliable questions</li>
-      <li>no to degraded quality of questions in the coaching test series</li>
-      <li>preparation in a contemporary way</li>
-      <li>simplicity</li>
-      <li>no to scavenging telegram channels</li>
+      <li>A Fully Customizable Prep Experience</li>
+      <li>High-Quality context aware PYQ-Themed Questions</li>
+      <li>Finally, an End to Low-Quality Coaching Questions</li>
+      <li>Modernize Your Study Routine with AI</li>
+      <li>Effortless & Intuitive Interface</li>
+      <li>Stop Scavenging, Start Studying: All your resources, in one place.</li>
     </ul>
   )
 }

@@ -32,14 +32,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # ✅ Try to get the role from Supabase Auth metadata first
+    # Try to get the role from Supabase Auth metadata first
     role = (
         user.get("user_metadata", {}).get("role")
         if isinstance(user.get("user_metadata"), dict)
         else None
     )
 
-    # ✅ If no role in Auth metadata, check user_profiles table
+    # If no role in Auth metadata, check user_profiles table
     if not role:
         profile = supabase_service().get_user_profile(user["id"])
         if profile and "role" in profile:

@@ -1,12 +1,12 @@
 """
-Main FastAPI application - Render + Vercel Production Ready with CORS Fix & FAISS fallback
+Main FastAPI application for multi-provider model selection
 """
 import os
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.append('.')
 
+from core.supabase_client import get_supabase_service
 from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
 
@@ -21,6 +22,8 @@ from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
 from api.routes.answer import router as answer_router
+from api.routes.model_performance import router as performance_router
+from api.routes.cleanup import router as cleanup_router
 
 # Load environment variables
 load_dotenv()
@@ -37,31 +40,41 @@ app_state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan management with FAISS fallback"""
+    """Application lifespan management with Supabase vector store"""
     try:
         logger.info("Initializing AI services...")
 
-        # Load FAISS — allow startup even if missing
-        persist_dir = os.getenv("FAISS_DIR", "data/faiss_db")
+        # Get the Supabase client instance first
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+
+        # Load Supabase vector store
         try:
-            if not os.path.exists(persist_dir):
-                logger.warning(f"FAISS directory {persist_dir} not found. Starting without it.")
-                vectorstore = None
-            else:
-                vectorstore = load_index(persist_dir)
-                logger.info("FAISS vectorstore loaded successfully")
+            vectorstore = load_index()
+            logger.info("Supabase vectorstore loaded successfully")
         except Exception as e:
-            logger.error(f"FAISS load failed: {e}")
+            logger.error(f"Supabase vectorstore load failed: {e}")
             vectorstore = None
 
         app_state["vectorstore"] = vectorstore
 
-        # Init Question Generator
+        # Init Question Generator with all required API keys
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
-        together_key = os.getenv("TOGETHER_API_KEY")
-        qg = create_question_generator(groq_api_key, together_key, vectorstore)
+        
+        # MODIFIED: Get Google and Together keys for multi-provider support
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        #together_key = os.getenv("TOGETHER_API_KEY")
+
+        # MODIFIED: Pass all keys to the factory function
+        qg = create_question_generator(
+            groq_api_key=groq_api_key,
+            google_api_key=google_api_key,
+            #together_api_key=together_key,
+            vectorstore=vectorstore,
+            supabase_client=supabase_client
+        )
         app_state["question_generator"] = qg
         logger.info("Question generator initialized")
 
@@ -76,11 +89,16 @@ async def lifespan(app: FastAPI):
     app_state.clear()
     logger.info("AI services shut down")
 
-# Allowed origins — include localhost & Vercel in production
+# CORS Setup — supports prod, preview, local
+
 ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    os.getenv("FRONTEND_URL", "").strip()  # e.g. https://yourapp.vercel.app
+    o.strip() for o in os.getenv("FRONTEND_URL", "").split(",") if o.strip()
 ]
+
+if "http://localhost:3000" not in ALLOWED_ORIGINS:
+    ALLOWED_ORIGINS.append("http://localhost:3000")
+
+logger.info(f"CORS allowed origins: {ALLOWED_ORIGINS}")
 
 # FastAPI app
 app = FastAPI(
@@ -90,27 +108,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Manual CORS handling — ensures OPTIONS + all responses have headers
-@app.middleware("http")
-async def cors_handler(request: Request, call_next):
-    origin = request.headers.get("origin")
-    allow_origin = origin if origin in ALLOWED_ORIGINS else ALLOWED_ORIGINS[0] if ALLOWED_ORIGINS[0] else "*"
-
-    if request.method == "OPTIONS":
-        response = JSONResponse(content={})
-    else:
-        response = await call_next(request)
-
-    response.headers["Access-Control-Allow-Origin"] = allow_origin
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    return response
-
-# Standard CORS middleware as backup
+# Standard CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[o for o in ALLOWED_ORIGINS if o],
+    allow_origins=ALLOWED_ORIGINS if ALLOWED_ORIGINS else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -120,6 +121,9 @@ app.add_middleware(
 app.include_router(questions_router, prefix="/api", tags=["questions"])
 app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
+app.include_router(performance_router, prefix="/api", tags=["performance"])
+app.include_router(cleanup_router, prefix="/api/admin", tags=["cleanup"])
+
 
 @app.get("/")
 def root():
@@ -146,7 +150,7 @@ def health_check():
 def test_cors():
     return {"message": "CORS is working!", "status": "success"}
 
-# Error handlers — add CORS headers here too
+# Error handlers
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request, exc):
     response = JSONResponse(status_code=exc.status_code, content={"error": exc.detail})

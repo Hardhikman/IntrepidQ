@@ -28,14 +28,14 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({ stats }) => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>Subject Breakdown</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Subject Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
           {subjectData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250}>
               <BarChart data={subjectData}>
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -45,16 +45,16 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({ stats }) => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-sm text-gray-500">No subject data yet.</div>
+            <div className="text-xs sm:text-sm text-gray-500">No subject data yet.</div>
           )}
         </CardContent>
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Mode Breakdown</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Mode Breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={250}>
             <BarChart data={modeData}>
               <XAxis dataKey="name" />
               <YAxis />

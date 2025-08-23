@@ -26,6 +26,7 @@ from api.routes.subjects import router as subjects_router
 from api.routes.answer import router as answer_router
 from api.routes.model_performance import router as performance_router
 from api.routes.cleanup import router as cleanup_router
+from api.routes.feedback import router as feedback_router
 
 # Load environment variables
 load_dotenv()
@@ -173,6 +174,7 @@ app.include_router(subjects_router, prefix="/api", tags=["subjects"])
 app.include_router(answer_router, prefix="/api", tags=["answer"])
 app.include_router(performance_router, prefix="/api", tags=["performance"])
 app.include_router(cleanup_router, prefix="/api/admin", tags=["cleanup"])
+app.include_router(feedback_router, prefix="/api", tags=["feedback"])
 
 
 @app.get("/")

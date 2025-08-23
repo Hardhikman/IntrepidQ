@@ -87,7 +87,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             pipe.zcard(key)
             
             # Add current request
-            pipe.zadd(key, {current_time: current_time})
+            pipe.zadd(key, {str(current_time): current_time})
             
             # Set expiry
             pipe.expire(key, 120)  # 2 minutes to be safe

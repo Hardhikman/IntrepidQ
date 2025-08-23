@@ -16,6 +16,17 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
+def _ensure_redis_protocol(url: str) -> str:
+    """Ensure Redis URL has proper protocol prefix"""
+    if not url:
+        return url
+    
+    # If URL doesn't start with redis:// or rediss://, add redis://
+    if not url.startswith(('redis://', 'rediss://')):
+        return f"redis://{url}"
+    
+    return url
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     def __init__(
         self, 
@@ -34,19 +45,28 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Initialize Redis connection
         self.redis_client = None
         if enable_redis:
-            # Railway Redis URL detection
+            # Railway Redis URL detection with fallback order
             actual_redis_url = (
                 os.getenv('REDISCLOUD_URL') or      # Railway Redis Cloud
                 os.getenv('REDIS_PRIVATE_URL') or  # Railway Redis Private
+                os.getenv('REDIS_URL') or          # Standard Redis URL
                 redis_url                           # Passed parameter or default
             )
             
+            # Ensure proper protocol prefix for Railway compatibility
+            actual_redis_url = _ensure_redis_protocol(actual_redis_url)
+            
+            # Log which URL we're trying to use (masked for security)
+            masked_url = actual_redis_url.split('@')[-1] if '@' in actual_redis_url else actual_redis_url
+            logger.info(f"Rate limiter attempting Redis connection to: {masked_url}")
+            
             try:
-                self.redis_client = redis.from_url(actual_redis_url, decode_responses=True)
+                self.redis_client = redis.from_url(actual_redis_url, decode_responses=True, socket_connect_timeout=5)
                 self.redis_client.ping()
-                logger.info(f"Rate limiter connected to Redis: {actual_redis_url.split('@')[-1] if '@' in actual_redis_url else actual_redis_url}")
+                logger.info(f"Rate limiter connected to Redis: {masked_url}")
             except Exception as e:
                 logger.warning(f"Redis connection failed for rate limiter: {e}. Using memory storage.")
+                logger.info("Rate limiter will use in-memory storage - all functionality remains available")
                 self.redis_client = None
     
     def get_client_ip(self, request: Request) -> str:

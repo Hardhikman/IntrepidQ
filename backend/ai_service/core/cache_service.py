@@ -13,9 +13,20 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
+def _ensure_redis_protocol(url: str) -> str:
+    """Ensure Redis URL has proper protocol prefix"""
+    if not url:
+        return url
+    
+    # If URL doesn't start with redis:// or rediss://, add redis://
+    if not url.startswith(('redis://', 'rediss://')):
+        return f"redis://{url}"
+    
+    return url
+
 class CacheService:
     def __init__(self):
-        # Railway Redis URL detection
+        # Railway Redis URL detection with fallback order
         redis_url = (
             os.getenv('REDISCLOUD_URL') or      # Railway Redis Cloud
             os.getenv('REDIS_PRIVATE_URL') or  # Railway Redis Private  
@@ -23,13 +34,21 @@ class CacheService:
             'redis://localhost:6379'           # Local fallback
         )
         
+        # Ensure proper protocol prefix for Railway compatibility
+        redis_url = _ensure_redis_protocol(redis_url)
+        
+        # Log which URL we're trying to use (masked for security)
+        masked_url = redis_url.split('@')[-1] if '@' in redis_url else redis_url
+        logger.info(f"Cache service attempting Redis connection to: {masked_url}")
+        
         try:
-            self.redis_client = redis.from_url(redis_url, decode_responses=True)
+            self.redis_client = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=5)
             # Test connection
             self.redis_client.ping()
-            logger.info(f"Redis connected successfully: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
+            logger.info(f"Redis connected successfully: {masked_url}")
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}. Caching disabled.")
+            logger.info("Cache service will operate without Redis - question generation will still work")
             self.redis_client = None
     
     def _generate_cache_key(self, **kwargs) -> str:

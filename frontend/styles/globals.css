@@ -78,6 +78,43 @@
     background-size: 200% 200%;
     animation: gradient 4s ease infinite;
   }
+  
+  /* Responsive utility classes */
+  .responsive-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  
+  .card-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  
+  .form-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 gap-4;
+  }
+  
+  .responsive-heading {
+    @apply text-2xl sm:text-3xl md:text-4xl font-bold;
+  }
+  
+  .responsive-subheading {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+  
+  .mobile-hidden {
+    @apply hidden sm:block;
+  }
+  
+  .mobile-only {
+    @apply block sm:hidden;
+  }
+  
+  .text-responsive {
+    @apply text-sm sm:text-base md:text-lg;
+  }
+  
+  .button-responsive {
+    @apply px-3 py-1.5 text-sm sm:px-4 sm:py-2 sm:text-base;
+  }
 }
 
 /* Custom styles */
@@ -150,5 +187,44 @@
   }
   60%, 100% {
     content: '...';
+  }
+}
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+  /* Touch-friendly elements */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Better mobile scrolling */
+  .mobile-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Responsive padding */
+  .p-responsive {
+    @apply p-3 sm:p-4 md:p-6;
+  }
+  
+  .px-responsive {
+    @apply px-3 sm:px-4 md:px-6;
+  }
+  
+  .py-responsive {
+    @apply py-3 sm:py-4 md:py-6;
+  }
+  
+  /* Responsive margins */
+  .m-responsive {
+    @apply m-3 sm:m-4 md:m-6;
+  }
+  
+  .mx-responsive {
+    @apply mx-3 sm:mx-4 md:mx-6;
+  }
+  
+  .my-responsive {
+    @apply my-3 sm:my-4 md:my-6;
   }
 }

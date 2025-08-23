@@ -1,6 +1,6 @@
 # IntrepidQ2 🚀
 
-**The Next-Generation AI-Powered UPSC Question Generator**
+**A minimalistic AI RAG system that curates context-aware Q&A designed to make you think**
 
 <div align="center">
   <img src="https://img.shields.io/badge/version-2.0-blue.svg" alt="Version 2.0">

@@ -71,9 +71,9 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
   return (
     <TooltipProvider delayDuration={0}>
       <section className="bg-white rounded-xl shadow-md border border-gray-200">
-        <div className="flex flex-wrap gap-3 p-3 items-center">
+        <div className="flex flex-wrap gap-2 sm:gap-3 p-3 items-center justify-center sm:justify-start">
 
-          {/* GS Paper dropdown */}
+          {/* GS Paper dropdown - Made responsive */}
           <Select
             value={selectedSubject}
             onValueChange={handleSubjectChange}
@@ -81,7 +81,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           >
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-36 bg-orange-50 border border-orange-300 rounded-lg text-sm">
+                <SelectTrigger className="h-10 w-32 sm:w-36 bg-orange-50 border border-orange-300 rounded-lg text-sm">
                   <SelectValue placeholder="Select GS" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -95,11 +95,11 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </SelectContent>
           </Select>
 
-          {/* AI Model Selector */}
+          {/* AI Model Selector - Made responsive */}
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-44 bg-blue-50 border border-blue-300 rounded-lg text-sm">
+                <SelectTrigger className="h-10 w-36 sm:w-44 bg-blue-50 border border-blue-300 rounded-lg text-sm">
                   <SelectValue placeholder="Model" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -114,11 +114,11 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </SelectContent>
           </Select>
 
-          {/* Topic Combobox */}
+          {/* Topic Combobox - Made responsive */}
           {mode === "topic" && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="w-72 bg-orange-50 border border-orange-300 rounded-lg">
+                <div className="w-56 sm:w-72 bg-orange-50 border border-orange-300 rounded-lg">
                   <TopicCombobox
                     items={subjects[selectedSubject]?.topics || []}
                     value={selectedTopic}
@@ -138,7 +138,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </Tooltip>
           )}
 
-          {/* Current Affairs Toggle */}
+          {/* Current Affairs Toggle - Made responsive */}
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex items-center space-x-2">
@@ -160,7 +160,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </TooltipContent>
           </Tooltip>
 
-          {/* Slider */}
+          {/* Slider - Made responsive */}
           {mode === "topic" && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -169,7 +169,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
                   <span className="text-gray-800 font-semibold text-sm">
                     {numQuestions}
                   </span>
-                  <div className="w-24">
+                  <div className="w-20 sm:w-24">
                     <Slider
                       min={1}
                       max={10}
@@ -184,7 +184,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </Tooltip>
           )}
 
-          {/* Generate Button */}
+          {/* Generate Button - Made responsive */}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

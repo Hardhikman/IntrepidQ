@@ -85,6 +85,57 @@ def get_user_stats(user_id: str):
     }
 
 
+@router.get("/check_guest_limit")
+async def check_guest_limit(request: Request):
+    """Check current guest generation limit status"""
+    try:
+        client_ip = get_client_ip(request)
+        
+        # Check current guest generation count
+        used_count = 0
+        limit_reached = False
+        
+        try:
+            from datetime import datetime
+            today = datetime.utcnow().date()
+            
+            response = supabase_service().client.table("guest_generations").select(
+                "generation_count, last_generation_date"
+            ).eq("ip_address", client_ip).execute()
+
+            if response.data:
+                record = response.data[0]
+                generation_count = record.get("generation_count", 0)
+                last_date_str = record.get("last_generation_date")
+                
+                if last_date_str:
+                    try:
+                        last_date = datetime.fromisoformat(last_date_str).date()
+                        if last_date == today:
+                            used_count = generation_count
+                            limit_reached = used_count >= GUEST_DAILY_LIMIT
+                    except ValueError:
+                        pass
+        except Exception as e:
+            logger.error(f"Error checking guest limit: {e}")
+            
+        return {
+            "generations_used": used_count,
+            "daily_limit": GUEST_DAILY_LIMIT,
+            "remaining": max(GUEST_DAILY_LIMIT - used_count, 0),
+            "limit_reached": limit_reached
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in check_guest_limit: {e}", exc_info=True)
+        return {
+            "generations_used": 0,
+            "daily_limit": GUEST_DAILY_LIMIT,
+            "remaining": GUEST_DAILY_LIMIT,
+            "limit_reached": False
+        }
+
+
 @router.post("/generate_questions")
 async def generate_questions(
     request: Dict[str, Any],

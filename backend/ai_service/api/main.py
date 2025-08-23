@@ -6,8 +6,9 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
@@ -17,6 +18,7 @@ sys.path.append('.')
 from core.supabase_client import get_supabase_service
 from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
+from core.rate_limiter import RateLimitMiddleware
 
 from api.models import HealthResponse
 from api.routes.questions import router as questions_router
@@ -34,6 +36,20 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+# Security Middleware
+class SecurityMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        # Security headers as per infrastructure requirements
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        
+        return response
 
 # Global state
 app_state = {}
@@ -115,6 +131,18 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# Add security middleware
+app.add_middleware(SecurityMiddleware)
+
+# Add rate limiting middleware
+rate_limit_per_minute = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+app.add_middleware(
+    RateLimitMiddleware,
+    calls_per_minute=rate_limit_per_minute,
+    redis_url=redis_url
 )
 
 # Routers

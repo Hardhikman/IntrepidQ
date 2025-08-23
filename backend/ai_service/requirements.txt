@@ -1,6 +1,7 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 fastapi>=0.100.0
+starlette>=0.27.0
 uvicorn[standard]>=0.20.0
 langchain>=0.0.300
 langchain-community>=0.0.30
@@ -18,7 +19,9 @@ supabase>=2.0.0
 pgvector>=0.2.0
 postgrest>=0.15.0
 python-multipart>=0.0.5
+redis>=5.0.0
 google-generativeai>=0.4.0
 together
 torch==2.8.0+cpu
+locust>=2.0.0
 

@@ -1,9 +1,10 @@
 """
 Pydantic models for API requests and responses
 """
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+import re
 
 # Health check models
 class HealthResponse(BaseModel):
@@ -24,17 +25,51 @@ class SubjectsResponse(BaseModel):
 
 # Question generation models
 class GenerateQuestionsRequest(BaseModel):
-    """Request model for generating questions"""
-    topic: str = Field(..., description="Topic for question generation")
+    """Request model for generating questions with enhanced validation"""
+    topic: str = Field(..., min_length=3, max_length=200, description="Topic for question generation")
     num: int = Field(default=5, ge=1, le=10, description="Number of questions to generate")
     use_ca: bool = Field(default=False, description="Include current affairs")
-    months: int = Field(default=6, ge=1, le=12, description="Current affairs time period in months")
+    months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
+    model: str = Field(default="llama3-70b", description="AI model to use")
+    
+    @validator('topic')
+    def validate_topic(cls, v):
+        # Sanitize input - remove potentially harmful characters
+        sanitized = re.sub(r'[<>"\';]', '', v.strip())
+        if len(sanitized) < 3:
+            raise ValueError('Topic too short after sanitization')
+        if len(sanitized) > 200:
+            raise ValueError('Topic too long')
+        return sanitized
+    
+    @validator('model')
+    def validate_model(cls, v):
+        allowed_models = ["llama3-70b", "gemini-pro", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"]
+        if v not in allowed_models:
+            raise ValueError(f'Model must be one of {allowed_models}')
+        return v
 
 class GenerateWholePaperRequest(BaseModel):
-    """Request model for generating whole paper"""
+    """Request model for generating whole paper with enhanced validation"""
     subject: str = Field(..., description="Subject for paper generation (GS1, GS2, GS3, GS4)")
     use_ca: bool = Field(default=False, description="Include current affairs")
-    months: int = Field(default=6, ge=1, le=12, description="Current affairs time period in months")
+    months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
+    model: str = Field(default="llama3-70b", description="AI model to use")
+    
+    @validator('subject')
+    def validate_subject(cls, v):
+        allowed_subjects = ["GS1", "GS2", "GS3", "GS4"]
+        v_upper = v.upper()
+        if v_upper not in allowed_subjects:
+            raise ValueError(f'Subject must be one of {allowed_subjects}')
+        return v_upper
+    
+    @validator('model')
+    def validate_model(cls, v):
+        allowed_models = ["llama3-70b", "gemini-pro", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"]
+        if v not in allowed_models:
+            raise ValueError(f'Model must be one of {allowed_models}')
+        return v
 
 class QuestionsResponse(BaseModel):
     """Response model for generated questions"""

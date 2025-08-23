@@ -3,6 +3,7 @@ Rate limiting middleware for FastAPI with KeyDB backend
 Implements IP-based tracking with configurable limits and 429 responses
 KeyDB provides better performance than Redis with multi-threading
 """
+import os
 import time
 import logging
 from typing import Dict, Optional
@@ -33,12 +34,19 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Initialize Redis connection
         self.redis_client = None
         if enable_redis:
+            # Railway Redis URL detection
+            actual_redis_url = (
+                os.getenv('REDISCLOUD_URL') or      # Railway Redis Cloud
+                os.getenv('REDIS_PRIVATE_URL') or  # Railway Redis Private
+                redis_url                           # Passed parameter or default
+            )
+            
             try:
-                self.redis_client = redis.from_url(redis_url, decode_responses=True)
+                self.redis_client = redis.from_url(actual_redis_url, decode_responses=True)
                 self.redis_client.ping()
-                logger.info("Rate limiter connected to KeyDB")
+                logger.info(f"Rate limiter connected to Redis: {actual_redis_url.split('@')[-1] if '@' in actual_redis_url else actual_redis_url}")
             except Exception as e:
-                logger.warning(f"KeyDB connection failed for rate limiter: {e}. Using memory storage.")
+                logger.warning(f"Redis connection failed for rate limiter: {e}. Using memory storage.")
                 self.redis_client = None
     
     def get_client_ip(self, request: Request) -> str:
@@ -87,7 +95,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             pipe.zcard(key)
             
             # Add current request
-            pipe.zadd(key, {current_time: current_time})
+            pipe.zadd(key, {str(current_time): current_time})
             
             # Set expiry
             pipe.expire(key, 120)  # 2 minutes to be safe

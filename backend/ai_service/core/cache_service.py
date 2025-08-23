@@ -15,14 +15,21 @@ logger = logging.getLogger(__name__)
 
 class CacheService:
     def __init__(self):
-        redis_url = os.getenv('REDIS_URL', 'redis://localhost:6379')
+        # Railway Redis URL detection
+        redis_url = (
+            os.getenv('REDISCLOUD_URL') or      # Railway Redis Cloud
+            os.getenv('REDIS_PRIVATE_URL') or  # Railway Redis Private  
+            os.getenv('REDIS_URL') or          # Standard Redis URL
+            'redis://localhost:6379'           # Local fallback
+        )
+        
         try:
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             # Test connection
             self.redis_client.ping()
-            logger.info(f"KeyDB connected successfully: {redis_url}")
+            logger.info(f"Redis connected successfully: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
         except Exception as e:
-            logger.warning(f"KeyDB connection failed: {e}. Caching disabled.")
+            logger.warning(f"Redis connection failed: {e}. Caching disabled.")
             self.redis_client = None
     
     def _generate_cache_key(self, **kwargs) -> str:

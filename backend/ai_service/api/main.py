@@ -8,7 +8,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 
@@ -138,7 +138,14 @@ app.add_middleware(SecurityMiddleware)
 
 # Add rate limiting middleware
 rate_limit_per_minute = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
-redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+# Railway Redis URL detection
+redis_url = (
+    os.getenv("REDISCLOUD_URL") or      # Railway Redis Cloud
+    os.getenv("REDIS_PRIVATE_URL") or  # Railway Redis Private
+    os.getenv("REDIS_URL") or          # Standard Redis URL
+    "redis://localhost:6379"           # Local fallback
+)
+logger.info(f"Using Redis URL: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
 app.add_middleware(
     RateLimitMiddleware,
     calls_per_minute=rate_limit_per_minute,

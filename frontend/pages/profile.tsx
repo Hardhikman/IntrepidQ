@@ -116,13 +116,13 @@ export default function Profile({ session }: ProfileProps) {
   }
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-6 sm:py-8">
       <div className="max-w-2xl mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-                  <h1 className="text-3xl font-bold">Profile</h1>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 sm:mb-8">
+                  <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
                   <Button
                     onClick={signOut}
-                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
@@ -131,7 +131,7 @@ export default function Profile({ session }: ProfileProps) {
 
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-lg sm:text-xl">
               <User className="mr-2 h-5 w-5" />
               User Information
             </CardTitle>
@@ -140,8 +140,8 @@ export default function Profile({ session }: ProfileProps) {
             <div className="flex items-center space-x-3">
               <Mail className="h-5 w-5 text-gray-500" />
               <div>
-                <p className="text-sm text-gray-500">Email</p>
-                <p className="font-medium">{session.user.email}</p>
+                <p className="text-xs sm:text-sm text-gray-500">Email</p>
+                <p className="font-medium text-sm sm:text-base">{session.user.email}</p>
               </div>
             </div>
 
@@ -149,8 +149,8 @@ export default function Profile({ session }: ProfileProps) {
               <div className="flex items-center space-x-3">
                 <Calendar className="h-5 w-5 text-gray-500" />
                 <div>
-                  <p className="text-sm text-gray-500">Member since</p>
-                  <p className="font-medium">
+                  <p className="text-xs sm:text-sm text-gray-500">Member since</p>
+                  <p className="font-medium text-sm sm:text-base">
                     {new Date(profile.created_at).toLocaleDateString()}
                   </p>
                 </div>
@@ -163,6 +163,7 @@ export default function Profile({ session }: ProfileProps) {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
+                className="text-sm sm:text-base"
               />
             </div>
 
@@ -176,10 +177,10 @@ export default function Profile({ session }: ProfileProps) {
           </CardContent>
         </Card>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 sm:mt-8 text-center">
                   <Button
                     onClick={() => router.push('/')}
-                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto"
                   >
                     Back to Main page
                   </Button>

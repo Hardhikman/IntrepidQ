@@ -173,15 +173,15 @@ export default function FloatingFeedbackButton() {
   return (
     <div className="fixed bottom-4 right-4 z-50">
       {open && (
-        <Card className="mb-2 w-64 shadow-xl">
-          <CardContent className="p-3 space-y-3">
-            <div className="text-sm font-medium">Website Feedback</div>
+        <Card className="mb-2 w-64 sm:w-72 shadow-xl">
+          <CardContent className="p-3 sm:p-4 space-y-3">
+            <div className="text-sm sm:text-base font-medium">Website Feedback</div>
             <div className="flex gap-2">
               <Button
                 variant={feedbackType === "bug" ? "default" : "outline"}
                 disabled={submitting}
                 onClick={() => setFeedbackType("bug")}
-                className="w-full"
+                className="w-full text-sm sm:text-base"
               >
                 🐞 Bug
               </Button>
@@ -189,7 +189,7 @@ export default function FloatingFeedbackButton() {
                 variant={feedbackType === "feature" ? "default" : "outline"}
                 disabled={submitting}
                 onClick={() => setFeedbackType("feature")}
-                className="w-full"
+                className="w-full text-sm sm:text-base"
               >
                 💡 Feature
               </Button>
@@ -206,6 +206,7 @@ export default function FloatingFeedbackButton() {
                 variant="default"
                 disabled={submitting || !feedbackType || !comment.trim() || !supabase}
                 onClick={submitFeedback}
+                className="text-sm sm:text-base"
               >
                 Submit
               </Button>
@@ -214,7 +215,7 @@ export default function FloatingFeedbackButton() {
         </Card>
       )}
       <Button
-        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white"
+        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white text-sm sm:text-base"
         onClick={() => setOpen((v) => !v)}
         variant={open ? "secondary" : "default"}
       >

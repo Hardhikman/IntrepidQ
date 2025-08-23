@@ -66,7 +66,9 @@ class SupabaseService:
             else:
                 logger.warning(f"Failed to log analytics event: {getattr(response, 'error', str(response))}")
         except Exception as e:
-            logger.error(f"Error logging analytics event for user {user_id}: {e}", exc_info=True)
+            # Handle case where usage_analytics table doesn't exist yet or other database issues
+            logger.warning(f"Could not log analytics event for user {user_id}: {e}")
+            # Don't re-raise the exception to avoid breaking the main application flow
 
     # Auth
     def verify_user(self, token: str) -> Optional[Dict[str, Any]]:

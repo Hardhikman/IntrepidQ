@@ -23,6 +23,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Menu } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 // Types
 import { GeneratedQuestion } from "@/lib/supabase";
@@ -35,6 +36,7 @@ interface Subject {
 export default function UPSCQuestionGenerator() {
   const {
     user,
+    profile,
     loading: authLoading,
     signOut,
     signInWithGoogle,
@@ -62,10 +64,63 @@ export default function UPSCQuestionGenerator() {
   // NEW: variant toggle → default "compact", change to "spacious" if wanted
   const [cardVariant, setCardVariant] = useState<"compact" | "spacious">("compact");
 
+  // Daily limit tracking
+  const [dailyLimitReached, setDailyLimitReached] = useState(false);
+  const [guestGenerationsUsed, setGuestGenerationsUsed] = useState(0);
+
+  // Helper function to get remaining guest generations
+  const getRemainingGuestGenerations = () => {
+    return Math.max(2 - guestGenerationsUsed, 0);
+  };
+
+  // Check guest limit status from server
+  const checkGuestLimitFromServer = async () => {
+    if (user) return; // Only for guests
+    
+    try {
+      const response = await fetch('/api/check_guest_limit', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setGuestGenerationsUsed(data.generations_used || 0);
+        setDailyLimitReached(data.limit_reached || false);
+      }
+    } catch (error) {
+      // Silently handle errors - fallback to default state
+      setGuestGenerationsUsed(0);
+      setDailyLimitReached(false);
+    }
+  };
+
   // Load subjects
   useEffect(() => {
     fetchSubjects();
   }, []);
+
+  // Check daily limits
+  useEffect(() => {
+    checkDailyLimits();
+  }, [user, loading, authLoading, profile]);
+
+  const checkDailyLimits = () => {
+    if (authLoading) return;
+    
+    if (user && profile) {
+      // Authenticated user - check from profile
+      const today = new Date().toISOString().slice(0, 10);
+      const lastDate = profile?.last_generation_date;
+      const count = lastDate === today ? (profile?.generation_count_today || 0) : 0;
+      setDailyLimitReached(count >= 5);
+    } else if (!user) {
+      // Guest user - check from server
+      checkGuestLimitFromServer();
+    } else {
+      setDailyLimitReached(false);
+    }
+  };
 
   useEffect(() => {
     const shouldPoll = loading || generatingAllAnswers || answerLoadingIndex !== null;
@@ -134,6 +189,10 @@ export default function UPSCQuestionGenerator() {
         if (response.status === 429) {
           const errorData = await response.json();
           if (errorData.guest_limit_reached) {
+            // Update guest state from server response
+            setDailyLimitReached(true);
+            setGuestGenerationsUsed(2); // Reached limit
+            
             // Guest user hit limit - show special toast with sign-in option
             toast({
               title: "Question Generation Limit Reached",
@@ -151,6 +210,7 @@ export default function UPSCQuestionGenerator() {
             });
           } else {
             // Authenticated user hit limit
+            setDailyLimitReached(true);
             toast({
               title: "Daily Limit Reached",
               description: errorData.error || "Daily generation limit reached",
@@ -189,6 +249,17 @@ export default function UPSCQuestionGenerator() {
             }
       );
       setQuestions(qs);
+      
+      // Update guest state after successful generation
+      if (!user) {
+        setGuestGenerationsUsed(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 2) {
+            setDailyLimitReached(true);
+          }
+          return newCount;
+        });
+      }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -283,41 +354,71 @@ export default function UPSCQuestionGenerator() {
       <Card className="max-w-5xl mx-auto shadow-md">
         <CardHeader className="py-3">
           <div className="flex items-center justify-between">
-            <div className="w-20" />
-            <CardTitle className="flex-1 text-center text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-orange-400 via-blue-400 to-orange-500 
+            {/* Left - Website Title (full left alignment) */}
+            <CardTitle className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-orange-400 via-blue-400 to-orange-500 
   bg-clip-text text-transparent drop-shadow-sm">
               IntrepidQ
             </CardTitle>
 
-            {/* Conditional rendering: User menu for authenticated users, Sign In button for guests */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-semibold tracking-wide">
-                    <Menu className="w-5 h-5 mr-2" /> MENU
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[180px]">
-                  <DropdownMenuLabel className="text-orange-600 font-semibold">
-                    {authLoading ? "Checking..." : user?.email ?? "Guest"}
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/dashboard")}>📊 Dashboard</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/profile")}>👤 Profile</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/about")}>ℹ️ About</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut}>🚪 Sign Out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
+            {/* Right side buttons */}
+            <div className="flex items-center justify-end gap-2">
+              {/* About button - always visible */}
               <Button 
-                onClick={handleGoogleSignIn}
-                className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white flex items-center font-semibold tracking-wide"
-                disabled={authLoading}
+                size="sm"
+                onClick={() => router.push("/about")}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
               >
-                {authLoading ? "Loading..." : "🚀 Sign In with Google"}
+                ℹ️ About
               </Button>
-            )}
+
+              {/* Separator */}
+              <Separator orientation="vertical" className="h-6" />
+
+              {/* Blog button - always visible */}
+              <Button 
+                size="sm"
+                onClick={() => router.push("/blog")}
+                className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+              >
+                📝 Blog
+              </Button>
+
+              {/* Separator */}
+              <Separator orientation="vertical" className="h-6" />
+
+              {/* Conditional rendering: User menu for authenticated users, Sign In button for guests */}
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      size="sm"
+                      className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                    >
+                      <Menu className="w-4 h-4 mr-1.5" /> MENU
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[180px]">
+                    <DropdownMenuLabel className="text-orange-600 font-semibold">
+                      {authLoading ? "Checking..." : user?.email ?? "Guest"}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>📊 Dashboard</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>👤 Profile</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut}>🚪 Sign Out</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  size="sm"
+                  onClick={handleGoogleSignIn}
+                  className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                  disabled={authLoading}
+                >
+                  {authLoading ? "Loading..." : "🚀 Sign In with Google"}
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
       </Card>
@@ -419,10 +520,32 @@ export default function UPSCQuestionGenerator() {
           <CardContent className="py-4">
             <div className="text-center">
               <div className="text-blue-800 font-medium mb-2">
-                🎆 Welcome, Guest! You have 2 free question generations per day.
+                {dailyLimitReached 
+                  ? '🚫 Daily limit reached! You have 0 question generations remaining today.' 
+                  : `🎆 Welcome, Guest! You have ${getRemainingGuestGenerations()} question generation${getRemainingGuestGenerations() === 1 ? '' : 's'} remaining today.`
+                }
               </div>
               <div className="text-blue-600 text-sm">
-                Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!
+                {dailyLimitReached 
+                  ? '🚀 Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
+                  : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
+                }
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Authenticated user daily limit notification */}
+      {user && dailyLimitReached && (
+        <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
+          <CardContent className="py-4">
+            <div className="text-center">
+              <div className="text-orange-800 font-medium mb-2">
+                🚫 Daily Limit Reached! You've used all 5 question generations today.
+              </div>
+              <div className="text-orange-600 text-sm">
+                Your daily limit will reset tomorrow. You can still generate unlimited answers!
               </div>
             </div>
           </CardContent>
@@ -444,10 +567,11 @@ export default function UPSCQuestionGenerator() {
           setUseCurrentAffairs={setUseCurrentAffairs}
           selectedModel={selectedModel}
           setSelectedModel={setSelectedModel}
-          isGenerateDisabled={loading}
+          isGenerateDisabled={loading || dailyLimitReached}
           loading={loading}
           onGenerate={handleGenerateQuestions}
           mode={mode}
+          dailyLimitReached={dailyLimitReached}
         />
 
         <div id="results-section">

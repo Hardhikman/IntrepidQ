@@ -261,3 +261,147 @@ async def get_dashboard_data(user: Dict[str, Any] = Depends(get_current_user)):
     Returns both user profile and stats in one API call.
     """
     return supabase_service().get_user_dashboard_data(user['id'])
+
+
+@router.get("/cache_stats")
+async def get_cache_stats(user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
+    """
+    Get cache statistics including Supabase cache storage
+    """
+    try:
+        question_generator = get_question_generator()
+        cache_stats = question_generator.get_cache_stats()
+        
+        return {
+            "success": True,
+            "cache_stats": cache_stats,
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error fetching cache stats: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch cache statistics")
+
+
+@router.delete("/cache")
+async def clear_cache(
+    subject: Optional[str] = None,
+    topic: Optional[str] = None,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Clear cache - requires authentication
+    """
+    try:
+        question_generator = get_question_generator()
+        question_generator.clear_cache(subject=subject, topic=topic)
+        
+        cache_scope = "all cache" if not subject else f"{subject}" if not topic else f"{subject}-{topic}"
+        
+        return {
+            "success": True,
+            "message": f"Successfully cleared {cache_scope}",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error clearing cache: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to clear cache")
+
+
+@router.post("/cache/cleanup")
+async def manual_cache_cleanup(user: Dict[str, Any] = Depends(get_current_user)):
+    """
+    Manually trigger cache cleanup (expired entries)
+    """
+    try:
+        # Call the Supabase cleanup function
+        from core.supabase_client import supabase_service
+        
+        result = supabase_service().client.rpc('cleanup_expired_cache').execute()
+        
+        return {
+            "success": True,
+            "message": result.data if result.data else "Cache cleanup completed",
+            "timestamp": datetime.now().isoformat()
+        }
+    except Exception as e:
+        logger.error(f"Error during manual cache cleanup: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to cleanup cache")
+
+
+@router.get("/cleanup/status")
+async def get_cleanup_status(user: Optional[Dict[str, Any]] = Depends(get_optional_user)):
+    """
+    Get automatic cleanup status and schedule information
+    """
+    try:
+        from core.supabase_client import supabase_service
+        
+        # Check if pg_cron extension is available
+        try:
+            cron_check = supabase_service().client.rpc('pg_extension_exists', {'ext_name': 'pg_cron'}).execute()
+            pg_cron_available = bool(cron_check.data)
+        except:
+            pg_cron_available = False
+        
+        cleanup_status = {
+            "pg_cron_available": pg_cron_available,
+            "scheduled_jobs": [],
+            "recent_executions": [],
+            "cleanup_functions_available": True
+        }
+        
+        if pg_cron_available:
+            try:
+                # Get scheduled jobs
+                jobs_resp = supabase_service().client.table('cron.job').select('jobname, schedule, active, created_at').execute()
+                cleanup_status["scheduled_jobs"] = jobs_resp.data or []
+                
+                # Get recent executions
+                executions_resp = supabase_service().client.table('cron.job_run_details').select(
+                    'start_time, end_time, return_message, status'
+                ).order('start_time', desc=True).limit(5).execute()
+                cleanup_status["recent_executions"] = executions_resp.data or []
+                
+            except Exception as e:
+                logger.warning(f"Could not fetch cron job details: {e}")
+        
+        # Check what would be cleaned up
+        try:
+            # Count old guest records
+            guest_count_resp = supabase_service().client.rpc(
+                'count_old_guest_records', 
+                {'days_old': 7}
+            ).execute()
+            
+            # Count expired cache entries
+            cache_count_resp = supabase_service().client.table('questions_cache').select(
+                'id', count='exact'
+            ).lt('expires_at', datetime.now().isoformat()).execute()
+            
+            topic_count_resp = supabase_service().client.table('topic_questions_index').select(
+                'id', count='exact'
+            ).lt('expires_at', datetime.now().isoformat()).execute()
+            
+            cleanup_status["pending_cleanup"] = {
+                "old_guest_records": guest_count_resp.data if guest_count_resp.data else 0,
+                "expired_cache_entries": cache_count_resp.count or 0,
+                "expired_topic_entries": topic_count_resp.count or 0
+            }
+            
+        except Exception as e:
+            logger.warning(f"Could not get cleanup counts: {e}")
+            cleanup_status["pending_cleanup"] = {
+                "old_guest_records": "unknown",
+                "expired_cache_entries": "unknown", 
+                "expired_topic_entries": "unknown"
+            }
+        
+        return {
+            "success": True,
+            "cleanup_status": cleanup_status,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting cleanup status: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to get cleanup status")

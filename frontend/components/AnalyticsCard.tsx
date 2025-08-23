@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 
 interface AnalyticsCardProps {
@@ -14,8 +14,6 @@ interface AnalyticsCardProps {
     total_generations: number;
   } | null;
 }
-
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#AF19FF", "#FF1919"];
 
 export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({ stats }) => {
   if (!stats) {
@@ -38,15 +36,13 @@ export const AnalyticsCard: React.FC<AnalyticsCardProps> = ({ stats }) => {
         <CardContent>
           {subjectData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={subjectData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} fill="#8884d8" label>
-                  {subjectData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
+              <BarChart data={subjectData}>
+                <XAxis dataKey="name" />
+                <YAxis />
                 <Tooltip />
                 <Legend />
-              </PieChart>
+                <Bar dataKey="value" fill="#8884d8" />
+              </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="text-sm text-gray-500">No subject data yet.</div>

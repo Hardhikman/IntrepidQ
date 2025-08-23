@@ -6577,3 +6577,506 @@ AttributeError: 'QuestionGenerator' object has no attribute 'get_subject_from_to
 2025-08-16 21:02:28,745 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
 2025-08-16 21:02:28,888 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
 2025-08-16 21:33:35,371 INFO api.main AI services shut down
+2025-08-22 13:38:20,421 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:38:20,461 INFO api.main Initializing AI services...
+2025-08-22 13:39:33,022 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:39:33,034 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:39:38,941 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:39:41,534 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:39:41,814 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:39:41,824 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845, 0.571153846153845]}
+2025-08-22 13:39:41,835 INFO api.main Question generator initialized
+2025-08-22 13:39:41,837 INFO api.main AI services ready
+2025-08-22 13:40:29,819 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 13:40:29,828 INFO core.question_generator Adaptive fallback order: ['gemma2-9b', 'moonshot-k2', 'deepseek-r1', 'deepseek-v3']
+2025-08-22 13:40:29,926 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.Test+Topic&limit=5 "HTTP/2 200 OK"
+2025-08-22 13:40:29,930 INFO core.question_generator Attempting model: llama3-70b
+2025-08-22 13:40:34,308 INFO httpx HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 13:40:34,533 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance "HTTP/2 200 OK"
+2025-08-22 13:40:34,536 INFO core.question_generator [SUCCESS] llama3-70b took 1.49s (avg 0.61s over 27 runs)
+2025-08-22 13:40:34,548 INFO core.question_generator Cached 3 questions for GS1 - Test Topic
+2025-08-22 13:40:34,806 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=id%2Cgeneration_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 13:40:34,927 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations "HTTP/2 201 Created"
+2025-08-22 13:40:37,569 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 13:40:37,575 INFO core.question_generator Adaptive fallback order: ['gemma2-9b', 'moonshot-k2', 'deepseek-r1', 'deepseek-v3']
+2025-08-22 13:40:37,648 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Role+of+Women+and+Women%E2%80%99s+Organizations%2C+Population+and+Associated+Issues%2C+Poverty+and+Developmental+Issues%2C+Urbanization%2C+Their+Problems+and+Their+Remedies&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:37,758 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Indian+Culture+-+Salient+Aspects+of+Art+Forms%2C+Literature%2C+and+Architecture+from+Ancient+to+Modern+Times&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:37,828 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Important+Geophysical+Phenomena+Such+as+Earthquakes%2C+Tsunami%2C+Volcanic+Activity%2C+Cyclone+etc.%2C+Geographical+Features+and+Their+Location+%E2%80%93+Changes+in+Critical+Geographical+Features+%28Including+Water-Bodies+and+Ice-Caps%29+and+in+Flora+and+Fauna+and+the+Effects+of+Such+Changes&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:37,918 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+History+of+the+World+%2818th+Century+Events+such+as+Industrial+Revolution%2C+World+Wars%2C+Redrawal+of+National+Boundaries%2C+Colonization%2C+Decolonization%2C+Political+Philosophies+like+Communism%2C+Capitalism%2C+Socialism%2C+etc.+%E2%80%93+Their+Forms+and+Effect+on+Society%29&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:37,998 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Modern+Indian+history+from+about+the+middle+of+the+eighteenth+century+until+the+present+-+significant+events%2C+personalities%2C+issues+%26+The+Freedom+Struggle+%E2%80%93+its+various+stages+and+important+contributors%2Fcontributions+from+different+parts+of+the+country&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:38,090 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Social+Empowerment%2C+Communalism%2C+Regionalism+%26+Secularism&limit=2 "HTTP/2 200 OK"
+2025-08-22 13:40:38,094 INFO core.question_generator Using 5 cached questions as examples for whole paper generation
+2025-08-22 13:40:38,095 INFO core.question_generator Attempting model: llama3-70b
+2025-08-22 13:40:42,997 INFO httpx HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 13:40:43,067 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance "HTTP/2 200 OK"
+2025-08-22 13:40:43,071 INFO core.question_generator [SUCCESS] llama3-70b took 2.58s (avg 0.68s over 28 runs)
+2025-08-22 13:40:43,076 INFO core.question_generator Cached 1 questions for GS1 - GS1 - Role of Women and Women’s Organizations, Population and Associated Issues, Poverty and Developmental Issues, Urbanization, Their Problems and Their Remedies
+2025-08-22 13:40:43,078 INFO core.question_generator Cached 1 questions for GS1 - GS1 - Indian Culture - Salient Aspects of Art Forms, Literature, and Architecture from Ancient to Modern Times
+2025-08-22 13:40:43,085 INFO core.question_generator Cached 1 questions for GS1 - GS1 - Important Geophysical Phenomena Such as Earthquakes, Tsunami, Volcanic Activity, Cyclone etc., Geographical Features and Their Location – Changes in Critical Geographical Features (Including Water-Bodies and Ice-Caps) and in Flora and Fauna and the Effects of Such Changes
+2025-08-22 13:40:43,093 INFO core.question_generator Cached 1 questions for GS1 - GS1 - History of the World (18th Century Events such as Industrial Revolution, World Wars, Redrawal of National Boundaries, Colonization, Decolonization, Political Philosophies like Communism, Capitalism, Socialism, etc. – Their Forms and Effect on Society)
+2025-08-22 13:40:43,097 INFO core.question_generator Cached 1 questions for GS1 - GS1 - Modern Indian history from about the middle of the eighteenth century until the present - significant events, personalities, issues & The Freedom Struggle – its various stages and important contributors/contributions from different parts of the country
+2025-08-22 13:40:43,101 INFO core.question_generator Cached 5 questions for GS1 - GS1 - Social Empowerment, Communalism, Regionalism & Secularism
+2025-08-22 13:40:43,200 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=id%2Cgeneration_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 13:40:43,337 INFO httpx HTTP Request: PATCH https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?id=eq.4 "HTTP/2 400 Bad Request"
+2025-08-22 13:40:43,345 ERROR core.supabase_client [Supabase] Increment guest generation count failed for IP 127.0.0.1: {'message': "Could not find the 'updated_at' column of 'guest_generations' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+2025-08-22 13:40:45,662 INFO api.routes.answer Generating answer for question: What is the significance of the Indian Constitution?
+2025-08-22 13:47:17,245 INFO api.main AI services shut down
+2025-08-22 13:47:52,512 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:47:52,570 INFO api.main Initializing AI services...
+2025-08-22 13:49:09,186 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:49:09,188 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:49:14,053 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:49:15,598 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:49:15,765 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:49:15,769 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:49:15,775 INFO api.main Question generator initialized
+2025-08-22 13:49:15,776 INFO api.main AI services ready
+2025-08-22 13:49:26,171 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:49:26,198 INFO api.main Initializing AI services...
+2025-08-22 13:49:44,700 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:49:44,703 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:49:53,038 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:49:55,271 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:49:55,356 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:49:55,358 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:49:55,361 INFO api.main Question generator initialized
+2025-08-22 13:49:55,362 INFO api.main AI services ready
+2025-08-22 13:50:04,350 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:50:04,396 INFO api.main Initializing AI services...
+2025-08-22 13:50:22,671 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:50:22,671 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:50:27,332 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:50:28,404 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:50:28,525 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:50:28,528 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:50:28,534 INFO api.main Question generator initialized
+2025-08-22 13:50:28,535 INFO api.main AI services ready
+2025-08-22 13:51:26,568 INFO api.main AI services shut down
+2025-08-22 13:51:39,888 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:51:39,925 INFO api.main Initializing AI services...
+2025-08-22 13:52:03,869 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:52:03,873 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:52:08,759 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:52:10,062 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:52:10,151 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:52:10,153 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:52:10,156 INFO api.main Question generator initialized
+2025-08-22 13:52:10,157 INFO api.main AI services ready
+2025-08-22 13:53:43,823 INFO api.main AI services shut down
+2025-08-22 13:53:57,289 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:53:57,325 INFO api.main Initializing AI services...
+2025-08-22 13:54:18,377 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:54:18,378 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:54:23,500 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:54:27,133 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:54:27,390 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:54:27,395 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:54:27,410 INFO api.main Question generator initialized
+2025-08-22 13:54:27,411 INFO api.main AI services ready
+2025-08-22 13:54:37,644 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:54:37,719 INFO api.main Initializing AI services...
+2025-08-22 13:55:00,350 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:55:00,354 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:55:05,789 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:55:06,992 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:55:07,131 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:55:07,141 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:55:07,155 INFO api.main Question generator initialized
+2025-08-22 13:55:07,157 INFO api.main AI services ready
+2025-08-22 13:55:18,455 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:55:18,509 INFO api.main Initializing AI services...
+2025-08-22 13:55:49,028 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:55:49,030 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:55:53,985 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:55:55,639 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:55:55,788 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:55:55,790 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:55:55,795 INFO api.main Question generator initialized
+2025-08-22 13:55:55,797 INFO api.main AI services ready
+2025-08-22 13:56:33,784 INFO api.main AI services shut down
+2025-08-22 13:56:52,019 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:56:52,049 INFO api.main Initializing AI services...
+2025-08-22 13:57:14,600 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:57:14,602 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:57:20,342 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:57:22,789 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 13:57:22,921 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 13:57:22,924 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 13:57:22,936 INFO api.main Question generator initialized
+2025-08-22 13:57:22,937 INFO api.main AI services ready
+2025-08-22 13:59:04,236 INFO api.main AI services shut down
+2025-08-22 13:59:21,069 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 13:59:21,110 INFO api.main Initializing AI services...
+2025-08-22 13:59:50,948 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 13:59:50,949 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 13:59:58,005 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 13:59:59,808 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 14:00:00,026 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 14:00:00,039 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 14:00:00,090 INFO api.main Question generator initialized
+2025-08-22 14:00:00,092 INFO api.main AI services ready
+2025-08-22 14:00:11,477 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 14:00:11,529 INFO api.main Initializing AI services...
+2025-08-22 14:00:37,128 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 14:00:37,129 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 14:00:42,045 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 14:00:43,129 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 14:00:43,294 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 14:00:43,303 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 14:00:43,312 INFO api.main Question generator initialized
+2025-08-22 14:00:43,312 INFO api.main AI services ready
+2025-08-22 14:19:06,157 INFO api.main AI services shut down
+2025-08-22 14:19:33,307 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 14:19:33,371 INFO api.main Initializing AI services...
+2025-08-22 14:20:56,806 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 14:20:56,808 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 14:21:02,593 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 14:21:05,218 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 14:21:05,442 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 14:21:05,464 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 14:21:05,485 INFO api.main Question generator initialized
+2025-08-22 14:21:05,486 INFO api.main AI services ready
+2025-08-22 14:37:46,438 INFO api.main AI services shut down
+2025-08-22 14:38:07,734 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 14:38:07,769 INFO api.main Initializing AI services...
+2025-08-22 14:38:59,527 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 14:38:59,529 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 14:39:05,305 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 14:39:07,588 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 14:39:07,825 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 14:39:07,831 INFO core.question_generator Loaded model performance history: {'deepseek-v3': [32.885, 32.885, 32.885, 32.885, 32.885, 32.885], 'deepseek-r1': [16.6525, 16.6525, 16.6525, 16.6525], 'moonshot-k2': [6.155, 6.155, 6.155, 6.155, 6.155, 6.155], 'gemma2-9b': [0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565, 0.143478260869565], 'llama3-70b': [0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285, 0.675714285714285]}
+2025-08-22 14:39:07,834 INFO api.main Question generator initialized
+2025-08-22 14:39:07,836 INFO api.main AI services ready
+2025-08-22 15:28:19,276 INFO api.main AI services shut down
+2025-08-22 15:28:38,918 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 15:28:38,919 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 15:29:10,051 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?columns=%22metadata%22%2C%22content%22%2C%22embedding%22%2C%22id%22 "HTTP/2 201 Created"
+2025-08-22 15:29:12,297 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?columns=%22metadata%22%2C%22content%22%2C%22embedding%22%2C%22id%22 "HTTP/2 201 Created"
+2025-08-22 15:30:10,572 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 15:30:10,598 INFO api.main Initializing AI services...
+2025-08-22 15:30:26,855 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 15:30:26,856 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 15:30:31,541 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 15:30:32,902 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 15:30:33,042 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 15:30:33,053 INFO core.question_generator Loaded model performance history: {}
+2025-08-22 15:30:33,059 INFO api.main Question generator initialized
+2025-08-22 15:30:33,059 INFO api.main AI services ready
+2025-08-22 15:31:43,960 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 15:31:43,974 INFO core.question_generator Adaptive fallback order: ['gemma2-9b', 'deepseek-v3', 'moonshot-k2', 'deepseek-r1']
+2025-08-22 15:31:44,118 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&limit=5 "HTTP/2 200 OK"
+2025-08-22 15:31:44,293 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=question_text&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&expires_at=gt.2025-08-22T15%3A31%3A44.132005&order=created_at.desc&limit=6 "HTTP/2 200 OK"
+2025-08-22 15:31:44,301 INFO core.question_generator Attempting model: llama3-70b
+2025-08-22 15:31:47,967 INFO httpx HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 15:31:48,171 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance "HTTP/2 201 Created"
+2025-08-22 15:31:48,175 INFO core.question_generator [SUCCESS] llama3-70b took 1.28s (avg 1.28s over 1 runs)
+2025-08-22 15:31:48,744 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/questions_cache "HTTP/2 201 Created"
+2025-08-22 15:31:48,836 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?columns=%22question_data%22%2C%22expires_at%22%2C%22subject%22%2C%22topic%22%2C%22question_text%22 "HTTP/2 201 Created"
+2025-08-22 15:31:48,921 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=id&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29 "HTTP/2 200 OK"
+2025-08-22 15:31:48,926 INFO core.question_generator Cached 1 questions in Supabase for GS1 - GS1 - Distribution of Key Natural Resources Across the World (Including South Asia and the Indian Sub-Continent); Factors Responsible for the Location of Primary, Secondary and Tertiary Sector Industries in Various Parts of the World (Including India)
+2025-08-22 15:31:49,008 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=id%2Cgeneration_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 15:31:49,112 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations "HTTP/2 201 Created"
+2025-08-22 15:34:28,463 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:34:28,663 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:34:28,747 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 15:34:28,881 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:34:28,962 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:34:29,125 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 15:35:07,602 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:35:07,759 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:35:07,839 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=generation_count_today%2Clast_generation_date&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:35:07,919 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&limit=5 "HTTP/2 200 OK"
+2025-08-22 15:35:08,020 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=question_text&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&expires_at=gt.2025-08-22T15%3A35%3A07.928132&order=created_at.desc&limit=6 "HTTP/2 200 OK"
+2025-08-22 15:35:08,030 INFO core.question_generator Using 1 Supabase cached questions as examples for GS1 - GS1 - Distribution of Key Natural Resources Across the World (Including South Asia and the Indian Sub-Continent); Factors Responsible for the Location of Primary, Secondary and Tertiary Sector Industries in Various Parts of the World (Including India)
+2025-08-22 15:35:08,048 INFO core.question_generator Attempting model: llama3-70b
+2025-08-22 15:35:10,671 INFO httpx HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 15:35:10,917 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance "HTTP/2 409 Conflict"
+2025-08-22 15:35:10,931 WARNING core.question_generator Failed saving model performance: {'message': 'duplicate key value violates unique constraint "idx_model_performance_name"', 'code': '23505', 'hint': None, 'details': 'Key (model_name)=(llama3-70b) already exists.'}
+2025-08-22 15:35:10,933 INFO core.question_generator [SUCCESS] llama3-70b took 0.78s (avg 1.03s over 2 runs)
+2025-08-22 15:35:11,017 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/questions_cache "HTTP/2 201 Created"
+2025-08-22 15:35:11,100 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?columns=%22question_data%22%2C%22expires_at%22%2C%22subject%22%2C%22topic%22%2C%22question_text%22 "HTTP/2 201 Created"
+2025-08-22 15:35:11,182 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=id&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29 "HTTP/2 200 OK"
+2025-08-22 15:35:11,188 INFO core.question_generator Cached 1 questions in Supabase for GS1 - GS1 - Distribution of Key Natural Resources Across the World (Including South Asia and the Indian Sub-Continent); Factors Responsible for the Location of Primary, Secondary and Tertiary Sector Industries in Various Parts of the World (Including India)
+2025-08-22 15:35:11,275 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?columns=%22questions%22%2C%22mode%22%2C%22model%22%2C%22use_current_affairs%22%2C%22subject%22%2C%22question_count%22%2C%22topic%22%2C%22user_id%22 "HTTP/2 400 Bad Request"
+2025-08-22 15:35:11,277 ERROR api.routes.questions Error generating questions: {'message': "Could not find the 'model' column of 'generated_questions' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+Traceback (most recent call last):
+  File "C:\SmartQ\IntrepidQ2\backend\ai_service\api\routes\questions.py", line 150, in generate_questions
+    resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
+  File "C:\SmartQ\IntrepidQ2\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 78, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': "Could not find the 'model' column of 'generated_questions' in the schema cache", 'code': 'PGRST204', 'hint': None, 'details': None}
+2025-08-22 15:43:30,768 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:43:31,004 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:43:31,116 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=generation_count_today%2Clast_generation_date&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:43:31,269 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&limit=5 "HTTP/2 200 OK"
+2025-08-22 15:43:31,369 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=question_text&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29&expires_at=gt.2025-08-22T15%3A43%3A31.275057&order=created_at.desc&limit=6 "HTTP/2 200 OK"
+2025-08-22 15:43:31,374 INFO core.question_generator Using 2 Supabase cached questions as examples for GS1 - GS1 - Distribution of Key Natural Resources Across the World (Including South Asia and the Indian Sub-Continent); Factors Responsible for the Location of Primary, Secondary and Tertiary Sector Industries in Various Parts of the World (Including India)
+2025-08-22 15:43:31,381 INFO core.question_generator Attempting model: llama3-70b
+2025-08-22 15:43:34,916 INFO httpx HTTP Request: POST https://api.groq.com/openai/v1/chat/completions "HTTP/1.1 200 OK"
+2025-08-22 15:43:35,055 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance "HTTP/2 409 Conflict"
+2025-08-22 15:43:35,060 WARNING core.question_generator Failed saving model performance: {'message': 'duplicate key value violates unique constraint "idx_model_performance_name"', 'code': '23505', 'hint': None, 'details': 'Key (model_name)=(llama3-70b) already exists.'}
+2025-08-22 15:43:35,062 INFO core.question_generator [SUCCESS] llama3-70b took 0.96s (avg 1.01s over 3 runs)
+2025-08-22 15:43:35,181 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/questions_cache "HTTP/2 201 Created"
+2025-08-22 15:43:35,256 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?columns=%22question_data%22%2C%22expires_at%22%2C%22subject%22%2C%22topic%22%2C%22question_text%22 "HTTP/2 201 Created"
+2025-08-22 15:43:35,385 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=id&subject=eq.GS1&topic=eq.GS1+-+Distribution+of+Key+Natural+Resources+Across+the+World+%28Including+South+Asia+and+the+Indian+Sub-Continent%29%3B+Factors+Responsible+for+the+Location+of+Primary%2C+Secondary+and+Tertiary+Sector+Industries+in+Various+Parts+of+the+World+%28Including+India%29 "HTTP/2 200 OK"
+2025-08-22 15:43:35,389 INFO core.question_generator Cached 1 questions in Supabase for GS1 - GS1 - Distribution of Key Natural Resources Across the World (Including South Asia and the Indian Sub-Continent); Factors Responsible for the Location of Primary, Secondary and Tertiary Sector Industries in Various Parts of the World (Including India)
+2025-08-22 15:43:35,483 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?columns=%22questions%22%2C%22mode%22%2C%22model%22%2C%22use_current_affairs%22%2C%22subject%22%2C%22question_count%22%2C%22topic%22%2C%22user_id%22 "HTTP/2 201 Created"
+2025-08-22 15:43:35,617 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=generation_count_today%2Clast_generation_date&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:43:35,720 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles "HTTP/2 201 Created"
+2025-08-22 15:43:35,836 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_dashboard_data "HTTP/2 200 OK"
+2025-08-22 15:45:13,615 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:45:13,819 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:45:13,899 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 15:45:14,083 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 15:45:14,159 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 15:45:14,270 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 15:48:22,463 INFO api.main AI services shut down
+2025-08-22 15:48:50,482 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 15:48:50,547 INFO api.main Initializing AI services...
+2025-08-22 15:49:23,097 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 15:49:23,101 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 15:49:28,404 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 15:49:30,203 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 15:49:30,301 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 15:49:30,343 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 15:49:30,359 INFO api.main Question generator initialized
+2025-08-22 15:49:30,360 INFO api.main AI services ready
+2025-08-22 15:50:30,405 INFO api.main AI services shut down
+2025-08-22 15:50:46,158 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 15:50:46,185 INFO api.main Initializing AI services...
+2025-08-22 15:51:06,972 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 15:51:06,973 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 15:51:11,628 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 15:51:12,947 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 15:51:13,054 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 15:51:13,058 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 15:51:13,062 INFO api.main Question generator initialized
+2025-08-22 15:51:13,062 INFO api.main AI services ready
+2025-08-22 15:55:50,564 INFO api.main AI services shut down
+2025-08-22 15:59:27,343 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 15:59:27,385 INFO api.main Initializing AI services...
+2025-08-22 15:59:52,580 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 15:59:52,582 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 15:59:57,283 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 15:59:59,240 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 15:59:59,397 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 15:59:59,399 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 15:59:59,400 INFO api.main Question generator initialized
+2025-08-22 15:59:59,402 INFO api.main AI services ready
+2025-08-22 16:52:39,482 INFO api.main AI services shut down
+2025-08-22 16:53:15,432 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 16:53:15,503 INFO api.main Initializing AI services...
+2025-08-22 16:54:40,252 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 16:54:40,256 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 16:54:46,193 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 16:54:48,354 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 16:54:48,520 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 16:54:48,522 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 16:54:48,523 INFO api.main Question generator initialized
+2025-08-22 16:54:48,523 INFO api.main AI services ready
+2025-08-22 17:05:29,943 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 17:05:29,978 INFO api.main Initializing AI services...
+2025-08-22 17:05:59,514 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 17:05:59,516 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 17:06:07,070 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 17:06:08,740 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 17:06:08,958 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 17:06:08,960 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 17:06:08,961 INFO api.main Question generator initialized
+2025-08-22 17:06:08,961 INFO api.main AI services ready
+2025-08-22 17:20:51,975 INFO api.main AI services shut down
+2025-08-22 17:21:12,821 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 17:21:12,855 INFO api.main Initializing AI services...
+2025-08-22 17:22:24,832 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 17:22:24,834 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 17:22:30,297 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 17:22:31,512 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 17:22:31,639 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 17:22:31,640 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 17:22:31,641 INFO api.main Question generator initialized
+2025-08-22 17:22:31,642 INFO api.main AI services ready
+2025-08-22 17:24:38,908 INFO api.main AI services shut down
+2025-08-22 17:42:33,187 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 17:42:33,228 INFO api.main Initializing AI services...
+2025-08-22 17:43:39,016 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 17:43:39,017 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 17:43:44,224 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 17:43:45,924 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 17:43:46,127 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 17:43:46,129 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 17:43:46,130 INFO api.main Question generator initialized
+2025-08-22 17:43:46,130 INFO api.main AI services ready
+2025-08-22 18:04:25,704 INFO api.main AI services shut down
+2025-08-22 18:20:57,927 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 18:20:58,681 INFO api.main Initializing AI services...
+2025-08-22 18:22:29,458 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 18:22:29,460 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 18:22:34,276 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 18:22:36,369 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 18:22:36,645 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 18:22:36,647 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28]}
+2025-08-22 18:22:36,648 INFO api.main Question generator initialized
+2025-08-22 18:22:36,649 INFO api.main AI services ready
+2025-08-22 18:48:49,859 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 18:48:50,235 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=content&metadata-%3E%3Etopic=eq.GS1+-+Effects+of+Globalization+on+Indian+Society&limit=5 "HTTP/2 200 OK"
+2025-08-22 18:48:50,606 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=question_text&subject=eq.GS1&topic=eq.GS1+-+Effects+of+Globalization+on+Indian+Society&expires_at=gt.2025-08-22T18%3A48%3A50.260718&order=created_at.desc&limit=6 "HTTP/2 200 OK"
+2025-08-22 18:48:50,641 INFO core.question_generator Attempting model: moonshot-k2
+2025-08-22 18:48:56,125 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?on_conflict=model_name "HTTP/2 201 Created"
+2025-08-22 18:48:56,141 INFO core.question_generator [SUCCESS] moonshot-k2 took 5.14s (avg 5.14s over 1 runs)
+2025-08-22 18:48:56,301 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/questions_cache "HTTP/2 201 Created"
+2025-08-22 18:48:56,515 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?columns=%22question_text%22%2C%22expires_at%22%2C%22subject%22%2C%22topic%22%2C%22question_data%22 "HTTP/2 201 Created"
+2025-08-22 18:48:56,645 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/topic_questions_index?select=id&subject=eq.GS1&topic=eq.GS1+-+Effects+of+Globalization+on+Indian+Society "HTTP/2 200 OK"
+2025-08-22 18:48:56,650 INFO core.question_generator Cached 1 questions in Supabase for GS1 - GS1 - Effects of Globalization on Indian Society
+2025-08-22 18:48:56,835 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=id%2Cgeneration_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 18:48:56,963 INFO httpx HTTP Request: PATCH https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?id=eq.aabeb68a-1ca9-498c-b292-23e22a0dc4b3 "HTTP/2 200 OK"
+2025-08-22 18:51:12,761 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 18:55:49,043 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 18:55:49,362 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 18:55:49,508 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 18:55:49,680 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 18:55:49,764 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 18:55:50,001 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 19:00:08,905 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:00:09,184 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:00:09,295 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 19:00:09,402 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:00:09,475 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:00:09,578 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 19:01:14,123 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:03:40,259 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:05:05,964 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:07:07,348 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:07:15,219 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:09:03,031 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:09:25,528 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:10:54,710 INFO api.main AI services shut down
+2025-08-22 19:11:27,322 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 19:11:27,418 INFO api.main Initializing AI services...
+2025-08-22 19:13:09,494 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 19:13:09,702 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 19:13:20,727 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 19:13:23,428 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 19:13:23,716 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 19:13:23,723 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28], 'moonshot-k2': [5.14]}
+2025-08-22 19:13:23,726 INFO api.main Question generator initialized
+2025-08-22 19:13:23,729 INFO api.main AI services ready
+2025-08-22 19:13:43,116 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 19:13:43,189 INFO api.main Initializing AI services...
+2025-08-22 19:14:17,272 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 19:14:17,274 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 19:14:22,373 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 19:14:23,955 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 19:14:24,122 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 19:14:24,132 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28], 'moonshot-k2': [5.14]}
+2025-08-22 19:14:24,139 INFO api.main Question generator initialized
+2025-08-22 19:14:24,147 INFO api.main AI services ready
+2025-08-22 19:14:24,338 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:15:43,903 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:15:44,056 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:15:44,179 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:16:13,970 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:16:14,138 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:16:14,266 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 19:16:14,394 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:16:14,465 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:16:14,566 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 19:17:32,524 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:17:32,687 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:17:32,765 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 19:17:32,841 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:17:32,905 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:17:32,994 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 19:18:22,964 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:18:36,164 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:32:49,432 INFO api.main AI services shut down
+2025-08-22 19:52:25,270 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 19:52:25,314 INFO api.main Initializing AI services...
+2025-08-22 19:54:30,875 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 19:54:30,881 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 19:54:36,576 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 19:54:39,014 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 19:54:39,242 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 19:54:39,245 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28], 'moonshot-k2': [5.14]}
+2025-08-22 19:54:39,246 INFO api.main Question generator initialized
+2025-08-22 19:54:39,247 INFO api.main AI services ready
+2025-08-22 19:56:01,400 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-08-22 19:56:20,600 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:56:20,799 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:56:20,960 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 19:56:21,339 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:56:21,420 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:56:21,538 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 19:56:24,459 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:56:24,534 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:56:24,631 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 19:56:24,700 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 19:56:24,760 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 19:56:24,825 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:03:16,993 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:03:17,338 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:03:17,448 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:03:17,548 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:03:17,633 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:03:17,726 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:10:55,489 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:10:55,766 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:10:55,959 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:10:56,073 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:10:56,150 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:10:56,255 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:15:01,188 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:15:02,003 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:15:02,270 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:15:02,573 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:15:02,780 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:15:03,053 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:21:11,042 INFO api.main AI services shut down
+2025-08-22 20:31:25,483 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 20:31:25,526 INFO api.main Initializing AI services...
+2025-08-22 20:32:59,364 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 20:32:59,368 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 20:33:05,186 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 20:33:07,506 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 20:33:07,906 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 20:33:07,908 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28], 'moonshot-k2': [5.14]}
+2025-08-22 20:33:07,908 INFO api.main Question generator initialized
+2025-08-22 20:33:07,909 INFO api.main AI services ready
+2025-08-22 20:34:09,812 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:34:11,864 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:34:12,561 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:34:12,749 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:34:13,728 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:34:13,985 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:34:15,060 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:34:15,248 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:34:15,906 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:34:16,050 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:34:16,205 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:34:16,365 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:40:12,344 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:40:13,074 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:40:13,276 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 20:40:13,787 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 20:40:14,023 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 20:40:14,575 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 20:42:26,094 INFO api.main AI services shut down
+2025-08-22 21:13:26,886 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-08-22 21:13:26,914 INFO api.main Initializing AI services...
+2025-08-22 21:13:49,693 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-08-22 21:13:49,693 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-08-22 21:13:55,739 INFO api.main Supabase vectorstore loaded successfully
+2025-08-22 21:13:58,038 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-08-22 21:13:58,209 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-08-22 21:13:58,215 INFO core.question_generator Loaded model performance history: {'llama3-70b': [1.28], 'moonshot-k2': [5.14]}
+2025-08-22 21:13:58,216 INFO api.main Question generator initialized
+2025-08-22 21:13:58,217 INFO api.main AI services ready
+2025-08-22 21:18:58,569 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 21:18:58,931 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 21:18:59,112 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/generated_questions?select=%2A&user_id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806&order=created_at.desc&limit=100 "HTTP/2 200 OK"
+2025-08-22 21:18:59,298 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/auth/v1/user "HTTP/2 200 OK"
+2025-08-22 21:18:59,387 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/user_profiles?select=%2A&id=eq.22e3117e-a04e-4834-9e1a-6bf3560d9806 "HTTP/2 200 OK"
+2025-08-22 21:18:59,643 INFO httpx HTTP Request: POST https://plxtjopchabugzbfpjls.supabase.co/rest/v1/rpc/get_user_stats_rpc "HTTP/2 200 OK"
+2025-08-22 23:48:10,687 INFO api.main AI services shut down
+2025-08-23 09:31:43,937 WARNING core.cache_service KeyDB connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.. Caching disabled.
+2025-08-23 09:51:04,256 WARNING core.cache_service KeyDB connection failed: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.. Caching disabled.
+2025-08-23 09:51:09,755 WARNING core.rate_limiter KeyDB connection failed for rate limiter: Error 10061 connecting to localhost:6379. No connection could be made because the target machine actively refused it.. Using memory storage.

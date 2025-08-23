@@ -46,6 +46,7 @@ interface QuestionGeneratorProps {
   loading: boolean;
   onGenerate: () => void;
   mode: "topic" | "paper";
+  dailyLimitReached?: boolean;
 }
 
 export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
@@ -65,6 +66,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
   loading,
   onGenerate,
   mode,
+  dailyLimitReached = false,
 }) => {
   return (
     <TooltipProvider delayDuration={0}>
@@ -188,18 +190,25 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
               <Button
                 onClick={onGenerate}
                 disabled={isGenerateDisabled}
-                className="h-10 w-12 rounded-full bg-gradient-to-r from-orange-500 to-blue-500 
-                           hover:from-orange-600 hover:to-blue-600 text-white shadow text-base flex 
-                           items-center justify-center"
+                className={`h-10 w-12 rounded-full text-white shadow text-base flex 
+                           items-center justify-center ${
+                  dailyLimitReached 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600'
+                }`}
               >
                 {loading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
+                ) : dailyLimitReached ? (
+                  "🚫"
                 ) : (
                   "→"
                 )}
               </Button>
             </TooltipTrigger>
-            <TooltipContent><p>Send Request</p></TooltipContent>
+            <TooltipContent>
+              <p>{dailyLimitReached ? "Daily Limit Reached" : "Send Request"}</p>
+            </TooltipContent>
           </Tooltip>
         </div>
       </section>

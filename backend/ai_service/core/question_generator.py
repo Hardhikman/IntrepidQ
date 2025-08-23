@@ -42,17 +42,15 @@ class QuestionGenerator:
         google_api_key: Optional[str],
         vectorstore: Optional[SupabaseVectorStore],
         supabase_client: Optional[Client],
-        cache_dir: str = "news_cache",
-        questions_cache_dir: str = "questions_cache"
+        cache_dir: str = "news_cache"
     ):
         self.groq_api_key = groq_api_key
         self.google_api_key = google_api_key
         self.vectorstore = vectorstore
         self.supabase_client = supabase_client
-        self.cache = Cache(cache_dir)
+        self.cache = Cache(cache_dir)  # Keep only news cache
         
-        # Separate cache for generated questions
-        self.questions_cache = Cache(questions_cache_dir)
+        # Remove local questions cache - use Supabase only
         
         self.topics_by_subject = (
             self._build_topics_by_subject()
@@ -74,136 +72,268 @@ class QuestionGenerator:
         self.min_attempts_for_avg = 3
         self._load_model_performance()
 
-    # Questions Cache Management
+    # Supabase Questions Cache Management
     def _get_cache_key(self, subject: str, topic: str, num: int, use_ca: bool = False, months: int = 6) -> str:
         """Generate cache key for questions"""
         key_data = f"{subject}_{topic}_{num}_{use_ca}_{months}"
         return hashlib.md5(key_data.encode()).hexdigest()
 
     def _cache_questions(self, cache_key: str, questions: List[dict], subject: str, topic: str):
-        """Cache generated questions with metadata"""
-        cache_data = {
-            "questions": questions,
-            "subject": subject,
-            "topic": topic,
-            "timestamp": time.time(),
-            "generated_at": datetime.now().isoformat()
-        }
+        """Cache generated questions in Supabase with metadata"""
+        if not self.supabase_client:
+            logger.warning("Supabase client not available for caching")
+            return
         
-        # Cache with 7 days expiry (7 * 24 * 3600 seconds)
-        self.questions_cache.set(cache_key, cache_data, expire=604800)
+        try:
+            # Store in main cache table
+            cache_data = {
+                "cache_key": cache_key,
+                "subject": subject,
+                "topic": topic,
+                "questions": json.dumps(questions),
+                "metadata": json.dumps({
+                    "generated_at": datetime.now().isoformat(),
+                    "question_count": len(questions)
+                }),
+                "expires_at": (datetime.now() + timedelta(days=7)).isoformat()
+            }
+            
+            self.supabase_client.table('questions_cache').upsert(cache_data).execute()
+            
+            # Add individual questions to topic index for random sampling
+            topic_entries = []
+            for q in questions:
+                topic_entries.append({
+                    "subject": subject,
+                    "topic": topic,
+                    "question_text": q.get("question", str(q)),
+                    "question_data": json.dumps(q),
+                    "expires_at": (datetime.now() + timedelta(days=7)).isoformat()
+                })
+            
+            if topic_entries:
+                # Insert new entries
+                self.supabase_client.table('topic_questions_index').insert(topic_entries).execute()
+                
+                # Clean up old entries to maintain size limit (50 per topic)
+                self._cleanup_topic_cache(subject, topic, max_entries=50)
+            
+            logger.info(f"Cached {len(questions)} questions in Supabase for {subject} - {topic}")
+            
+        except Exception as e:
+            logger.error(f"Failed to cache questions in Supabase: {e}")
+
+    def _cleanup_topic_cache(self, subject: str, topic: str, max_entries: int = 50):
+        """Remove old entries to maintain cache size limit"""
+        if not self.supabase_client:
+            return
         
-        # Also store in a topic-based index for easy retrieval
-        topic_key = f"topic_{subject}_{topic}"
-        existing_questions = self.questions_cache.get(topic_key, [])
+        try:
+            # Get count of entries for this topic
+            response = (self.supabase_client
+                       .table('topic_questions_index')
+                       .select('id', count='exact')
+                       .eq('subject', subject)
+                       .eq('topic', topic)
+                       .execute())
+            
+            count = response.count or 0
+            if count > max_entries:
+                # Delete oldest entries beyond the limit
+                excess_count = count - max_entries
+                old_entries = (self.supabase_client
+                              .table('topic_questions_index')
+                              .select('id')
+                              .eq('subject', subject)
+                              .eq('topic', topic)
+                              .order('created_at')
+                              .limit(excess_count)
+                              .execute())
+                
+                if old_entries.data:
+                    ids_to_delete = [entry['id'] for entry in old_entries.data]
+                    for entry_id in ids_to_delete:
+                        self.supabase_client.table('topic_questions_index').delete().eq('id', entry_id).execute()
+                    
+                    logger.info(f"Cleaned up {len(ids_to_delete)} old cache entries for {subject}-{topic}")
         
-        # Add new questions to the topic cache, avoiding duplicates
-        for q in questions:
-            if q not in existing_questions:
-                existing_questions.append(q)
-        
-        # Keep only last 50 questions per topic to prevent unlimited growth
-        if len(existing_questions) > 50:
-            existing_questions = existing_questions[-50:]
-        
-        self.questions_cache.set(topic_key, existing_questions, expire=604800)
-        logger.info(f"Cached {len(questions)} questions for {subject} - {topic}")
+        except Exception as e:
+            logger.error(f"Failed to cleanup topic cache: {e}")
 
     def _get_cached_questions_as_examples(self, subject: str, topic: str, max_examples: int = 3) -> List[str]:
-        """Get random cached questions to use as examples"""
-        topic_key = f"topic_{subject}_{topic}"
-        cached_questions = self.questions_cache.get(topic_key, [])
-        
-        if not cached_questions:
+        """Get random cached questions from Supabase to use as examples"""
+        if not self.supabase_client:
             return []
         
-        # Select random questions as examples
-        num_examples = min(len(cached_questions), max_examples)
-        selected_questions = random.sample(cached_questions, num_examples)
-        
-        # Format as examples (just the question text)
-        examples = []
-        for i, q in enumerate(selected_questions, 1):
-            question_text = q.get("question", str(q))
-            examples.append(f"{i}. {question_text}")
-        
-        logger.info(f"Using {len(examples)} cached questions as examples for {subject} - {topic}")
-        return examples
+        try:
+            # Get random questions from topic index
+            response = (self.supabase_client
+                       .table('topic_questions_index')
+                       .select('question_text')
+                       .eq('subject', subject)
+                       .eq('topic', topic)
+                       .gt('expires_at', datetime.now().isoformat())
+                       .order('created_at', desc=True)
+                       .limit(max_examples * 2)  # Get more to allow random sampling
+                       .execute())
+            
+            if not response.data:
+                return []
+            
+            # Extract question texts
+            questions = [item['question_text'] for item in response.data if item.get('question_text')]
+            
+            if not questions:
+                return []
+            
+            # Random sampling
+            num_examples = min(len(questions), max_examples)
+            selected_questions = random.sample(questions, num_examples)
+            
+            # Format as examples
+            examples = []
+            for i, question in enumerate(selected_questions, 1):
+                examples.append(f"{i}. {question}")
+            
+            logger.info(f"Using {len(examples)} Supabase cached questions as examples for {subject} - {topic}")
+            return examples
+            
+        except Exception as e:
+            logger.warning(f"Failed to get cached examples for {subject}-{topic}: {e}")
+            return []
 
     def _get_all_cached_questions_for_examples(self, subject: str, max_examples: int = 5) -> List[str]:
         """Get random cached questions from any topic in the subject for whole paper examples"""
-        all_questions = []
-        
-        # Collect questions from all topics in the subject
-        for topic in self.topics_by_subject.get(subject, []):
-            topic_key = f"topic_{subject}_{topic}"
-            cached_questions = self.questions_cache.get(topic_key, [])
-            all_questions.extend(cached_questions)
-        
-        if not all_questions:
+        if not self.supabase_client:
             return []
         
-        # Select random questions as examples
-        num_examples = min(len(all_questions), max_examples)
-        selected_questions = random.sample(all_questions, num_examples)
-        
-        # Format as examples
-        examples = []
-        for i, q in enumerate(selected_questions, 1):
-            question_text = q.get("question", str(q))
-            examples.append(f"{i}. {question_text}")
-        
-        logger.info(f"Using {len(examples)} cached questions as examples for whole paper generation")
-        return examples
+        try:
+            # Get questions from any topic in the subject
+            response = (self.supabase_client
+                       .table('topic_questions_index')
+                       .select('question_text')
+                       .eq('subject', subject)
+                       .gt('expires_at', datetime.now().isoformat())
+                       .order('created_at', desc=True)
+                       .limit(max_examples * 3)  # Get more to allow random sampling
+                       .execute())
+            
+            if not response.data:
+                return []
+            
+            # Extract question texts
+            questions = [item['question_text'] for item in response.data if item.get('question_text')]
+            
+            if not questions:
+                return []
+            
+            # Random sampling
+            num_examples = min(len(questions), max_examples)
+            selected_questions = random.sample(questions, num_examples)
+            
+            # Format as examples
+            examples = []
+            for i, question in enumerate(selected_questions, 1):
+                examples.append(f"{i}. {question}")
+            
+            logger.info(f"Using {len(examples)} Supabase cached questions as examples for whole paper generation")
+            return examples
+            
+        except Exception as e:
+            logger.warning(f"Failed to get all cached examples for {subject}: {e}")
+            return []
 
     def get_cache_stats(self) -> dict:
-        """Get statistics about cached questions"""
+        """Get statistics about cached questions in Supabase"""
         stats = {
-            "total_cache_entries": len(list(self.questions_cache)),
+            "cache_type": "supabase_only",
             "subjects": {},
-            "total_questions": 0
+            "total_questions": 0,
+            "total_cache_entries": 0
         }
         
-        for subject in ["GS1", "GS2", "GS3", "GS4"]:
-            subject_questions = 0
-            topics_with_cache = 0
+        if not self.supabase_client:
+            return stats
+        
+        try:
+            # Get total cache entries
+            cache_resp = self.supabase_client.table('questions_cache').select('id', count='exact').execute()
+            stats["total_cache_entries"] = cache_resp.count or 0
             
-            for topic in self.topics_by_subject.get(subject, []):
-                topic_key = f"topic_{subject}_{topic}"
-                cached_questions = self.questions_cache.get(topic_key, [])
-                if cached_questions:
-                    subject_questions += len(cached_questions)
-                    topics_with_cache += 1
+            # Get total questions in topic index
+            topic_resp = self.supabase_client.table('topic_questions_index').select('id', count='exact').execute()
+            stats["total_questions"] = topic_resp.count or 0
             
-            stats["subjects"][subject] = {
-                "total_questions": subject_questions,
-                "topics_with_cache": topics_with_cache
-            }
-            stats["total_questions"] += subject_questions
+            # Get stats per subject
+            for subject in ["GS1", "GS2", "GS3", "GS4"]:
+                try:
+                    # Cache entries per subject
+                    cache_subject_resp = (self.supabase_client
+                                         .table('questions_cache')
+                                         .select('id', count='exact')
+                                         .eq('subject', subject)
+                                         .execute())
+                    
+                    # Topic index questions per subject
+                    topic_subject_resp = (self.supabase_client
+                                         .table('topic_questions_index')
+                                         .select('id', count='exact')
+                                         .eq('subject', subject)
+                                         .execute())
+                    
+                    # Topics with cache
+                    topics_resp = (self.supabase_client
+                                  .table('topic_questions_index')
+                                  .select('topic')
+                                  .eq('subject', subject)
+                                  .execute())
+                    
+                    unique_topics = len(set(item['topic'] for item in topics_resp.data)) if topics_resp.data else 0
+                    
+                    stats["subjects"][subject] = {
+                        "cache_entries": cache_subject_resp.count or 0,
+                        "questions": topic_subject_resp.count or 0,
+                        "topics_with_cache": unique_topics
+                    }
+                    
+                except Exception as e:
+                    logger.warning(f"Failed to get stats for {subject}: {e}")
+                    stats["subjects"][subject] = {
+                        "cache_entries": 0,
+                        "questions": 0,
+                        "topics_with_cache": 0
+                    }
+        
+        except Exception as e:
+            logger.error(f"Failed to get cache stats: {e}")
         
         return stats
 
     def clear_cache(self, subject: str = None, topic: str = None):
         """Clear cache - all, by subject, or by specific topic"""
-        if topic and subject:
-            # Clear specific topic
-            topic_key = f"topic_{subject}_{topic}"
-            if topic_key in self.questions_cache:
-                del self.questions_cache[topic_key]
-                logger.info(f"Cleared cache for {subject} - {topic}")
-        elif subject:
-            # Clear all topics in subject
-            cleared_count = 0
-            for topic in self.topics_by_subject.get(subject, []):
-                topic_key = f"topic_{subject}_{topic}"
-                if topic_key in self.questions_cache:
-                    del self.questions_cache[topic_key]
-                    cleared_count += 1
-            logger.info(f"Cleared cache for {cleared_count} topics in {subject}")
-        else:
-            # Clear all cache
-            self.questions_cache.clear()
-            logger.info("Cleared all questions cache")
+        if not self.supabase_client:
+            logger.warning("Supabase client not available for cache clearing")
+            return
+        
+        try:
+            if topic and subject:
+                # Clear specific topic
+                self.supabase_client.table('questions_cache').delete().eq('subject', subject).eq('topic', topic).execute()
+                self.supabase_client.table('topic_questions_index').delete().eq('subject', subject).eq('topic', topic).execute()
+                logger.info(f"Cleared Supabase cache for {subject} - {topic}")
+            elif subject:
+                # Clear all topics in subject
+                cache_resp = self.supabase_client.table('questions_cache').delete().eq('subject', subject).execute()
+                topic_resp = self.supabase_client.table('topic_questions_index').delete().eq('subject', subject).execute()
+                logger.info(f"Cleared Supabase cache for all topics in {subject}")
+            else:
+                # Clear all cache
+                self.supabase_client.table('questions_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
+                self.supabase_client.table('topic_questions_index').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
+                logger.info("Cleared all Supabase cache")
+        
+        except Exception as e:
+            logger.error(f"Failed to clear cache: {e}")
 
     #Supabase Model Speed Persistence
     def _load_model_performance(self):
@@ -230,7 +360,7 @@ class QuestionGenerator:
                 "model_name": model_name,
                 "avg_speed": avg_speed,
                 "num_runs": num_runs
-            }).execute()
+            }, on_conflict="model_name").execute()
         except Exception as e:
             logger.warning(f"Failed saving model performance: {e}")
 

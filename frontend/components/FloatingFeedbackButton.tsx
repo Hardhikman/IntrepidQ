@@ -21,7 +21,7 @@ export default function FloatingFeedbackButton() {
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [comment, setComment] = useState("");
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [feedbackType, setFeedbackType] = useState<"bug" | "feature" | null>(null);
   const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
 
@@ -82,10 +82,19 @@ export default function FloatingFeedbackButton() {
   }, [toast]);
 
   const submitFeedback = async () => {
-    if (selectedRating === null) {
+    if (!feedbackType) {
       toast({
-        title: "Rating required",
-        description: "Please select 'Good' or 'Bad' before submitting.",
+        title: "Feedback Type Required",
+        description: "Please select if this is a bug report or feature request.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!comment.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please provide details about your feedback.",
         variant: "destructive",
       });
       return;
@@ -114,16 +123,15 @@ export default function FloatingFeedbackButton() {
         return;
       }
 
-      const res = await fetch("/api/question_feedback", {
+      const res = await fetch("/api/website_feedback", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          generation_id: "website_feedback",
-          rating: selectedRating,
-          comment: comment?.trim() || undefined,
+          type: feedbackType,
+          comment: comment.trim(),
         }),
       });
 
@@ -134,7 +142,7 @@ export default function FloatingFeedbackButton() {
       toast({ title: "Thanks!", description: "Feedback submitted." });
       setOpen(false);
       setComment("");
-      setSelectedRating(null);
+      setFeedbackType(null);
     } catch (e: any) {
       toast({
         title: "Error",
@@ -167,36 +175,36 @@ export default function FloatingFeedbackButton() {
       {open && (
         <Card className="mb-2 w-64 shadow-xl">
           <CardContent className="p-3 space-y-3">
-            <div className="text-sm font-medium">Rate your experience</div>
+            <div className="text-sm font-medium">Website Feedback</div>
             <div className="flex gap-2">
               <Button
-                variant={selectedRating === 5 ? "default" : "outline"}
+                variant={feedbackType === "bug" ? "default" : "outline"}
                 disabled={submitting}
-                onClick={() => setSelectedRating(5)}
+                onClick={() => setFeedbackType("bug")}
                 className="w-full"
               >
-                👍 Good
+                🐞 Bug
               </Button>
               <Button
-                variant={selectedRating === 1 ? "default" : "outline"}
+                variant={feedbackType === "feature" ? "default" : "outline"}
                 disabled={submitting}
-                onClick={() => setSelectedRating(1)}
+                onClick={() => setFeedbackType("feature")}
                 className="w-full"
               >
-                👎 Bad
+                💡 Feature
               </Button>
             </div>
             <textarea
               className="w-full border rounded p-2 text-sm"
-              rows={3}
-              placeholder="Share details (optional)"
+              rows={4}
+              placeholder="Describe your feedback in detail..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
             />
             <div className="flex justify-end">
               <Button
                 variant="default"
-                disabled={submitting || selectedRating === null || !supabase}
+                disabled={submitting || !feedbackType || !comment.trim() || !supabase}
                 onClick={submitFeedback}
               >
                 Submit

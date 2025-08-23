@@ -1,4 +1,4 @@
-# IntrepidQ2 🚀
+# IntrepidQ2
 
 **A minimalistic AI RAG system that curates context-aware Q&A designed to make you think**
 

@@ -136,15 +136,30 @@ app.add_middleware(
 # Add security middleware
 app.add_middleware(SecurityMiddleware)
 
+def _ensure_redis_protocol(url: str) -> str:
+    """Ensure Redis URL has proper protocol prefix"""
+    if not url:
+        return url
+    
+    # If URL doesn't start with redis:// or rediss://, add redis://
+    if not url.startswith(('redis://', 'rediss://')):
+        return f"redis://{url}"
+    
+    return url
+
 # Add rate limiting middleware
 rate_limit_per_minute = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
-# Railway Redis URL detection
+# Railway Redis URL detection with protocol prefix handling
 redis_url = (
     os.getenv("REDISCLOUD_URL") or      # Railway Redis Cloud
     os.getenv("REDIS_PRIVATE_URL") or  # Railway Redis Private
     os.getenv("REDIS_URL") or          # Standard Redis URL
     "redis://localhost:6379"           # Local fallback
 )
+
+# Ensure proper protocol prefix for Railway compatibility
+redis_url = _ensure_redis_protocol(redis_url)
+
 logger.info(f"Using Redis URL: {redis_url.split('@')[-1] if '@' in redis_url else redis_url}")
 app.add_middleware(
     RateLimitMiddleware,

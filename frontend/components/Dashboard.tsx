@@ -210,32 +210,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
 
   return (
     <div className="min-h-screen p-4 space-y-6">
-      {/* Header */}
+      {/* Header - Made responsive */}
       <Card className="max-w-6xl mx-auto">
         <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold">📊 Your Activity Dashboard</CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
+          <CardTitle className="text-2xl sm:text-3xl font-bold">📊 Your Activity Dashboard</CardTitle>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             This dashboard summarizes your question generation activity, study streaks, and progress.
           </p>
         </CardHeader>
       </Card>
 
-      {/* Daily Limit */}
+      {/* Daily Limit - Made responsive */}
       <Card className="max-w-6xl mx-auto">
         <CardHeader>
           <CardTitle>Daily Task Limit</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm text-gray-600">Resets daily at midnight (UTC)</div>
-            <div className="text-sm font-medium">{usedToday}/{DAILY_LIMIT} used</div>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-2">
+            <div className="text-xs sm:text-sm text-gray-600">Resets daily at midnight (UTC)</div>
+            <div className="text-xs sm:text-sm font-medium">{usedToday}/{DAILY_LIMIT} used</div>
           </div>
           <Progress value={percentToday} className="h-3 mb-3" />
-          <div className="flex gap-1 mb-1">
+          <div className="flex flex-wrap gap-1 mb-1">
             {Array.from({ length: DAILY_LIMIT }).map((_, i) => (
               <div
                 key={i}
-                className={`h-3 w-10 rounded ${i < usedToday ? "bg-violet-500" : "bg-gray-200"}`}
+                className={`h-2 sm:h-3 w-8 sm:w-10 rounded ${i < usedToday ? "bg-violet-500" : "bg-gray-200"}`}
               />
             ))}
           </div>
@@ -245,17 +245,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* KPIs - Made responsive */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Generation Card */}
         <Card className="h-fit">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Generations</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Total Generations</CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-600 mb-2">{stats?.total_generations ?? 0}</div>
-              <div className="text-sm text-gray-600">Questions Generated</div>
+              <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">{stats?.total_generations ?? 0}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Questions Generated</div>
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="text-xs text-gray-500 text-center">
@@ -271,20 +271,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
         </Card>
         
         {/* Achievement Badges */}
-        <Card className="lg:col-span-2 h-fit">
+        <Card className="md:col-span-2 h-fit">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
               🏆 Achievement Badges
-              <span className="text-sm font-normal text-gray-500">({achievementBadges.length} earned)</span>
+              <span className="text-xs sm:text-sm font-normal text-gray-500">({achievementBadges.length} earned)</span>
             </CardTitle>
-            <p className="text-sm text-gray-600 mt-1">Unlock badges by generating questions, maintaining streaks, and exploring subjects</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">Unlock badges by generating questions, maintaining streaks, and exploring subjects</p>
           </CardHeader>
           <CardContent className="pt-0">
             {achievementBadges.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <div className="text-4xl mb-3">🌟</div>
-                <div className="text-lg font-medium mb-2">Ready to Start Your Journey?</div>
-                <div className="text-sm">Generate your first question to unlock achievement badges!</div>
+              <div className="text-center py-6 sm:py-8 text-gray-500">
+                <div className="text-3xl sm:text-4xl mb-3">🌟</div>
+                <div className="text-base sm:text-lg font-medium mb-2">Ready to Start Your Journey?</div>
+                <div className="text-xs sm:text-sm">Generate your first question to unlock achievement badges!</div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -301,18 +301,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                   
                   return (
                     <div key={category} className="space-y-2">
-                      <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
                         {categoryInfo[category]?.title}
                         <span className="text-xs text-gray-500">({categoryBadges.length})</span>
                       </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
                         {categoryBadges.map((badge, index) => (
                           <div
                             key={`${category}-${index}`}
-                            className={`bg-gradient-to-br ${categoryInfo[category]?.color} rounded-lg p-3 text-center hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 group border`}
+                            className={`bg-gradient-to-br ${categoryInfo[category]?.color} rounded-lg p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 group border`}
                             title={badge.description}
                           >
-                            <div className="text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">{badge.icon}</div>
+                            <div className="text-xl sm:text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">{badge.icon}</div>
                             <div className="text-xs font-semibold text-gray-800 truncate" title={badge.title}>{badge.title}</div>
                             <div className="text-xs text-gray-600 mt-1 leading-tight" title={badge.description}>
                               {badge.description}
@@ -325,8 +325,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                 })}
                 
                 {/* Progress indicators for next achievements */}
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                  <h4 className="text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
                     🎯 Next Achievements
                   </h4>
                   <div className="space-y-2 text-xs text-gray-600">
@@ -396,16 +396,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       {/* Analytics */}
       <AnalyticsCard stats={stats} />
 
-      {/* Streak Calendar */}
+      {/* Streak Calendar - Made responsive */}
       <Card className="max-w-6xl mx-auto">
         <CardHeader>
           <CardTitle>🔥 Study Streak Calendar</CardTitle>
-          <p className="text-sm text-gray-600">Your daily activity over the past month</p>
+          <p className="text-xs sm:text-sm text-gray-600">Your daily activity over the past month</p>
         </CardHeader>
         <CardContent>
           <div className="mb-4 text-center">
-            <div className="text-3xl font-bold text-orange-600">{profile?.study_streak ?? 0}</div>
-            <div className="text-sm text-gray-600">Current Streak (days)</div>
+            <div className="text-2xl sm:text-3xl font-bold text-orange-600">{profile?.study_streak ?? 0}</div>
+            <div className="text-xs sm:text-sm text-gray-600">Current Streak (days)</div>
             <div className="text-xs text-gray-500 mt-1">
               {profile?.study_streak >= 30 ? '🏆 Consistency Master!' : 
                profile?.study_streak >= 14 ? '🔥 On Fire!' : 
@@ -415,28 +415,27 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             </div>
           </div>
           
-          <div className="grid grid-cols-7 gap-2 mb-4">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-center text-xs font-medium text-gray-500 p-1">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
+              <div key={index} className="text-center text-xs font-medium text-gray-500 p-1">
                 {day}
               </div>
             ))}
           </div>
           
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {[...Array(35)].map((_, i) => {
               const dayIndex = i - 28; // Show last 4 weeks + current week
               const isToday = dayIndex === 0;
               const isPastActive = dayIndex < 0 && dayIndex >= -(profile?.study_streak ?? 0);
               const isFutureDay = dayIndex > 0;
-              const dayNumber = Math.abs(dayIndex) || new Date().getDate();
               
               return (
                 <div
                   key={i}
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors ${
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center text-xs font-medium transition-colors ${
                     isToday
-                      ? 'bg-blue-500 text-white ring-2 ring-blue-200 shadow-md'
+                      ? 'bg-blue-500 text-white ring-1 sm:ring-2 ring-blue-200 shadow-md'
                       : isPastActive
                       ? 'bg-green-500 text-white hover:bg-green-600'
                       : isFutureDay
@@ -453,30 +452,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             })}
           </div>
           
-          <div className="flex items-center justify-center gap-6 mt-6 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6 text-xs text-gray-500">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded-lg"></div>
+              <div className="w-3 h-3 bg-green-500 rounded-md sm:rounded-lg"></div>
               <span>Active day</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded-lg"></div>
+              <div className="w-3 h-3 bg-blue-500 rounded-md sm:rounded-lg"></div>
               <span>Today</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-200 rounded-lg"></div>
+              <div className="w-3 h-3 bg-gray-200 rounded-md sm:rounded-lg"></div>
               <span>Inactive</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* History */}
+      {/* History - Made responsive */}
       <Card className="max-w-6xl mx-auto">
-        <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <CardTitle>Recent History</CardTitle>
-          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <Select value={selectedSubject || "all"} onValueChange={(value) => setSelectedSubject(value === "all" ? null : value)}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
                 <SelectValue placeholder="Filter by Subject" />
               </SelectTrigger>
               <SelectContent>
@@ -487,7 +486,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
               </SelectContent>
             </Select>
             <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper"))}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
                 <SelectValue placeholder="Filter by Mode" />
               </SelectTrigger>
               <SelectContent>
@@ -497,7 +496,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
               </SelectContent>
             </Select>
             <Select value={selectedDateRange || "all"} onValueChange={(value) => setSelectedDateRange(value === "all" ? null : value)}>
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
                 <SelectValue placeholder="Filter by Date" />
               </SelectTrigger>
               <SelectContent>
@@ -508,7 +507,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                 <SelectItem value="quarter">Last 90 days</SelectItem>
               </SelectContent>
             </Select>
-            <Button size="sm" variant="outline" onClick={() => { setSelectedSubject(null); setSelectedMode(null); setSelectedDateRange(null); }}>
+            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setSelectedSubject(null); setSelectedMode(null); setSelectedDateRange(null); }}>
               Clear
             </Button>
           </div>
@@ -543,8 +542,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                   <div className="text-sm mt-2 whitespace-pre-wrap">
                     {expandedId === item.id
                       ? item.questions
-                      : item.questions.slice(0, 200) + (item.questions.length > 200 ? "..." : "")}
-                    {item.questions.length > 200 && (
+                      : item.questions.slice(0, 150) + (item.questions.length > 150 ? "..." : "")}
+                    {item.questions.length > 150 && (
                       <button
                         className="ml-2 text-blue-600 text-xs"
                         onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
@@ -560,10 +559,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
         </CardContent>
       </Card>
 
-      {/* Footer */}
+      {/* Footer - Made responsive */}
       <div className="max-w-6xl mx-auto flex items-center justify-end">
-        <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white">
-          🚀 Back to Generator
+        <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto">
+           Back to Generator
         </Button>
       </div>
     </div>

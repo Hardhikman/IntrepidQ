@@ -105,6 +105,7 @@ graph TB
 
 ### Technology Stack
 
+
 #### 🎨 Frontend
 - **Next.js 14+**: React framework with SSR/SSG capabilities
 - **TypeScript**: Type-safe development
@@ -113,6 +114,9 @@ graph TB
 - **React Hook Form**: Efficient form handling with validation
 - **Recharts**: Beautiful data visualization
 - **Supabase Client**: Real-time database and auth integration
+
+[**Live Demo**](https://intrepid-q1-nzmt.vercel.app/) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
+
 
 #### ⚡ Backend
 - **FastAPI**: High-performance Python web framework

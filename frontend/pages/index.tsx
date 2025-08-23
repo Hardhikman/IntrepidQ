@@ -350,19 +350,19 @@ export default function UPSCQuestionGenerator() {
   // Return the main interface for both authenticated and guest users
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-50 to-blue-50 p-4 space-y-6">
-      {/* HEADER */}
+      {/* HEADER - Made responsive */}
       <Card className="max-w-5xl mx-auto shadow-md">
         <CardHeader className="py-3">
-          <div className="flex items-center justify-between">
-            {/* Left - Website Title (full left alignment) */}
-            <CardTitle className="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-orange-400 via-blue-400 to-orange-500 
-  bg-clip-text text-transparent drop-shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Website Title - Responsive sizing and alignment */}
+            <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-orange-400 via-blue-400 to-orange-500 
+  bg-clip-text text-transparent drop-shadow-sm text-center sm:text-left">
               IntrepidQ
             </CardTitle>
 
-            {/* Right side buttons */}
-            <div className="flex items-center justify-end gap-2">
-              {/* About button - always visible */}
+            {/* Right side buttons - Responsive stacking */}
+            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
+              {/* About button */}
               <Button 
                 size="sm"
                 onClick={() => router.push("/about")}
@@ -372,9 +372,9 @@ export default function UPSCQuestionGenerator() {
               </Button>
 
               {/* Separator */}
-              <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
-              {/* Blog button - always visible */}
+              {/* Blog button */}
               <Button 
                 size="sm"
                 onClick={() => router.push("/blog")}
@@ -384,7 +384,7 @@ export default function UPSCQuestionGenerator() {
               </Button>
 
               {/* Separator */}
-              <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-6 hidden sm:block" />
 
               {/* Conditional rendering: User menu for authenticated users, Sign In button for guests */}
               {user ? (
@@ -423,7 +423,7 @@ export default function UPSCQuestionGenerator() {
         </CardHeader>
       </Card>
 
-      {/* MODE SELECTOR with compact/spacious toggle */}
+      {/* MODE SELECTOR with compact/spacious toggle - Made responsive */}
       <Card className="max-w-5xl mx-auto shadow-sm">
         <CardContent
           className={cn(
@@ -441,7 +441,7 @@ export default function UPSCQuestionGenerator() {
             <div className="flex items-center gap-2">
               <span
                 className={cn(
-                  "font-bold text-orange-800",
+                  "font-bold text-orange-800 text-center",
                   cardVariant === "compact"
                     ? "text-lg sm:text-xl md:text-2xl"
                     : "text-2xl md:text-3xl"
@@ -453,13 +453,13 @@ export default function UPSCQuestionGenerator() {
 
             <div
               className={cn(
-                "flex flex-col sm:flex-row items-center justify-center",
+                "flex flex-col sm:flex-row items-center justify-center w-full",
                 cardVariant === "compact" ? "gap-3" : "gap-6"
               )}
             >
               <Button
                 className={cn(
-                  "rounded-xl font-semibold transition-all shadow-sm",
+                  "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto",
                   cardVariant === "compact"
                     ? "px-5 md:px-6 py-2.5 text-base"
                     : "px-8 md:px-10 py-4 text-lg",
@@ -474,7 +474,7 @@ export default function UPSCQuestionGenerator() {
 
               <Button
                 className={cn(
-                  "rounded-xl font-semibold transition-all shadow-sm",
+                  "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto",
                   cardVariant === "compact"
                     ? "px-5 md:px-6 py-2.5 text-base"
                     : "px-8 md:px-10 py-4 text-lg",
@@ -491,7 +491,7 @@ export default function UPSCQuestionGenerator() {
             {mode === "paper" && (
               <div
                 className={cn(
-                  "text-blue-800 bg-blue-50 border border-blue-200 rounded-md",
+                  "text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full",
                   cardVariant === "compact"
                     ? "text-xs md:text-sm px-3 py-2"
                     : "text-sm md:text-base px-4 py-3"
@@ -514,18 +514,18 @@ export default function UPSCQuestionGenerator() {
         </CardContent>
       </Card>
 
-      {/* Guest user information */}
+      {/* Guest user information - Made responsive */}
       {!user && (
         <Card className="max-w-5xl mx-auto shadow-sm border-blue-200 bg-blue-50">
           <CardContent className="py-4">
             <div className="text-center">
-              <div className="text-blue-800 font-medium mb-2">
+              <div className="text-blue-800 font-medium mb-2 text-sm sm:text-base">
                 {dailyLimitReached 
                   ? '🚫 Daily limit reached! You have 0 question generations remaining today.' 
                   : `🎆 Welcome, Guest! You have ${getRemainingGuestGenerations()} question generation${getRemainingGuestGenerations() === 1 ? '' : 's'} remaining today.`
                 }
               </div>
-              <div className="text-blue-600 text-sm">
+              <div className="text-blue-600 text-xs sm:text-sm">
                 {dailyLimitReached 
                   ? '🚀 Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
                   : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
@@ -536,15 +536,15 @@ export default function UPSCQuestionGenerator() {
         </Card>
       )}
 
-      {/* Authenticated user daily limit notification */}
+      {/* Authenticated user daily limit notification - Made responsive */}
       {user && dailyLimitReached && (
         <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
           <CardContent className="py-4">
             <div className="text-center">
-              <div className="text-orange-800 font-medium mb-2">
+              <div className="text-orange-800 font-medium mb-2 text-sm sm:text-base">
                 🚫 Daily Limit Reached! You've used all 5 question generations today.
               </div>
-              <div className="text-orange-600 text-sm">
+              <div className="text-orange-600 text-xs sm:text-sm">
                 Your daily limit will reset tomorrow. You can still generate unlimited answers!
               </div>
             </div>
@@ -552,7 +552,7 @@ export default function UPSCQuestionGenerator() {
         </Card>
       )}
 
-      {/* CONFIG + RESULTS */}
+      {/* CONFIG + RESULTS - Made responsive */}
       <section className="max-w-5xl mx-auto space-y-6">
         <QuestionGenerator
           subjects={subjects}

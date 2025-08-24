@@ -354,11 +354,14 @@ export default function UPSCQuestionGenerator() {
       <Card className="max-w-5xl mx-auto shadow-md">
         <CardHeader className="py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Website Title - Responsive sizing and alignment */}
-            <CardTitle className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-gray-800 dark:text-white">
-              IntrepidQ
-            </CardTitle>
-
+            {/* Website Title with enhanced layout */}
+            <div className="flex items-center justify-center sm:justify-start">
+              <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl p-1 shadow-md">
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-white px-4 py-2 rounded-lg bg-white bg-opacity-90">
+                  IntrepidQ
+                </CardTitle>
+              </div>
+            </div>
             {/* Right side buttons - Responsive stacking */}
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
               {/* Resources Dropdown */}

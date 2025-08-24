@@ -158,6 +158,57 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"[Supabase] Increment generation count failed for user {user_id}: {e}")
 
+    def update_study_streak(self, user_id: str):
+        """Update study streak based on consecutive daily activity."""
+        try:
+            client = self._ensure_client()
+            today = datetime.utcnow().date()
+            
+            # Get current profile data
+            profile_resp = client.table("user_profiles").select(
+                "study_streak, last_generation_date"
+            ).eq("id", user_id).execute()
+
+            if not profile_resp.data:
+                logger.warning(f"No profile found for user {user_id} when updating study streak")
+                return
+
+            profile = profile_resp.data[0]
+            current_streak = profile.get("study_streak", 0)
+            last_date_str = profile.get("last_generation_date")
+            
+            last_date = None
+            if last_date_str:
+                try:
+                    last_date = datetime.fromisoformat(last_date_str).date()
+                except ValueError:
+                    logger.warning(f"Could not parse date: {last_date_str}")
+
+            # Calculate new streak
+            new_streak = current_streak
+            if last_date is None:
+                # First time user
+                new_streak = 1
+            elif last_date == today:
+                # Already updated today, no change
+                pass
+            elif (today - last_date).days == 1:
+                # Consecutive day, increment streak
+                new_streak = current_streak + 1
+            elif last_date != today:
+                # Gap in activity, reset streak
+                new_streak = 1
+
+            # Update the study streak if it changed
+            if new_streak != current_streak:
+                client.table("user_profiles").update({
+                    "study_streak": new_streak
+                }).eq("id", user_id).execute()
+                logger.info(f"Updated study streak for user {user_id}: {current_streak} -> {new_streak}")
+                
+        except Exception as e:
+            logger.error(f"[Supabase] Update study streak failed for user {user_id}: {e}")
+
     # Guest rate limiting methods
     def check_guest_generation_limit(self, ip_address: str, daily_limit: int = 2) -> bool:
         """Check if guest user (by IP) is under daily generation limit."""

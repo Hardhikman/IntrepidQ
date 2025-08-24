@@ -427,7 +427,7 @@ export default function UPSCQuestionGenerator() {
                   className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
                   disabled={authLoading}
                 >
-                  {authLoading ? "Loading..." : "🚀 Sign In with Google"}
+                  {authLoading ? "Loading..." : "Sign In with Google"}
                 </Button>
               )}
             </div>
@@ -459,7 +459,7 @@ export default function UPSCQuestionGenerator() {
                     : "text-2xl md:text-3xl"
                 )}
               >
-                🎯 Select Question Generation Mode
+                 Select Question Generation Mode
               </span>
             </div>
 

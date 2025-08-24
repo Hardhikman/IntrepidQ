@@ -61,7 +61,7 @@ export default function AcceptableUsePolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                You must not use IntrepidQ2 for any of the following activities:
+                You must not use IntrepidQ for any of the following activities:
               </p>
               
               <h3 className="text-base md:text-lg font-serif font-semibold text-gray-800 mb-3 mt-4">

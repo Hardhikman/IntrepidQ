@@ -503,8 +503,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                 <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="today">Today</SelectItem>
                 <SelectItem value="week">Last 7 days</SelectItem>
+                <SelectItem value="fortnight">Last 15 days</SelectItem>
                 <SelectItem value="month">Last 30 days</SelectItem>
-                <SelectItem value="quarter">Last 90 days</SelectItem>
               </SelectContent>
             </Select>
             <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setSelectedSubject(null); setSelectedMode(null); setSelectedDateRange(null); }}>

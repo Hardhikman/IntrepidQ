@@ -120,13 +120,6 @@ export default function Profile({ session }: ProfileProps) {
       <div className="max-w-2xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 sm:mb-8">
                   <h1 className="text-2xl sm:text-3xl font-bold">Profile</h1>
-                  <Button
-                    onClick={signOut}
-                    className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </Button>
                 </div>
 
         <Card>

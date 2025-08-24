@@ -128,13 +128,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             byDate = itemDate >= weekAgo;
             break;
+          case 'fortnight':
+            const fortnightAgo = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+            byDate = itemDate >= fortnightAgo;
+            break;
           case 'month':
             const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
             byDate = itemDate >= monthAgo;
-            break;
-          case 'quarter':
-            const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-            byDate = itemDate >= quarterAgo;
             break;
           default:
             byDate = true;

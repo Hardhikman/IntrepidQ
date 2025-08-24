@@ -366,9 +366,9 @@ export default function UPSCQuestionGenerator() {
                 <DropdownMenuTrigger asChild>
                   <Button 
                     size="sm"
-                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                    className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
                   >
-                    📚 Resources
+                     Resources
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[180px]">
@@ -377,26 +377,26 @@ export default function UPSCQuestionGenerator() {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push("/about")}>
-                    ℹ️ About IntrepidQ
+                     About IntrepidQ
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push("/blog")}>
-                    📝 Blog
+                     Blogs
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => router.push("/privacy-policy")}>
-                    🔒 Privacy Policy
+                     Privacy Policy
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push("/terms-of-service")}>
-                    📜 Terms of Service
+                     Terms of Service
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push("/acceptable-use-policy")}>
-                    📝 Acceptable Use
+                     Acceptable Use
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
               {/* Separator */}
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
+              <Separator orientation="vertical" className="h-6 hidden sm:block bg-gray-400" />
 
               {/* Conditional rendering: User menu for authenticated users, Sign In button for guests */}
               {user ? (
@@ -404,7 +404,7 @@ export default function UPSCQuestionGenerator() {
                   <DropdownMenuTrigger asChild>
                     <Button 
                       size="sm"
-                      className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                      className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
                     >
                       <Menu className="w-4 h-4 mr-1.5" /> MENU
                     </Button>
@@ -424,7 +424,7 @@ export default function UPSCQuestionGenerator() {
                 <Button 
                   size="sm"
                   onClick={handleGoogleSignIn}
-                  className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                  className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
                   disabled={authLoading}
                 >
                   {authLoading ? "Loading..." : "🚀 Sign In with Google"}

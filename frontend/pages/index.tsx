@@ -356,7 +356,7 @@ export default function UPSCQuestionGenerator() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Website Title with enhanced layout */}
             <div className="flex items-center justify-center sm:justify-start">
-              <div className="bg-gradient-to-r from-orange-500 to-blue-500 rounded-xl p-1 shadow-md">
+              <div className="border-4 border-orange-500 border-t-orange-500 border-r-blue-500 border-b-blue-500 border-l-orange-500 rounded-xl bg-white shadow-md">
                 <CardTitle className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-gray-800 px-4 py-2 rounded-lg">
                   IntrepidQ
                 </CardTitle>

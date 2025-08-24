@@ -221,14 +221,6 @@ export default function TermsOfServicePage() {
                 <span className="inline-block w-8"></span>
                 We may update these Terms from time to time. We will notify you of any changes by posting the new Terms on this page.
               </p>
-
-              <h2 className="text-lg md:text-xl font-serif font-bold text-gray-800 mb-3 mt-6 border-b pb-2">
-                13. Contact Information
-              </h2>
-              <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
-                <span className="inline-block w-8"></span>
-                If you have any questions about these Terms, please contact us at: hardhikm.08@gmail.com
-              </p>
             </div>
 
             {/* Back to Home button */}

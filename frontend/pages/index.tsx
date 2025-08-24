@@ -355,8 +355,7 @@ export default function UPSCQuestionGenerator() {
         <CardHeader className="py-3">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Website Title - Responsive sizing and alignment */}
-            <CardTitle className="text-3xl sm:text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-orange-400 via-blue-400 to-orange-500 
-  bg-clip-text text-transparent drop-shadow-sm text-center sm:text-left">
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-gray-800 dark:text-white">
               IntrepidQ
             </CardTitle>
 

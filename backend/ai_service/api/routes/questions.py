@@ -200,6 +200,7 @@ async def generate_questions(
             if records_to_insert:
                 resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
                 supabase_service().increment_generation_count(user['id'])
+                supabase_service().update_study_streak(user['id'])
 
             return {
                 "questions": result["questions"],
@@ -287,6 +288,7 @@ async def generate_whole_paper(
             if records_to_insert:
                 resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
                 supabase_service().increment_generation_count(user['id'])
+                supabase_service().update_study_streak(user['id'])
 
             return {
                 "questions": result["questions"],

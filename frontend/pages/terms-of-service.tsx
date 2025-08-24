@@ -227,7 +227,7 @@ export default function TermsOfServicePage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                If you have any questions about these Terms, please contact us at: hardhikm.08@gmal.com
+                If you have any questions about these Terms, please contact us at: hardhikm.08@gmail.com
               </p>
             </div>
 

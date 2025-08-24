@@ -362,26 +362,39 @@ export default function UPSCQuestionGenerator() {
 
             {/* Right side buttons - Responsive stacking */}
             <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-              {/* About button */}
-              <Button 
-                size="sm"
-                onClick={() => router.push("/about")}
-                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
-              >
-                ℹ️ About
-              </Button>
-
-              {/* Separator */}
-              <Separator orientation="vertical" className="h-6 hidden sm:block" />
-
-              {/* Blog button */}
-              <Button 
-                size="sm"
-                onClick={() => router.push("/blog")}
-                className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
-              >
-                📝 Blog
-              </Button>
+              {/* Resources Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm"
+                  >
+                    📚 Resources
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[180px]">
+                  <DropdownMenuLabel className="text-purple-600 font-semibold">
+                    Information & Resources
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/about")}>
+                    ℹ️ About IntrepidQ
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/blog")}>
+                    📝 Blog
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push("/privacy-policy")}>
+                    🔒 Privacy Policy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/terms-of-service")}>
+                    📜 Terms of Service
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push("/acceptable-use-policy")}>
+                    📝 Acceptable Use
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Separator */}
               <Separator orientation="vertical" className="h-6 hidden sm:block" />

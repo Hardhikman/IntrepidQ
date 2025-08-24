@@ -24,7 +24,7 @@
 
 ---
 
-## 🌟 What's New in IntrepidQ2
+## 🌟 What's New in IntrepidQ
 
 ✨ **Enhanced AI Engine**: Multi-model support (Groq, Google Gemini, OpenRouter)  
 🔄 **Smart Caching**: Supabase-based intelligent question caching system  

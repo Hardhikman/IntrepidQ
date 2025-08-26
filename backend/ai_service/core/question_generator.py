@@ -1,4 +1,3 @@
-
 """
 Question generation functionality - multi-provider
 Supports: Groq, Gemini, Together, OpenRouter
@@ -10,6 +9,7 @@ Features:
 - Persistent model performance in Supabase
 - Consistent stats output for topic & paper generation
 - Generated questions caching with random example selection to get reliable questions
+- Document retrieval exclusively via vector search with fallback to direct query.
 """
 import os
 import time
@@ -26,6 +26,7 @@ from supabase import Client
 from langchain.prompts import PromptTemplate
 from langchain_groq import ChatGroq
 from langchain_community.vectorstores import SupabaseVectorStore
+from langchain_core.utils import convert_to_secret_str
 
 # Optional providers
 try:
@@ -49,8 +50,6 @@ class QuestionGenerator:
         self.vectorstore = vectorstore
         self.supabase_client = supabase_client
         self.cache = Cache(cache_dir)  # Keep only news cache
-        
-        # Remove local questions cache - use Supabase only
         
         self.topics_by_subject = (
             self._build_topics_by_subject()
@@ -131,24 +130,24 @@ class QuestionGenerator:
         try:
             # Get count of entries for this topic
             response = (self.supabase_client
-                       .table('topic_questions_index')
-                       .select('id', count='exact')
-                       .eq('subject', subject)
-                       .eq('topic', topic)
-                       .execute())
+                        .table('topic_questions_index')
+                        .select('id')
+                        .eq('subject', subject)
+                        .eq('topic', topic)
+                        .execute())
             
-            count = response.count or 0
+            count = len(response.data) if response.data else 0
             if count > max_entries:
                 # Delete oldest entries beyond the limit
                 excess_count = count - max_entries
                 old_entries = (self.supabase_client
-                              .table('topic_questions_index')
-                              .select('id')
-                              .eq('subject', subject)
-                              .eq('topic', topic)
-                              .order('created_at')
-                              .limit(excess_count)
-                              .execute())
+                               .table('topic_questions_index')
+                               .select('id')
+                               .eq('subject', subject)
+                               .eq('topic', topic)
+                               .order('created_at')
+                               .limit(excess_count)
+                               .execute())
                 
                 if old_entries.data:
                     ids_to_delete = [entry['id'] for entry in old_entries.data]
@@ -168,14 +167,14 @@ class QuestionGenerator:
         try:
             # Get random questions from topic index
             response = (self.supabase_client
-                       .table('topic_questions_index')
-                       .select('question_text')
-                       .eq('subject', subject)
-                       .eq('topic', topic)
-                       .gt('expires_at', datetime.now().isoformat())
-                       .order('created_at', desc=True)
-                       .limit(max_examples * 2)  # Get more to allow random sampling
-                       .execute())
+                        .table('topic_questions_index')
+                        .select('question_text')
+                        .eq('subject', subject)
+                        .eq('topic', topic)
+                        .gt('expires_at', datetime.now().isoformat())
+                        .order('created_at', desc=True)
+                        .limit(max_examples * 2)  # Get more to allow random sampling
+                        .execute())
             
             if not response.data:
                 return []
@@ -210,13 +209,13 @@ class QuestionGenerator:
         try:
             # Get questions from any topic in the subject
             response = (self.supabase_client
-                       .table('topic_questions_index')
-                       .select('question_text')
-                       .eq('subject', subject)
-                       .gt('expires_at', datetime.now().isoformat())
-                       .order('created_at', desc=True)
-                       .limit(max_examples * 3)  # Get more to allow random sampling
-                       .execute())
+                        .table('topic_questions_index')
+                        .select('question_text')
+                        .eq('subject', subject)
+                        .gt('expires_at', datetime.now().isoformat())
+                        .order('created_at', desc=True)
+                        .limit(max_examples * 3)  # Get more to allow random sampling
+                        .execute())
             
             if not response.data:
                 return []
@@ -257,11 +256,11 @@ class QuestionGenerator:
         
         try:
             # Get total cache entries
-            cache_resp = self.supabase_client.table('questions_cache').select('id', count='exact').execute()
+            cache_resp = self.supabase_client.table('questions_cache').select('id', count=None).execute()
             stats["total_cache_entries"] = cache_resp.count or 0
             
             # Get total questions in topic index
-            topic_resp = self.supabase_client.table('topic_questions_index').select('id', count='exact').execute()
+            topic_resp = self.supabase_client.table('topic_questions_index').select('id', count=None).execute()
             stats["total_questions"] = topic_resp.count or 0
             
             # Get stats per subject
@@ -270,23 +269,23 @@ class QuestionGenerator:
                     # Cache entries per subject
                     cache_subject_resp = (self.supabase_client
                                          .table('questions_cache')
-                                         .select('id', count='exact')
+                                         .select('id', count=None)
                                          .eq('subject', subject)
                                          .execute())
                     
                     # Topic index questions per subject
                     topic_subject_resp = (self.supabase_client
                                          .table('topic_questions_index')
-                                         .select('id', count='exact')
+                                         .select('id', count=None)
                                          .eq('subject', subject)
                                          .execute())
                     
                     # Topics with cache
                     topics_resp = (self.supabase_client
-                                  .table('topic_questions_index')
-                                  .select('topic')
-                                  .eq('subject', subject)
-                                  .execute())
+                                     .table('topic_questions_index')
+                                     .select('topic')
+                                     .eq('subject', subject)
+                                     .execute())
                     
                     unique_topics = len(set(item['topic'] for item in topics_resp.data)) if topics_resp.data else 0
                     
@@ -309,7 +308,7 @@ class QuestionGenerator:
         
         return stats
 
-    def clear_cache(self, subject: str = None, topic: str = None):
+    def clear_cache(self, subject: Optional[str] = None, topic: Optional[str] = None):
         """Clear cache - all, by subject, or by specific topic"""
         if not self.supabase_client:
             logger.warning("Supabase client not available for cache clearing")
@@ -401,12 +400,12 @@ class QuestionGenerator:
 
     #LLM Provider Clients
     def _get_groq_client(self, model_id: str) -> ChatGroq:
-        return ChatGroq(model=model_id, groq_api_key=self.groq_api_key, temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7")))
+        return ChatGroq(model=model_id, api_key=convert_to_secret_str(self.groq_api_key), temperature=float(os.getenv("GROQ_TEMPERATURE", "0.7")))
 
     def _get_gemini_client(self, model_id: str):
         if not self.google_api_key or ChatGoogleGenerativeAI is None:
             return None
-        return ChatGoogleGenerativeAI(model=model_id, google_api_key=self.google_api_key, temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")))
+        return ChatGoogleGenerativeAI(model=model_id, api_key=convert_to_secret_str(self.google_api_key), temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")))
 
     def _get_openrouter_client(self, model_id: str):
         key = os.getenv("OPENROUTER_API_KEY")
@@ -504,7 +503,7 @@ class QuestionGenerator:
         # Case 3: Raw string already
         if isinstance(response, str):
             return response.strip()
-        # Case 4: Fallback → convert to string
+        # Case 4: Fallback -> convert to string
         return str(response).strip()
 
     # ---------------- Prompts ----------------
@@ -610,8 +609,8 @@ Now return ONLY the JSON array:"""
             return "NEWSAPI_KEY not configured"
         cache_key = f"{topic}_{months}"
         cached = self.cache.get(cache_key)
-        if cached and time.time() - cached["timestamp"] < 3600:
-            return cached["news"]
+        if cached and isinstance(cached, dict) and time.time() - cached.get("timestamp", 0) < 3600:
+            return cached.get("news", "")
         from_date = (datetime.utcnow() - timedelta(days=30 * months)).date()
         params = {"q": topic, "from": from_date.isoformat(), "to": datetime.utcnow().date().isoformat(),
                   "sortBy": "relevancy", "language": "en", "pageSize": 5, "apiKey": key}
@@ -625,7 +624,7 @@ Now return ONLY the JSON array:"""
             return f"Error fetching news: {e}"
 
     # Safe Question Parsing
-    def safe_parse_questions(self, output: str, num: int = None) -> List[dict]:
+    def safe_parse_questions(self, output: str, num: Optional[int] = None) -> List[dict]:
         """
         Tries to safely parse LLM output into a list of {"thinking": ..., "question": ...}.
         Handles messy outputs, <think> blocks, stray text, and fallback cases.
@@ -691,9 +690,12 @@ Now return ONLY the JSON array:"""
 
     def _generate_static_questions(self, subject, topic, num, models_to_try: List[str]):
         try:
-            # Get database examples
-            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(5).execute()
-            db_examples = [item["content"] for item in resp.data] if resp.data else []
+            # Get database examples using vector similarity search
+            db_examples = self._get_relevant_documents_with_fallback(
+                topic, 
+                f"UPSC questions for {subject} on {topic}", 
+                k=5
+            )
             
             # Get cached questions as examples
             cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=3)
@@ -741,8 +743,7 @@ Now return ONLY the JSON array:"""
     def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str]):
         try:
             # Get database examples
-            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(3).execute()
-            db_examples = [item["content"] for item in resp.data] if resp.data else []
+            db_examples = self._get_relevant_documents_with_fallback(topic, f"UPSC questions for {subject} on {topic}", k=3)
             
             # Get cached questions as examples
             cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=2)
@@ -867,6 +868,47 @@ Now return ONLY the JSON array:"""
                     "status": "error"
                 }
             }
+            
+    def _get_relevant_documents_with_fallback(self, topic: str, query: str, k: int = 5) -> List[str]:
+        """
+        Get relevant documents using vector similarity search, with fallback.
+        """
+        if not self.vectorstore:
+            logger.warning("Vector store not available, falling back to direct query.")
+            return self._get_documents_current_method(topic, k)
+            
+        try:
+            logger.info(f"Attempting vector similarity search for query: '{query}'")
+            # Perform similarity search using vectorstore
+            docs = self.vectorstore.similarity_search(
+                query, 
+                k=k,
+                filter={"topic": topic}
+            )
+            
+            # Extract content
+            documents = [doc.page_content for doc in docs]
+            logger.info(f"Vector search successful. Found {len(documents)} documents.")
+            
+            return documents
+            
+        except Exception as e:
+            logger.warning(f"Vector search failed, falling back to direct query: {e}")
+            return self._get_documents_current_method(topic, k)
+
+    def _get_documents_current_method(self, topic: str, k: int = 5) -> List[str]:
+        """
+        Current method of retrieving documents - kept for backward compatibility.
+        """
+        if not self.supabase_client:
+            return []
+            
+        try:
+            resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(k).execute()
+            return [item["content"] for item in resp.data] if resp.data else []
+        except Exception as e:
+            logger.warning(f"Failed to get documents using current method: {e}")
+            return []
 
     def _gather_topic_examples(self, selected_topics: List[str], subject: str) -> List[str]:
         topic_examples = []
@@ -875,9 +917,10 @@ Now return ONLY the JSON array:"""
         
         for topic in selected_topics:
             try:
-                resp = self.supabase_client.table("documents").select("content").eq("metadata->>topic", topic).limit(2).execute()
-                if resp.data:
-                    examples = [item["content"] for item in resp.data]
+                # Use the new method for document retrieval
+                examples = self._get_relevant_documents_with_fallback(topic, f"UPSC questions for {subject} on {topic}", k=2)
+                
+                if examples:
                     display_topic = topic.replace(f"{subject} - ", "")
                     topic_examples.append(f"{display_topic}:")
                     for i, example in enumerate(examples, 1):
@@ -899,7 +942,7 @@ Now return ONLY the JSON array:"""
                 continue
             if (line.endswith("?")
                 or re.match(r"^(Discuss|Explain|Analyze|Evaluate|Critically|Examine|Comment|Elucidate|Illustrate|"
-                            r"Describe|Assess|Justify|Outline|Compare|Contrast|What|Why|How|To what extent)", line)):
+                                r"Describe|Assess|Justify|Outline|Compare|Contrast|What|Why|How|To what extent)", line)):
                 out.append(f"{n}. {line}")
                 n += 1
         return out

@@ -75,7 +75,10 @@ class SupabaseService:
         try:
             client = self._ensure_client()
             response = client.auth.get_user(token)
-            return response.user.model_dump() if response.user else None
+            # Fix: Add proper null check for response and response.user before accessing
+            if response and hasattr(response, 'user') and response.user:
+                return response.user.model_dump()
+            return None
         except Exception as e:
             logger.error(f"Token verification failed: {e}")
             return None
@@ -85,7 +88,10 @@ class SupabaseService:
         try:
             client = self._ensure_client()
             response = client.table("user_profiles").select("*").eq("id", user_id).execute()
-            return response.data[0] if response.data else None
+            # Fix: Add proper null check for response before accessing response.data
+            if response and hasattr(response, 'data') and response.data:
+                return response.data[0]
+            return None
         except Exception as e:
             logger.error(f"Failed to get user profile: {e}")
             return None
@@ -362,6 +368,22 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"Failed to get question history: {e}", exc_info=True)
             return []
+
+    def delete_question(self, user_id: str, question_id: str) -> bool:
+        """Delete a specific question from user's history."""
+        try:
+            client = self._ensure_client()
+            response = (
+                client.table('generated_questions')
+                .delete()
+                .eq('id', question_id)
+                .eq('user_id', user_id)
+                .execute()
+            )
+            return bool(response.data)
+        except Exception as e:
+            logger.error(f"Failed to delete question: {e}", exc_info=True)
+            return False
 
 # Global accessor
 _supabase_service = None

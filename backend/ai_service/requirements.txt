@@ -20,6 +20,7 @@ pgvector>=0.2.0
 postgrest>=0.15.0
 python-multipart>=0.0.5
 redis>=5.0.0
+hiredis==2.0.0
 google-generativeai>=0.4.0
 torch==2.8.0+cpu
 locust>=2.0.0

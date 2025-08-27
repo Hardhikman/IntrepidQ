@@ -83,6 +83,42 @@ async def get_user_profile(user: Dict[str, Any] = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to fetch user profile")
 
 
+@router.get("/models")
+async def get_available_models():
+    """Get all available AI models"""
+    try:
+        question_generator = get_question_generator()
+        models = question_generator.available_models
+        # Return models in a format suitable for the frontend
+        model_list = []
+        for model_name, model_info in models.items():
+            # Create user-friendly names for display
+            display_names = {
+                "llama3-70b": "Llama3 (70B)",
+                "llama3-8b": "Llama3 (8B)",
+                "gemma2-9b": "Gemma2 (9B)",
+                "deepseek-r1": "DeepSeek (R1)",
+                "gemini-1.5-flash": "Gemini 1.5 Flash",
+                "deepseek-v3": "DeepSeek (V3)",
+                "moonshot-k2": "Moonshot (K2)"
+            }
+            
+            model_list.append({
+                "id": model_name,
+                "name": display_names.get(model_name, model_name),
+                "provider": model_info["provider"]
+            })
+        
+        # Sort models by priority order
+        priority_order = question_generator.priority_order
+        sorted_models = sorted(model_list, key=lambda x: priority_order.index(x["id"]) if x["id"] in priority_order else len(priority_order))
+        
+        return {"models": sorted_models}
+    except Exception as e:
+        logger.error(f"Error fetching available models: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch available models")
+
+
 @router.post("/question_feedback")
 async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = Depends(get_current_user)):#tells FastAPI to automatically call the get_current_user function and pass its result as the user argument when this endpoint is called.
     """Submit feedback for a generated question or overall UX"""

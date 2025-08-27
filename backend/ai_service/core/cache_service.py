@@ -1,5 +1,5 @@
 """
-KeyDB caching service for IntrepidQ2
+KeyDB caching service for IntrepidQ
 Implements deterministic cache keys using MD5 hashing as per infrastructure requirements
 KeyDB is a high-performance Redis alternative with multi-threading support
 """
@@ -10,6 +10,10 @@ import hashlib
 import logging
 from typing import Optional, Dict, Any
 from datetime import datetime, timedelta
+
+# Add async redis support
+from redis.asyncio import Redis as AsyncRedis
+from redis import Redis
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +46,9 @@ class CacheService:
         logger.info(f"Cache service attempting Redis connection to: {masked_url}")
         
         try:
-            self.redis_client = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=5)
+            # Create both sync and async clients
+            self.redis_client: Optional[Redis] = redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=5)
+            self.async_redis_client: Optional[AsyncRedis] = AsyncRedis.from_url(redis_url, decode_responses=True, socket_connect_timeout=5)
             # Test connection
             self.redis_client.ping()
             logger.info(f"Redis connected successfully: {masked_url}")
@@ -50,6 +56,7 @@ class CacheService:
             logger.warning(f"Redis connection failed: {e}. Caching disabled.")
             logger.info("Cache service will operate without Redis - question generation will still work")
             self.redis_client = None
+            self.async_redis_client = None
     
     def _generate_cache_key(self, **kwargs) -> str:
         """Generate deterministic cache key using MD5 hashing of request parameters"""
@@ -59,12 +66,12 @@ class CacheService:
     
     async def get_cached_questions(self, topic: str, model: str, num: int, subject: str = "GS1", **kwargs) -> Optional[Dict[str, Any]]:
         """Get cached questions for given parameters"""
-        if not self.redis_client:
+        if not self.async_redis_client:
             return None
             
         try:
             cache_key = f"questions:{self._generate_cache_key(topic=topic, model=model, num=num, subject=subject, **kwargs)}"
-            cached_data = self.redis_client.get(cache_key)
+            cached_data = await self.async_redis_client.get(cache_key)
             
             if cached_data:
                 result = json.loads(cached_data)
@@ -80,7 +87,7 @@ class CacheService:
     
     async def cache_questions(self, questions: Dict[str, Any], topic: str, model: str, num: int, subject: str = "GS1", ttl: int = 3600, **kwargs):
         """Cache questions with TTL"""
-        if not self.redis_client:
+        if not self.async_redis_client:
             return
             
         try:
@@ -100,7 +107,7 @@ class CacheService:
                 }
             }
             
-            self.redis_client.setex(cache_key, ttl, json.dumps(cache_data, default=str))
+            await self.async_redis_client.setex(cache_key, ttl, json.dumps(cache_data, default=str))
             logger.info(f"Questions cached successfully: {topic[:30]}... (TTL: {ttl}s)")
             
         except Exception as e:
@@ -108,12 +115,12 @@ class CacheService:
     
     async def get_cached_answers(self, question_id: str, model: str = "llama3-70b") -> Optional[Dict[str, Any]]:
         """Get cached answers for a specific question"""
-        if not self.redis_client:
+        if not self.async_redis_client:
             return None
             
         try:
             cache_key = f"answers:{self._generate_cache_key(question_id=question_id, model=model)}"
-            cached_data = self.redis_client.get(cache_key)
+            cached_data = await self.async_redis_client.get(cache_key)
             
             if cached_data:
                 result = json.loads(cached_data)
@@ -128,7 +135,7 @@ class CacheService:
     
     async def cache_answers(self, answers: Dict[str, Any], question_id: str, model: str = "llama3-70b", ttl: int = 7200):
         """Cache answers with longer TTL"""
-        if not self.redis_client:
+        if not self.async_redis_client:
             return
             
         try:
@@ -141,7 +148,7 @@ class CacheService:
                 "model": model
             }
             
-            self.redis_client.setex(cache_key, ttl, json.dumps(cache_data, default=str))
+            await self.async_redis_client.setex(cache_key, ttl, json.dumps(cache_data, default=str))
             logger.info(f"Answers cached successfully: {question_id}")
             
         except Exception as e:
@@ -149,13 +156,13 @@ class CacheService:
     
     async def invalidate_cache(self, pattern: str = "*"):
         """Invalidate cache entries matching pattern"""
-        if not self.redis_client:
+        if not self.async_redis_client:
             return
             
         try:
-            keys = self.redis_client.keys(pattern)
+            keys = await self.async_redis_client.keys(pattern)
             if keys:
-                self.redis_client.delete(*keys)
+                await self.async_redis_client.delete(*keys)
                 logger.info(f"Invalidated {len(keys)} cache entries")
         except Exception as e:
             logger.error(f"Cache invalidation error: {e}")
@@ -167,14 +174,16 @@ class CacheService:
             
         try:
             info = self.redis_client.info()
+            # Ensure info is treated as a dictionary
+            info_dict: Dict[str, Any] = info if isinstance(info, dict) else {}
             return {
                 "status": "active",
-                "used_memory": info.get('used_memory_human'),
-                "connected_clients": info.get('connected_clients'),
-                "total_commands_processed": info.get('total_commands_processed'),
-                "keyspace_hits": info.get('keyspace_hits', 0),
-                "keyspace_misses": info.get('keyspace_misses', 0),
-                "hit_ratio": self._calculate_hit_ratio(info)
+                "used_memory": info_dict.get('used_memory_human'),
+                "connected_clients": info_dict.get('connected_clients'),
+                "total_commands_processed": info_dict.get('total_commands_processed'),
+                "keyspace_hits": info_dict.get('keyspace_hits', 0),
+                "keyspace_misses": info_dict.get('keyspace_misses', 0),
+                "hit_ratio": self._calculate_hit_ratio(info_dict)
             }
         except Exception as e:
             logger.error(f"Cache stats error: {e}")

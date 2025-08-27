@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 // Components
 import { QuestionGenerator } from "@/components/QuestionGenerator";
 import { ChatWindow } from "@/components/Chatwindow";
+import FloatingHeader from "@/components/FloatingHeader";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -52,7 +53,7 @@ export default function UPSCQuestionGenerator() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState(5);
   const [useCurrentAffairs, setUseCurrentAffairs] = useState(false);
-  const [mode, setMode] = useState<"topic" | "paper">("topic");
+  const [mode, setMode] = useState<"topic" | "keyword" | "paper">("topic");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -61,8 +62,8 @@ export default function UPSCQuestionGenerator() {
   const [selectedModel, setSelectedModel] = useState("llama3-70b");
   const [answerLoadingIndex, setAnswerLoadingIndex] = useState<number | null>(null);
 
-  // NEW: variant toggle → default "compact", change to "spacious" if wanted
-  const [cardVariant, setCardVariant] = useState<"compact" | "spacious">("compact");
+  // NEW: Keyword query state for keyword mode
+  const [keywordQuery, setKeywordQuery] = useState("");
 
   // Daily limit tracking
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
@@ -165,16 +166,36 @@ export default function UPSCQuestionGenerator() {
       toast({ title: "Warning", description: "Please select a topic", variant: "destructive" });
       return;
     }
+    
+    if (mode === "keyword" && !keywordQuery.trim()) {
+      toast({ title: "Warning", description: "Please enter keywords", variant: "destructive" });
+      return;
+    }
+    
     setQuestions([]);
     setAnswers({});
     setLoading(true);
 
     try {
-      const endpoint = mode === "paper" ? "/api/generate_whole_paper" : "/api/generate_questions";
-      const payload =
-        mode === "paper"
-          ? { subject: selectedSubject, use_ca: useCurrentAffairs, months: 6, model: selectedModel }
-          : { topic: selectedTopic, num: numQuestions, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
+      let endpoint, payload;
+      
+      if (mode === "paper") {
+        endpoint = "/api/generate_whole_paper";
+        payload = { subject: selectedSubject, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
+      } else if (mode === "keyword") {
+        endpoint = "/api/generate_questions_from_keywords";
+        payload = { 
+          keywords: keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0),
+          num: numQuestions, 
+          use_ca: useCurrentAffairs, 
+          months: 6, 
+          model: selectedModel,
+          subject: selectedSubject
+        };
+      } else {
+        endpoint = "/api/generate_questions";
+        payload = { topic: selectedTopic, num: numQuestions, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
+      }
 
       const sessionResponse = await supabase.auth.getSession();
       const token = sessionResponse.data.session?.access_token;
@@ -347,185 +368,186 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
+  // NEW: Handle keyword-based question generation
+  const handleGenerateQuestionsFromKeywords = async () => {
+    if (mode === "keyword" && !keywordQuery.trim()) {
+      toast({ title: "Warning", description: "Please enter keywords", variant: "destructive" });
+      return;
+    }
+    
+    setQuestions([]);
+    setAnswers({});
+    setLoading(true);
+
+    try {
+      const endpoint = "/api/generate_questions_from_keywords";
+      const payload = { 
+        keywords: keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0),
+        num: numQuestions, 
+        use_ca: useCurrentAffairs, 
+        months: 6, 
+        model: selectedModel,
+        subject: selectedSubject  // Add subject to payload
+      };
+
+      const sessionResponse = await supabase.auth.getSession();
+      const token = sessionResponse.data.session?.access_token;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        if (response.status === 429) {
+          const errorData = await response.json();
+          if (errorData.guest_limit_reached) {
+            // Update guest state from server response
+            setDailyLimitReached(true);
+            setGuestGenerationsUsed(2); // Reached limit
+            
+            // Guest user hit limit - show special toast with sign-in option
+            toast({
+              title: "Question Generation Limit Reached",
+              description: `You've reached your daily limit of ${errorData.guest_daily_limit} question generations. Sign in with Google to get ${errorData.user_daily_limit} question generations per day! You can still generate unlimited answers.`,
+              variant: "destructive",
+              action: (
+                <Button 
+                  size="sm" 
+                  onClick={handleGoogleSignIn}
+                  className="ml-2 bg-blue-600 hover:bg-blue-700"
+                >
+                  Sign In
+                </Button>
+              ),
+            });
+          } else {
+            // Authenticated user hit limit
+            setDailyLimitReached(true);
+            toast({
+              title: "Daily Limit Reached",
+              description: errorData.error || "Daily generation limit reached",
+              variant: "destructive",
+            });
+          }
+          return;
+        }
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const qs: GeneratedQuestion[] = (data.questions || []).map((q: any) =>
+        typeof q === "string"
+          ? {
+              id: Math.random().toString(),
+              subject: selectedSubject,
+              topic: keywordQuery, // Use keyword query as topic
+              mode: "keyword",
+              question: q,
+              thinking: "",
+              use_current_affairs: useCurrentAffairs,
+              question_count: 1,
+              created_at: new Date().toISOString(),
+            }
+          : {
+              id: Math.random().toString(),
+              subject: selectedSubject,
+              topic: keywordQuery, // Use keyword query as topic
+              mode: "keyword",
+              question: q.question || q.questions,
+              thinking: q.thinking || "",
+              use_current_affairs: useCurrentAffairs,
+              question_count: 1,
+              created_at: new Date().toISOString(),
+            }
+      );
+      setQuestions(qs);
+      
+      // Update guest state after successful generation
+      if (!user) {
+        setGuestGenerationsUsed(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 2) {
+            setDailyLimitReached(true);
+          }
+          return newCount;
+        });
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+      applyLocalGenerationIncrement?.(1);
+      refreshProfile?.();
+    }
+  };
+
   // Return the main interface for both authenticated and guest users
   return (
-    <div className="min-h-screen bg-gradient-to-r from-orange-50 to-blue-50 p-4 space-y-6">
-      {/* HEADER - Made responsive */}
-      <Card className="max-w-5xl mx-auto shadow-md">
-        <CardHeader className="py-3">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            {/* Website Title with enhanced layout */}
-            <div className="flex items-center justify-center sm:justify-start">
-              <div className="border-4 border-orange-500 border-t-orange-500 border-r-blue-500 border-b-blue-500 border-l-orange-500 rounded-xl bg-white shadow-md">
-                <CardTitle className="text-2xl sm:text-3xl font-bold text-center sm:text-left text-gray-800 px-4 py-2 rounded-lg">
-                  IntrepidQ
-                </CardTitle>
-              </div>
-            </div>
-            {/* Right side buttons - Responsive stacking */}
-            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full sm:w-auto">
-              {/* Resources Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    size="sm"
-                    className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
-                  >
-                     Resources
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[180px]">
-                  <DropdownMenuLabel className="text-purple-600 font-semibold">
-                    Information & Resources
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/about")}>
-                     About IntrepidQ
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/blog")}>
-                     Blogs
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push("/privacy-policy")}>
-                     Privacy Policy
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/terms-of-service")}>
-                     Terms of Service
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push("/acceptable-use-policy")}>
-                     Acceptable Use
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+    <div className="min-h-screen bg-gradient-to-r from-orange-50 to-blue-50">
+      {/* Floating Header */}
+      <FloatingHeader
+        user={user}
+        authLoading={authLoading}
+        signOut={signOut}
+        signInWithGoogle={signInWithGoogle}
+      />
 
-              {/* Separator */}
-              <Separator orientation="vertical" className="h-6 hidden sm:block bg-gray-400" />
-
-              {/* Conditional rendering: User menu for authenticated users, Sign In button for guests */}
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      size="sm"
-                      className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
-                    >
-                      <Menu className="w-4 h-4 mr-1.5" /> MENU
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="min-w-[180px]">
-                    <DropdownMenuLabel className="text-orange-600 font-semibold">
-                      {authLoading ? "Checking..." : user?.email ?? "Guest"}
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push("/dashboard")}>📊 Dashboard</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/profile")}>👤 Profile</DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={signOut}>🚪 Sign Out</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button 
-                  size="sm"
-                  onClick={handleGoogleSignIn}
-                  className="bg-gradient-to-r from-orange-400 to-blue-500 hover:from-orange-500 hover:to-blue-600 text-white flex items-center font-medium tracking-wide px-3 py-1.5 text-sm rounded-full"
-                  disabled={authLoading}
-                >
-                  {authLoading ? "Loading..." : "Sign In with Google"}
-                </Button>
-              )}
-            </div>
+      {/* Main Content with padding adjusted for taller floating header */}
+      <div className="pt-16 p-4 space-y-6">
+        {/* Mode selection card */}
+      <Card className="max-w-3xl mx-auto shadow-md bg-gradient-to-r from-orange-50 to-blue-50 border border-gray-200">
+        <CardContent className="py-4">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <span className="font-bold text-orange-800 text-center text-lg sm:text-xl">
+               Select Question Generation Mode
+            </span>
           </div>
-        </CardHeader>
-      </Card>
-
-      {/* MODE SELECTOR with compact/spacious toggle - Made responsive */}
-      <Card className="max-w-5xl mx-auto shadow-sm">
-        <CardContent
-          className={cn(
-            cardVariant === "compact"
-              ? "py-4"
-              : "py-8"
-          )}
-        >
-          <div
-            className={cn(
-              "mx-auto flex flex-col items-center",
-              cardVariant === "compact" ? "gap-3" : "gap-6"
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className={cn(
-                  "font-bold text-orange-800 text-center",
-                  cardVariant === "compact"
-                    ? "text-lg sm:text-xl md:text-2xl"
-                    : "text-2xl md:text-3xl"
-                )}
-              >
-                 Select Question Generation Mode
-              </span>
-            </div>
-
-            <div
+          
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+            <button
               className={cn(
-                "flex flex-col sm:flex-row items-center justify-center w-full",
-                cardVariant === "compact" ? "gap-3" : "gap-6"
+                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                mode === "topic"
+                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                  : "bg-white border border-orange-400 text-orange-700 hover:bg-orange-50"
               )}
+              onClick={() => setMode("topic")}
             >
-              <Button
-                className={cn(
-                  "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto",
-                  cardVariant === "compact"
-                    ? "px-5 md:px-6 py-2.5 text-base"
-                    : "px-8 md:px-10 py-4 text-lg",
-                  mode === "topic"
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                    : "bg-white border border-orange-400 text-orange-700 hover:bg-orange-50"
-                )}
-                onClick={() => setMode("topic")}
-              >
-                📚 Topic-wise
-              </Button>
-
-              <Button
-                className={cn(
-                  "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto",
-                  cardVariant === "compact"
-                    ? "px-5 md:px-6 py-2.5 text-base"
-                    : "px-8 md:px-10 py-4 text-lg",
-                  mode === "paper"
-                    ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                    : "bg-white border border-blue-400 text-blue-700 hover:bg-blue-50"
-                )}
-                onClick={() => setMode("paper")}
-              >
-                📄 Whole Paper
-              </Button>
-            </div>
-
-            {mode === "paper" && (
-              <div
-                className={cn(
-                  "text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full",
-                  cardVariant === "compact"
-                    ? "text-xs md:text-sm px-3 py-2"
-                    : "text-sm md:text-base px-4 py-3"
-                )}
-              >
-                10 questions · 10 marks each · 1 hour · 100 marks
-              </div>
-            )}
-
-            {/* toggle button to switch look */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-2"
-              onClick={() => setCardVariant(cardVariant === "compact" ? "spacious" : "compact")}
+              📚 Topic-wise
+            </button>
+            
+            <button
+              className={cn(
+                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                mode === "keyword"
+                  ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
+                  : "bg-white border border-purple-400 text-purple-700 hover:bg-purple-50"
+              )}
+              onClick={() => setMode("keyword")}
             >
-              ZOOM ({cardVariant})
-            </Button>
+              🔍 Keyword-based
+            </button>
+            
+            <button
+              className={cn(
+                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                mode === "paper"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                  : "bg-white border border-blue-400 text-blue-700 hover:bg-blue-50"
+              )}
+              onClick={() => setMode("paper")}
+            >
+              📄 Whole Paper
+            </button>
           </div>
+          
+          {mode === "paper" && (
+            <div className="text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full text-xs md:text-sm px-3 py-2 mt-3">
+              10 questions · 10 marks each · 1 hour · 100 marks
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -587,6 +609,10 @@ export default function UPSCQuestionGenerator() {
           onGenerate={handleGenerateQuestions}
           mode={mode}
           dailyLimitReached={dailyLimitReached}
+          // NEW: Pass keyword-related props
+          keywordQuery={keywordQuery}
+          setKeywordQuery={setKeywordQuery}
+          onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
         />
 
         <div id="results-section">
@@ -611,6 +637,7 @@ export default function UPSCQuestionGenerator() {
           />
         </div>
       </section>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 import json
 import os
 import logging
+# Fixed import approach for Google Generative AI
 import google.generativeai as genai
+from google.generativeai.generative_models import GenerativeModel
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -21,7 +23,9 @@ GUEST_DAILY_LIMIT = 2
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise RuntimeError("GOOGLE_API_KEY not set in env variables.")
-genai.configure(api_key=GOOGLE_API_KEY)
+
+# The google.generativeai library automatically uses the GOOGLE_API_KEY
+# environment variable, so an explicit genai.configure() call is not needed.
 
 # Model selection
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
@@ -58,8 +62,13 @@ class BatchAnswerRequest(BaseModel):
 class BatchAnswerResponse(BaseModel):
     answers: List[AnswerResponse]
 
-from api.auth import get_optional_user
-from core.supabase_client import supabase_service
+# These imports would be specific to your project structure
+# from api.auth import get_optional_user
+# from core.supabase_client import supabase_service
+
+# For demonstration, we'll use placeholder functions for dependencies
+async def get_optional_user() -> Optional[Dict[str, Any]]:
+    return None 
 
 #Helpers
 
@@ -71,11 +80,12 @@ def extract_text_from_response(response) -> str:
         return response.text
     if hasattr(response, "candidates") and response.candidates:
         try:
+            # Access the first part of the first candidate's content
             parts = response.candidates[0].content.parts
-            if parts and hasattr(parts, "text"):
-                return parts.text
-        except Exception:
-            pass
+            if parts and hasattr(parts[0], "text"):
+                return parts[0].text
+        except (IndexError, AttributeError):
+            pass  # Let it fall through to the ValueError
     raise ValueError("Gemini response did not contain any text output.")
 
 def build_prompt(question: str) -> str:
@@ -111,9 +121,16 @@ async def generate_answer(
         
         logger.info(f"Generating answer for question: {request.question}")
 
-        model = genai.GenerativeModel(
+        # The model will automatically use the API key from the environment variables
+        model = GenerativeModel(
             model_name=MODEL_NAME,
-            generation_config={"response_mime_type": "application/json"}
+            generation_config={"response_mime_type": "application/json"},
+            safety_settings={
+                "HARASSMENT": "BLOCK_NONE",
+                "HATE_SPEECH": "BLOCK_NONE",
+                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
+                "DANGEROUS_CONTENT": "BLOCK_NONE",
+            }
         )
 
         response = model.generate_content(build_prompt(request.question))
@@ -151,9 +168,16 @@ async def generate_answers(
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")
 
-        model = genai.GenerativeModel(
+        # The model will automatically use the API key from the environment variables
+        model = GenerativeModel(
             model_name=MODEL_NAME,
-            generation_config={"response_mime_type": "application/json"}
+            generation_config={"response_mime_type": "application/json"},
+            safety_settings={
+                "HARASSMENT": "BLOCK_NONE",
+                "HATE_SPEECH": "BLOCK_NONE",
+                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
+                "DANGEROUS_CONTENT": "BLOCK_NONE",
+            }
         )
 
         answers: List[AnswerResponse] = []

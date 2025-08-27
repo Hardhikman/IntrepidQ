@@ -64,7 +64,17 @@ def serialize_date_fields(data):
 def get_user_stats(user_id: str):
     """Get user stats including daily limit and streak"""
     try:
-        rpc_resp = supabase_service().client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
+        supabase_svc = supabase_service()
+        if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
+            logger.error("Supabase service not properly initialized")
+            return {
+                "generation_count_today": 0,
+                "remaining_today": DAILY_LIMIT,
+                "streak": 0,
+                "last_generation_date": None
+            }
+            
+        rpc_resp = supabase_svc.client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
         if rpc_resp.data:
             profile = rpc_resp.data.get("profile", {})
             generation_count_today = profile.get("generation_count_today", 0)
@@ -99,7 +109,18 @@ async def check_guest_limit(request: Request):
             from datetime import datetime
             today = datetime.utcnow().date()
             
-            response = supabase_service().client.table("guest_generations").select(
+            # Fix: Add proper null check for supabase client
+            supabase_svc = supabase_service()
+            if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
+                logger.error("Supabase service or client not properly initialized")
+                return {
+                    "generations_used": 0,
+                    "daily_limit": GUEST_DAILY_LIMIT,
+                    "remaining": GUEST_DAILY_LIMIT,
+                    "limit_reached": False
+                }
+            
+            response = supabase_svc.client.table("guest_generations").select(
                 "generation_count, last_generation_date"
             ).eq("ip_address", client_ip).execute()
 
@@ -198,9 +219,14 @@ async def generate_questions(
 
             resp = None
             if records_to_insert:
-                resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
-                supabase_service().increment_generation_count(user['id'])
-                supabase_service().update_study_streak(user['id'])
+                # Fix: Add proper null check for supabase client before using it
+                supabase_svc = supabase_service()
+                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
+                    logger.error("Supabase service or client not properly initialized")
+                else:
+                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                    supabase_svc.increment_generation_count(user['id'])
+                    supabase_svc.update_study_streak(user['id'])
 
             return {
                 "questions": result["questions"],
@@ -212,7 +238,9 @@ async def generate_questions(
         else:
             # Guest user - increment IP-based counter
             client_ip = get_client_ip(http_request)
-            supabase_service().increment_guest_generation_count(client_ip)
+            supabase_svc = supabase_service()
+            if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
+                supabase_svc.increment_guest_generation_count(client_ip)
 
         # Guest fallback
         return {
@@ -286,9 +314,14 @@ async def generate_whole_paper(
 
             resp = None
             if records_to_insert:
-                resp = supabase_service().client.table('generated_questions').insert(records_to_insert).execute()
-                supabase_service().increment_generation_count(user['id'])
-                supabase_service().update_study_streak(user['id'])
+                # Fix: Add proper null check for supabase client before using it
+                supabase_svc = supabase_service()
+                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
+                    logger.error("Supabase service or client not properly initialized")
+                else:
+                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                    supabase_svc.increment_generation_count(user['id'])
+                    supabase_svc.update_study_streak(user['id'])
 
             return {
                 "questions": result["questions"],
@@ -314,3 +347,102 @@ async def generate_whole_paper(
     except Exception as e:
         logger.error(f"Error generating whole paper: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate whole paper: {str(e)}")
+
+
+@router.post("/generate_questions_from_keywords")
+async def generate_questions_from_keywords(
+    request: Dict[str, Any],
+    http_request: Request,
+    user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
+    """Generate UPSC questions based on keywords with stats from QuestionGenerator"""
+    try:
+        qg = get_question_generator()
+        keywords = request.get('keywords', [])
+        num_questions = request.get('num', 5)
+        use_ca = request.get('use_ca', False)
+        months = request.get('months', 6)
+        model = request.get('model', 'llama3-70b')
+        subject = request.get('subject', 'GS1')  # Get subject from request, default to GS1
+
+        # Rate limiting logic
+        if user:
+            # Authenticated user - check user limit
+            if not supabase_service().check_generation_limit(user['id'], DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={"error": f"Daily generation limit of {DAILY_LIMIT} reached.", "stats": get_user_stats(user['id'])}
+                )
+        else:
+            # Guest user - check IP-based limit
+            client_ip = get_client_ip(http_request)
+            if not supabase_service().check_guest_generation_limit(client_ip, GUEST_DAILY_LIMIT):
+                raise HTTPException(
+                    status_code=429,
+                    detail={
+                        "error": f"Daily question generation limit of {GUEST_DAILY_LIMIT} reached for guest users. Sign in to get {DAILY_LIMIT} question generations per day. You can still generate unlimited answers!",
+                        "guest_limit_reached": True,
+                        "guest_daily_limit": GUEST_DAILY_LIMIT,
+                        "user_daily_limit": DAILY_LIMIT
+                    }
+                )
+
+        # Generate questions from keywords
+        result = qg.generate_questions_from_keywords(
+            keywords=keywords,
+            num=num_questions,
+            use_ca=use_ca,
+            months=months,
+            requested_model=model,
+            subject=subject  # Pass subject to the method
+        )
+
+        if user:
+            # Save questions to DB
+            records_to_insert = [{
+                'user_id': user['id'],
+                'subject': subject,  # Use the provided subject instead of hardcoded GS1
+                'topic': ', '.join(keywords),  # Store keywords as topic
+                'questions': (q_text["question"] if isinstance(q_text, dict) else q_text),
+                'mode': 'keyword',
+                'use_current_affairs': use_ca,
+                'question_count': 1,
+                'model': model
+            } for q_text in result["questions"]]
+
+            resp = None
+            if records_to_insert:
+                # Fix: Add proper null check for supabase client before using it
+                supabase_svc = supabase_service()
+                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
+                    logger.error("Supabase service or client not properly initialized")
+                else:
+                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                    supabase_svc.increment_generation_count(user['id'])
+                    supabase_svc.update_study_streak(user['id'])
+
+            return {
+                "questions": result["questions"],
+                "meta": result["meta"],
+                "keywords": keywords,
+                "question_count": len(result["questions"]),
+                "stats": get_user_stats(user['id'])
+            }
+        else:
+            # Guest user - increment IP-based counter
+            client_ip = get_client_ip(http_request)
+            supabase_service().increment_guest_generation_count(client_ip)
+
+        # Guest fallback
+        return {
+            "questions": result["questions"],
+            "meta": result["meta"],
+            "keywords": keywords,
+            "question_count": len(result["questions"])
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating questions from keywords: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to generate questions from keywords: {str(e)}")

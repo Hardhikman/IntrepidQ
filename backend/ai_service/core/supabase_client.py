@@ -201,8 +201,8 @@ class SupabaseService:
             elif (today - last_date).days == 1:
                 # Consecutive day, increment streak
                 new_streak = current_streak + 1
-            elif last_date != today:
-                # Gap in activity, reset streak
+            else:
+                # Gap in activity (more than 1 day), reset streak
                 new_streak = 1
 
             # Update the study streak if it changed

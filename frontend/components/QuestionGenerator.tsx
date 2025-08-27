@@ -19,6 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface Subject {
   name: string;
@@ -45,8 +46,13 @@ interface QuestionGeneratorProps {
   isGenerateDisabled: boolean;
   loading: boolean;
   onGenerate: () => void;
-  mode: "topic" | "paper";
+  mode: "topic" | "keyword" | "paper";
   dailyLimitReached?: boolean;
+  
+  // NEW: Keyword query props for mutually exclusive keyword mode
+  keywordQuery: string;
+  setKeywordQuery: (val: string) => void;
+  onGenerateFromKeywords: () => void;
 }
 
 export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
@@ -67,11 +73,20 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
   onGenerate,
   mode,
   dailyLimitReached = false,
+  // NEW: Keyword query props
+  keywordQuery,
+  setKeywordQuery,
+  onGenerateFromKeywords,
 }) => {
   return (
     <TooltipProvider delayDuration={0}>
       <section className="bg-white rounded-xl shadow-md border border-gray-200">
-        <div className="flex flex-wrap gap-2 sm:gap-3 p-3 items-center justify-center sm:justify-start">
+        <div className={cn(
+          "flex flex-wrap gap-2 sm:gap-3 p-3 items-center",
+          mode === "paper" 
+            ? "justify-center" 
+            : "justify-center sm:justify-start"
+        )}>
 
           {/* GS Paper dropdown - Made responsive */}
           <Select
@@ -114,7 +129,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </SelectContent>
           </Select>
 
-          {/* Topic Combobox - Made responsive */}
+          {/* Topic Combobox - Made responsive - only shown when in topic mode */}
           {mode === "topic" && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -136,6 +151,20 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
               </TooltipTrigger>
               <TooltipContent><p>GS Topics</p></TooltipContent>
             </Tooltip>
+          )}
+
+          {/* Keyword input field - only shown when in keyword mode */}
+          {mode === "keyword" && (
+            <div className="w-56 sm:w-72 bg-purple-50 border border-purple-300 rounded-lg">
+              <input
+                type="text"
+                placeholder="Enter keywords (Max 3:comma-separated)"
+                value={keywordQuery}
+                onChange={(e) => setKeywordQuery(e.target.value)}
+                className="w-full px-3 py-2 text-sm border-0 bg-transparent focus:ring-0"
+                disabled={loading || dailyLimitReached}
+              />
+            </div>
           )}
 
           {/* Current Affairs Toggle - Made responsive */}
@@ -161,7 +190,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           </Tooltip>
 
           {/* Slider - Made responsive */}
-          {mode === "topic" && (
+          {(mode === "topic" || mode === "keyword") && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer">
@@ -188,13 +217,15 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                onClick={onGenerate}
-                disabled={isGenerateDisabled}
+                onClick={mode === "keyword" ? onGenerateFromKeywords : onGenerate}
+                disabled={isGenerateDisabled || (mode === "keyword" ? !keywordQuery.trim() : false)}
                 className={`h-10 w-12 rounded-full text-white shadow text-base flex 
-                          items-center justify-center transition-all duration-300 transform hover:scale-110 ${
+                           items-center justify-center transition-all duration-300 transform hover:scale-110 ${
                   dailyLimitReached 
                     ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600'
+                    : mode === "keyword"
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
+                      : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600'
                 }`}
               >
                 {loading ? (
@@ -209,9 +240,10 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{dailyLimitReached ? "Daily Limit Reached" : "Send Request"}</p>
+              <p>{dailyLimitReached ? "Daily Limit Reached" : mode === "keyword" ? "Generate from Keywords" : "Send Request"}</p>
             </TooltipContent>
           </Tooltip>
+          
         </div>
       </section>
     </TooltipProvider>

@@ -22,6 +22,5 @@ python-multipart==0.0.5
 redis==5.0.0
 hiredis==2.0.0
 google-generativeai==0.4.0
-together==0.1.0
 torch==2.8.0+cpu
 locust==2.0.0

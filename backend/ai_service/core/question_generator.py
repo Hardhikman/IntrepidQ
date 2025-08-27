@@ -947,6 +947,113 @@ Now return ONLY the JSON array:"""
                 n += 1
         return out
 
+    def generate_questions_from_keywords(self, keywords: List[str], num: int, use_ca: bool, months: int, requested_model: str, subject: str = "GS1"):
+        """
+        Generate UPSC-style questions based on provided keywords using vector search and LLM prompting.
+        """
+        try:
+            models_to_try = self.select_model(requested_model)
+            
+            # Convert keywords to a search query
+            keyword_query = ", ".join(keywords)
+            
+            # Get relevant documents using vector similarity search based on keywords
+            db_examples = []
+            for keyword in keywords[:3]:  # Limit to first 3 keywords for efficiency
+                examples = self._get_relevant_documents_with_fallback(
+                    keyword, 
+                    f"UPSC questions related to {keyword}", 
+                    k=2
+                )
+                db_examples.extend(examples)
+            
+            # Get cached questions as examples
+            cached_examples = []
+            for keyword in keywords[:2]:  # Limit to first 2 keywords for efficiency
+                examples = self._get_cached_questions_as_examples(subject, keyword, max_examples=1)  # Use provided subject
+                cached_examples.extend(examples)
+            
+            # Combine examples
+            all_examples = db_examples + cached_examples
+            examples_text = "\n".join(all_examples) if all_examples else "No examples available."
+            
+            # Create prompt for keyword-based question generation
+            prompt_template = PromptTemplate.from_template(
+                """You are a UPSC Mains question paper designer.
+Generate {num} original UPSC-style Mains questions based on the following keywords: "{keywords}".
+
+Examples from database and previous generations:
+{examples}
+
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of objects
+- Each object must have "thinking" (short rationale) AND "question" (final UPSC-style question)
+- "thinking": max 2-3 sentences
+- "question": one exam-appropriate UPSC question
+- No commentary or text outside JSON
+- Exactly {num} items
+- Generate NEW questions, don't copy the examples
+- Ensure questions are relevant to the provided keywords
+
+Now return ONLY the JSON array:"""
+            )
+            
+            prompt = prompt_template.format(
+                num=num,
+                keywords=keyword_query,
+                examples=examples_text
+            )
+            
+            if use_ca:
+                # Add current affairs context if requested
+                news_contexts = []
+                for keyword in keywords[:2]:  # Limit to first 2 keywords for efficiency
+                    news = self.fetch_recent_news(keyword, months)
+                    if news and "not configured" not in news:
+                        news_contexts.append(f"Recent news for {keyword}:\n{news[:200]}...")
+                news_text = "\n\n".join(news_contexts) if news_contexts else ""
+                
+                if news_text:
+                    prompt += f"\n\nRecent News Context:\n{news_text}"
+            
+            result = self._try_models(models_to_try, prompt)
+            
+            # Parse questions
+            questions = self.safe_parse_questions(result.get("output", ""), num)
+            
+            # Cache the new questions if generation was successful
+            if questions and result.get("status") == "success":
+                # Use the first keyword as the topic for caching
+                cache_topic = keywords[0] if keywords else "general"
+                cache_key = self._get_cache_key(subject, cache_topic, num, use_ca, months)  # Use provided subject
+                self._cache_questions(cache_key, questions, subject, cache_topic)  # Use provided subject
+            
+            return {
+                "questions": questions,
+                "meta": {
+                    "model": result.get("model", "unknown"),
+                    "duration": result.get("duration", 0.0),
+                    "avg_speed": result.get("avg_speed", 0.0),
+                    "runs": result.get("runs", 0),
+                    "status": result.get("status", "unknown"),
+                    "examples_used": len(all_examples),
+                    "cached_examples": len(cached_examples)
+                }
+            }
+        except Exception as e:
+            logger.error(f"Error in generate_questions_from_keywords: {e}")
+            return {
+                "questions": [{"thinking": "", "question": f"Error generating questions from keywords: {str(e)}"}],
+                "meta": {
+                    "model": "error",
+                    "duration": 0.0,
+                    "avg_speed": 0.0,
+                    "runs": 0,
+                    "status": "error"
+                }
+            }
+
 # Factory
 def create_question_generator(groq_api_key, google_api_key, vectorstore, supabase_client):
     return QuestionGenerator(groq_api_key, google_api_key, vectorstore, supabase_client)

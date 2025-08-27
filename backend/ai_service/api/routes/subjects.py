@@ -7,9 +7,14 @@ from typing import Dict, Any, Optional
 import sys
 sys.path.append('.')
 
+# Add datetime import
+from datetime import datetime
+# Add CountMethod import
+from postgrest import CountMethod
+
 from api.auth import get_current_user, get_optional_user
 from api.models import (
-    SubjectsResponse, UserProfileResponse, UserStatsResponse, ModeBreakdown
+    SubjectsResponse, UserProfileResponse, UserStatsResponse, ModeBreakdown, UserProfile
 )
 from core.supabase_client import supabase_service
 
@@ -17,56 +22,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # INTERNAL HELPERS
-
-def _send_feedback_email(user: Dict[str, Any], feedback_data: Dict[str, Any]) -> None:
-    """Send feedback via SMTP (best-effort)."""
-    try:
-        import os
-        import smtplib, ssl
-        from email.message import EmailMessage
-
-        smtp_host = os.getenv("SMTP_HOST")
-        smtp_port = int(os.getenv("SMTP_PORT", "587"))
-        smtp_user = os.getenv("SMTP_USERNAME")
-        smtp_pass = os.getenv("SMTP_PASSWORD")
-        to_addr = os.getenv("FEEDBACK_EMAIL_TO")
-
-        if not (smtp_host and smtp_user and smtp_pass and to_addr):
-            logger.info("SMTP not configured; skipping feedback email")
-            return
-
-        comment = (feedback_data.get('comment') or '').strip()
-        if not comment:
-            return
-
-        rating = feedback_data.get('rating')
-        question_id = feedback_data.get('question_id')
-        generation_id = feedback_data.get('generation_id')
-
-        msg = EmailMessage()
-        msg['Subject'] = "New Feedback Comment"
-        msg['From'] = smtp_user
-        msg['To'] = to_addr
-        body = (
-            f"New feedback received:\n"
-            f"User ID: {user.get('id')}\n"
-            f"User Email: {user.get('email')}\n"
-            f"Rating: {rating}\n"
-            f"Generation ID: {generation_id}\n"
-            f"Question ID: {question_id}\n"
-            f"Comment:\n{comment}\n"
-        )
-        msg.set_content(body)
-
-        context = ssl.create_default_context()
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls(context=context)
-            server.login(smtp_user, smtp_pass)
-            server.send_message(msg)
-
-    except Exception as e:
-        logger.warning(f"Failed to send feedback email: {e}")
-
 
 def get_question_generator():
     """Get question generator - avoiding circular import"""
@@ -111,10 +66,17 @@ async def get_subjects(user: Optional[Dict[str, Any]] = Depends(get_optional_use
 async def get_user_profile(user: Dict[str, Any] = Depends(get_current_user)):
     """Get user profile"""
     try:
-        profile = supabase_service().get_user_profile(user['id'])
+        # Check if supabase_service is properly initialized
+        service = supabase_service()
+        if service is None:
+            raise HTTPException(status_code=500, detail="Database service not available")
+            
+        profile = service.get_user_profile(user['id'])
         if not profile:
             raise HTTPException(status_code=404, detail="User profile not found")
-        return UserProfileResponse(profile=profile, user=user)
+        # Convert dict to UserProfile model instance
+        user_profile = UserProfile(**profile)
+        return UserProfileResponse(profile=user_profile, user=user)
 
     except Exception as e:
         logger.error(f"Error fetching user profile: {e}", exc_info=True)
@@ -129,33 +91,46 @@ async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = 
         is_generation_level = gen_id in ('generation_feedback', 'website_feedback')
 
         if is_generation_level:
-            success = supabase_service().save_question_feedback(
-                user_id=user['id'],
-                question_id=None,
-                rating=feedback_data['rating'],
-                comment=feedback_data.get('comment')
-            )
+            # For website feedback and generation feedback, question_id should be None
+            # Check if supabase_service is properly initialized
+            service = supabase_service()
+            if service is None or not hasattr(service, 'client') or service.client is None:
+                raise HTTPException(status_code=500, detail="Database service not available")
+            
+            feedback_record = {
+                "user_id": user['id'],
+                "question_id": None,
+                "rating": feedback_data['rating'],
+                "comment": feedback_data.get('comment'),
+                "feedback_type": "website" if gen_id == 'website_feedback' else "generation"
+            }
+            
+            response = service.client.table("question_feedback").insert(feedback_record).execute()
+            success = bool(response.data)
         else:
             required_fields = ['generation_id', 'question_id', 'rating']
             for field in required_fields:
                 if field not in feedback_data:
                     raise HTTPException(status_code=400, detail=f"Missing required field: {field}")
 
-            success = supabase_service().save_question_feedback(
-                user_id=user['id'],
-                question_id=feedback_data['question_id'],
-                rating=feedback_data['rating'],
-                comment=feedback_data.get('comment')
-            )
+            # Check if supabase_service is properly initialized
+            service = supabase_service()
+            if service is None or not hasattr(service, 'client') or service.client is None:
+                raise HTTPException(status_code=500, detail="Database service not available")
+            
+            feedback_record = {
+                "user_id": user['id'],
+                "question_id": feedback_data['question_id'],
+                "rating": feedback_data['rating'],
+                "comment": feedback_data.get('comment'),
+                "feedback_type": "question"
+            }
+            
+            response = service.client.table("question_feedback").insert(feedback_record).execute()
+            success = bool(response.data)
 
         if not success:
             raise HTTPException(status_code=500, detail="Failed to save feedback")
-
-        if feedback_data.get('comment'):
-            try:
-                _send_feedback_email(user, feedback_data)
-            except Exception as e:
-                logger.warning(f"Email dispatch error: {e}")
 
         return {"success": True, "message": "Feedback submitted successfully"}
 
@@ -182,7 +157,12 @@ async def get_question_history(limit: int = 20, user: Dict[str, Any] = Depends(g
 async def delete_question(question_id: str, user: Dict[str, Any] = Depends(get_current_user)):
     """Delete a question from history"""
     try:
-        deleted = supabase_service().delete_question(user['id'], question_id)
+        # Check if supabase_service is properly initialized
+        service = supabase_service()
+        if service is None or not hasattr(service, 'client') or service.client is None:
+            raise HTTPException(status_code=500, detail="Database service not available")
+            
+        deleted = service.delete_question(user['id'], question_id)
         if deleted:
             return {"success": True, "message": "Question deleted successfully"}
         else:
@@ -203,7 +183,12 @@ async def update_user_profile(profile_data: Dict[str, Any], user: Dict[str, Any]
         if not update_data:
             raise HTTPException(status_code=400, detail="No valid fields to update")
 
-        response = supabase_service().client.table('user_profiles').update(update_data).eq('id', user['id']).execute()
+        # Check if supabase_service is properly initialized
+        service = supabase_service()
+        if service is None or not hasattr(service, 'client') or service.client is None:
+            raise HTTPException(status_code=500, detail="Database service not available")
+
+        response = service.client.table('user_profiles').update(update_data).eq('id', user['id']).execute()
 
         if response.data:
             return {"success": True, "message": "Profile updated successfully"}
@@ -316,13 +301,20 @@ async def manual_cache_cleanup(user: Dict[str, Any] = Depends(get_current_user))
         # Call the Supabase cleanup function
         from core.supabase_client import supabase_service
         
-        result = supabase_service().client.rpc('cleanup_expired_cache').execute()
+        # Check if supabase_service is properly initialized
+        service = supabase_service()
+        if service is None or not hasattr(service, 'client') or service.client is None:
+            raise HTTPException(status_code=500, detail="Database service not available")
+        
+        result = service.client.rpc('cleanup_expired_cache').execute()
         
         return {
             "success": True,
             "message": result.data if result.data else "Cache cleanup completed",
             "timestamp": datetime.now().isoformat()
         }
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error during manual cache cleanup: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to cleanup cache")
@@ -338,7 +330,12 @@ async def get_cleanup_status(user: Optional[Dict[str, Any]] = Depends(get_option
         
         # Check if pg_cron extension is available
         try:
-            cron_check = supabase_service().client.rpc('pg_extension_exists', {'ext_name': 'pg_cron'}).execute()
+            # Check if supabase_service is properly initialized
+            service = supabase_service()
+            if service is None or not hasattr(service, 'client') or service.client is None:
+                raise Exception("Supabase service not properly initialized")
+            
+            cron_check = service.client.rpc('pg_extension_exists', {'ext_name': 'pg_cron'}).execute()
             pg_cron_available = bool(cron_check.data)
         except:
             pg_cron_available = False
@@ -353,11 +350,15 @@ async def get_cleanup_status(user: Optional[Dict[str, Any]] = Depends(get_option
         if pg_cron_available:
             try:
                 # Get scheduled jobs
-                jobs_resp = supabase_service().client.table('cron.job').select('jobname, schedule, active, created_at').execute()
+                service = supabase_service()
+                if service is None or not hasattr(service, 'client') or service.client is None:
+                    raise Exception("Supabase service not properly initialized")
+                
+                jobs_resp = service.client.table('cron.job').select('jobname, schedule, active, created_at').execute()
                 cleanup_status["scheduled_jobs"] = jobs_resp.data or []
                 
                 # Get recent executions
-                executions_resp = supabase_service().client.table('cron.job_run_details').select(
+                executions_resp = service.client.table('cron.job_run_details').select(
                     'start_time, end_time, return_message, status'
                 ).order('start_time', desc=True).limit(5).execute()
                 cleanup_status["recent_executions"] = executions_resp.data or []
@@ -367,19 +368,24 @@ async def get_cleanup_status(user: Optional[Dict[str, Any]] = Depends(get_option
         
         # Check what would be cleaned up
         try:
+            # Check if supabase_service is properly initialized
+            svc = supabase_service()
+            if svc is None or not hasattr(svc, 'client') or svc.client is None:
+                raise Exception("Supabase service not properly initialized")
+            
             # Count old guest records
-            guest_count_resp = supabase_service().client.rpc(
+            guest_count_resp = svc.client.rpc(
                 'count_old_guest_records', 
                 {'days_old': 7}
             ).execute()
             
             # Count expired cache entries
-            cache_count_resp = supabase_service().client.table('questions_cache').select(
-                'id', count='exact'
+            cache_count_resp = svc.client.table('questions_cache').select(
+                'id', count=CountMethod.exact
             ).lt('expires_at', datetime.now().isoformat()).execute()
             
-            topic_count_resp = supabase_service().client.table('topic_questions_index').select(
-                'id', count='exact'
+            topic_count_resp = svc.client.table('topic_questions_index').select(
+                'id', count=CountMethod.exact
             ).lt('expires_at', datetime.now().isoformat()).execute()
             
             cleanup_status["pending_cleanup"] = {

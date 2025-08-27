@@ -6,7 +6,7 @@ KeyDB provides better performance than Redis with multi-threading
 import os
 import time
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
@@ -99,6 +99,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     
     async def check_rate_limit_redis(self, client_ip: str) -> tuple[bool, int, int]:
         """Check rate limit using KeyDB with sliding window"""
+        # Additional safety check to ensure redis_client is not None
+        if not self.redis_client:
+            logger.warning("Redis client is not available, falling back to memory-based rate limiting")
+            return self.check_rate_limit_memory(client_ip)
+            
         try:
             current_time = int(time.time())
             window_start = current_time - 60  # 1 minute window
@@ -133,7 +138,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             logger.error(f"KeyDB rate limit check failed: {e}")
             # Fallback to memory-based checking
             return self.check_rate_limit_memory(client_ip)
-    
+
     def check_rate_limit_memory(self, client_ip: str) -> tuple[bool, int, int]:
         """Fallback memory-based rate limiting"""
         current_time = time.time()
@@ -209,7 +214,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 def create_rate_limit_middleware(
     calls_per_minute: int = 60,
     redis_url: str = "redis://localhost:6379"
-) -> RateLimitMiddleware:
+) -> Callable:
     """Factory function to create rate limit middleware"""
     return lambda app: RateLimitMiddleware(
         app, 

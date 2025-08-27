@@ -61,6 +61,14 @@ export default function UPSCQuestionGenerator() {
   const [subjectsLoading, setSubjectsLoading] = useState(true);
   const [selectedModel, setSelectedModel] = useState("llama3-70b");
   const [answerLoadingIndex, setAnswerLoadingIndex] = useState<number | null>(null);
+  // Add models state
+  const [models, setModels] = useState<{ id: string; name: string }[]>([
+    { id: "llama3-70b", name: "Llama3 (70B)" },
+    { id: "deepseek-r1", name: "DeepSeek (R1)" },
+    { id: "deepseek-v3", name: "DeepSeek (V3)" },
+    { id: "moonshot-k2", name: "Moonshot (K2)" },
+    { id: "gemma2-9b", name: "Gemma2 (9B)" },
+  ]);
 
   // NEW: Keyword query state for keyword mode
   const [keywordQuery, setKeywordQuery] = useState("");
@@ -96,9 +104,10 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
-  // Load subjects
+  // Load subjects and models
   useEffect(() => {
     fetchSubjects();
+    fetchModels();
   }, []);
 
   // Check daily limits
@@ -149,6 +158,26 @@ export default function UPSCQuestionGenerator() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setSubjectsLoading(false);
+    }
+  };
+
+  const fetchModels = async () => {
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+      const response = await fetch(`${baseUrl}/api/models`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      if (data.models && data.models.length > 0) {
+        setModels(data.models);
+        // Set the first model as selected if it's not already set or if the current model is not in the list
+        if (!data.models.some((model: any) => model.id === selectedModel)) {
+          setSelectedModel(data.models[0].id);
+        }
+      }
+    } catch (err: any) {
+      console.error("Error fetching models:", err);
+      // Keep using the hardcoded models as fallback
+      toast({ title: "Notice", description: "Using default model list", variant: "default" });
     }
   };
 
@@ -613,6 +642,8 @@ export default function UPSCQuestionGenerator() {
           keywordQuery={keywordQuery}
           setKeywordQuery={setKeywordQuery}
           onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
+          // Models prop
+          models={models}
         />
 
         <div id="results-section">

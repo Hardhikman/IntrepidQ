@@ -53,6 +53,8 @@ interface QuestionGeneratorProps {
   keywordQuery: string;
   setKeywordQuery: (val: string) => void;
   onGenerateFromKeywords: () => void;
+  // Models prop
+  models: { id: string; name: string }[];
 }
 
 export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
@@ -77,6 +79,8 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
   keywordQuery,
   setKeywordQuery,
   onGenerateFromKeywords,
+  // Models prop
+  models,
 }) => {
   return (
     <TooltipProvider delayDuration={0}>
@@ -121,11 +125,11 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
               <TooltipContent><p>AI Model</p></TooltipContent>
             </Tooltip>
             <SelectContent>
-              <SelectItem value="llama3-70b">Llama3 (70B)</SelectItem>
-              <SelectItem value="deepseek-r1">DeepSeek (R1)</SelectItem>
-              <SelectItem value="deepseek-v3">DeepSeek (V3)</SelectItem>
-              <SelectItem value="moonshot-k2">Moonshot (K2)</SelectItem>
-              <SelectItem value="gemma2-9b">Gemma2 (9B)</SelectItem>
+              {models.map((model) => (
+                <SelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 

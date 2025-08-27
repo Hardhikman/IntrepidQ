@@ -38,27 +38,26 @@ export default function FloatingHeader({
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm rounded-b-2xl">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-12">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* Logo/Title */}
           <div className="flex items-center">
             <div className="border-2 border-orange-500 border-t-orange-500 border-r-blue-500 border-b-blue-500 border-l-orange-500 rounded-lg bg-white shadow-sm">
-              <h1 className="text-lg sm:text-xl font-bold text-gray-800 px-3 py-2">
+              <h1 className="text-base sm:text-lg font-bold text-gray-800 px-2 py-1 sm:px-3 sm:py-2">
                 IntrepidQ.ai
               </h1>
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2">
             {/* Resources Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   size="sm"
-                  className="bg-transparent hover:bg-orange-50 text-orange-600 border border-orange-200 font-medium px-3 py-2 text-xs rounded-full transition-all duration-200 hover:border-orange-300"
+                  className="bg-transparent hover:bg-orange-50 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300"
                 >
-                  <span className="hidden sm:inline">Resources</span>
-                  <span className="sm:hidden">R</span>
+                  Resources
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px]">
@@ -86,7 +85,7 @@ export default function FloatingHeader({
             </DropdownMenu>
 
             {/* Separator */}
-            <Separator orientation="vertical" className="h-6 bg-gray-300 hidden sm:block" />
+            <Separator orientation="vertical" className="h-6 bg-gray-300" />
 
             {/* User Menu or Sign In */}
             {user ? (
@@ -94,10 +93,9 @@ export default function FloatingHeader({
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="sm"
-                    className="bg-transparent hover:bg-blue-50 text-blue-600 border border-blue-200 font-medium px-3 py-2 text-xs rounded-full transition-all duration-200 hover:border-blue-300"
+                    className="bg-transparent hover:bg-blue-50 text-blue-600 border border-blue-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-blue-300"
                   >
-                    <span className="hidden sm:inline">Menu</span>
-                    <span className="sm:hidden">M</span>
+                    Menu
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[180px]">
@@ -121,15 +119,10 @@ export default function FloatingHeader({
               <Button
                 size="sm"
                 onClick={handleGoogleSignIn}
-                className="bg-transparent hover:bg-gradient-to-r hover:from-orange-100 hover:to-blue-100 text-orange-600 border border-orange-200 font-medium px-3 py-2 text-xs rounded-full transition-all duration-200 hover:border-orange-300"
+                className="bg-transparent hover:bg-gradient-to-r hover:from-orange-100 hover:to-blue-100 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300 whitespace-nowrap"
                 disabled={authLoading}
               >
-                <span className="hidden sm:inline">
-                  {authLoading ? "Loading..." : "Sign in with Google"}
-                </span>
-                <span className="sm:hidden">
-                  {authLoading ? "..." : "G"}
-                </span>
+                {authLoading ? "Loading..." : "Sign in with Google"}
               </Button>
             )}
           </div>

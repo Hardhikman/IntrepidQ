@@ -896,6 +896,45 @@ Now return ONLY the JSON array:"""
             logger.warning(f"Vector search failed, falling back to direct query: {e}")
             return self._get_documents_current_method(topic, k)
 
+    def _get_relevant_documents_without_filter(self, query: str, k: int = 5) -> List[str]:
+        """
+        Get relevant documents using vector similarity search without strict topic filtering.
+        This is used for keyword-based searches where we want semantic matching.
+        """
+        if not self.supabase_client:
+            logger.warning("Supabase client not available.")
+            return []
+            
+        try:
+            logger.info(f"Attempting vector similarity search without filter for query: '{query}'")
+            # Generate embedding for the query
+            if not self.vectorstore or not hasattr(self.vectorstore, 'embeddings') or not self.vectorstore.embeddings:
+                logger.warning("Embeddings not available for vector search.")
+                return []
+                
+            # Generate query embedding
+            query_embedding = self.vectorstore.embeddings.embed_query(query)
+            
+            # Call our match_documents function directly with an empty filter to match all documents
+            response = self.supabase_client.rpc(
+                "match_documents",
+                {
+                    "filter": {},  # Empty filter to match all documents
+                    "query_embedding": query_embedding,
+                    "match_count": k
+                }
+            ).execute()
+            
+            # Extract content from the response
+            documents = [item["content"] for item in response.data] if response.data else []
+            logger.info(f"Vector search successful. Found {len(documents)} documents.")
+            
+            return documents
+            
+        except Exception as e:
+            logger.warning(f"Vector search without filter failed: {e}")
+            return []
+
     def _get_documents_current_method(self, topic: str, k: int = 5) -> List[str]:
         """
         Current method of retrieving documents - kept for backward compatibility.
@@ -960,8 +999,8 @@ Now return ONLY the JSON array:"""
             # Get relevant documents using vector similarity search based on keywords
             db_examples = []
             for keyword in keywords[:3]:  # Limit to first 3 keywords for efficiency
-                examples = self._get_relevant_documents_with_fallback(
-                    keyword, 
+                # Use the new method without strict filtering for keyword-based search
+                examples = self._get_relevant_documents_without_filter(
                     f"UPSC questions related to {keyword}", 
                     k=2
                 )

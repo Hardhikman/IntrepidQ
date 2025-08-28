@@ -213,8 +213,10 @@ export default function UPSCQuestionGenerator() {
         payload = { subject: selectedSubject, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
       } else if (mode === "keyword") {
         endpoint = "/api/generate_questions_from_keywords";
+        // Only use the first keyword instead of all keywords
+        const firstKeyword = keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0)[0] || keywordQuery;
         payload = { 
-          keywords: keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0),
+          keywords: [firstKeyword], // Only send the first keyword
           num: numQuestions, 
           use_ca: useCurrentAffairs, 
           months: 6, 
@@ -400,7 +402,7 @@ export default function UPSCQuestionGenerator() {
   // NEW: Handle keyword-based question generation
   const handleGenerateQuestionsFromKeywords = async () => {
     if (mode === "keyword" && !keywordQuery.trim()) {
-      toast({ title: "Warning", description: "Please enter keywords", variant: "destructive" });
+      toast({ title: "Warning", description: "Please enter a keyword", variant: "destructive" });
       return;
     }
     
@@ -410,8 +412,10 @@ export default function UPSCQuestionGenerator() {
 
     try {
       const endpoint = "/api/generate_questions_from_keywords";
+      // Only use the first keyword instead of all keywords
+      const firstKeyword = keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0)[0] || keywordQuery;
       const payload = { 
-        keywords: keywordQuery.split(',').map(k => k.trim()).filter(k => k.length > 0),
+        keywords: [firstKeyword], // Only send the first keyword
         num: numQuestions, 
         use_ca: useCurrentAffairs, 
         months: 6, 

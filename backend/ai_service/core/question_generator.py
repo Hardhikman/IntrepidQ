@@ -1,6 +1,6 @@
 """
 Question generation functionality - multi-provider
-Supports: Groq, Gemini, Together, OpenRouter
+Supports: Groq, Gemini
 Features:
 - Provider-agnostic model calls
 - Automatic retry-on-failure with fallback list
@@ -59,14 +59,15 @@ class QuestionGenerator:
         self._setup_templates()
         self.available_models = {
             "llama3-70b": {"provider": "groq", "model_id": "llama3-70b-8192"},
+            "deepseek-r1": {"provider": "groq", "model_id": "deepseek-r1-distill-llama-70b"},
             "llama3-8b": {"provider": "groq", "model_id": "llama3-8b-8192"},
             "gemma2-9b": {"provider": "groq", "model_id": "gemma2-9b-it"},
-            "deepseek-r1": {"provider": "openrouter", "model_id": "deepseek/deepseek-r1:free"},
-            "gemini-1.5-flash": {"provider": "google", "model_id": "gemini-1.5-flash-latest"},
-            "deepseek-v3": {"provider": "openrouter", "model_id": "deepseek/deepseek-chat-v3-0324:free"},
-            "moonshot-k2": {"provider": "openrouter", "model_id": "moonshotai/kimi-k2:free"},
+            "openai-oss-20b": {"provider": "groq", "model_id": "openai/gpt-oss-20b"},
+            "gemini-2.5-pro": {"provider": "google", "model_id": "gemini-2.5-pro"},
+            "gemini-2.5-flash": {"provider": "google", "model_id": "gemini-2.5-flash"},
+            "moonshot-k2": {"provider": "groq", "model_id": "moonshotai/kimi-k2-instruct"},
         }
-        self.priority_order = ["gemma2-9b", "deepseek-v3", "llama3-70b", "moonshot-k2", "deepseek-r1"]
+        self.priority_order = ["gemma2-9b","openai-oss-20b", "llama3-70b", "moonshot-k2", "gemini-2.5-flash", "gemini-2.5-pro","deepseek-r1"]
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
         self._load_model_performance()
@@ -407,27 +408,6 @@ class QuestionGenerator:
             return None
         return ChatGoogleGenerativeAI(model=model_id, api_key=convert_to_secret_str(self.google_api_key), temperature=float(os.getenv("GEMINI_TEMPERATURE", "0.7")))
 
-    def _get_openrouter_client(self, model_id: str):
-        key = os.getenv("OPENROUTER_API_KEY")
-        if not key:
-            return None
-        def run(prompt: str):
-            url = "https://openrouter.ai/api/v1/chat/completions"
-            headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
-            data = {
-                "model": model_id,
-                "messages": [
-                    {"role": "system", "content": "You are a helpful UPSC assistant. Answer only in English."},
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": 800,
-                "temperature": 0.7
-            }
-            resp = requests.post(url, headers=headers, json=data, timeout=30)
-            resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
-        return run
-
     def _get_llm_client(self, model_name: str):
         info = self.available_models.get(model_name)
         if not info:
@@ -435,8 +415,7 @@ class QuestionGenerator:
         provider, model_id = info["provider"], info["model_id"]
         return {
             "groq": lambda: self._get_groq_client(model_id),
-            "google": lambda: self._get_gemini_client(model_id),
-            "openrouter": lambda: self._get_openrouter_client(model_id)
+            "google": lambda: self._get_gemini_client(model_id)
         }.get(provider, lambda: None)()
 
     #Model Retry with Stats 

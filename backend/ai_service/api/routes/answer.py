@@ -28,7 +28,7 @@ if not GOOGLE_API_KEY:
 # environment variable, so an explicit genai.configure() call is not needed.
 
 # Model selection
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
 
 
 def get_client_ip(request: Request) -> str:

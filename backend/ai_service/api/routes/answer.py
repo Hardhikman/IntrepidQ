@@ -4,6 +4,8 @@ import logging
 # Fixed import approach for Google Generative AI
 import google.generativeai as genai
 from google.generativeai.generative_models import GenerativeModel
+# Import required types for safety settings
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
@@ -20,15 +22,15 @@ DAILY_LIMIT = 5
 GUEST_DAILY_LIMIT = 2
 
 # Google API Key setup
+# The library will automatically look for the GOOGLE_API_KEY environment variable.
+# The 'No API_KEY found' error means this variable isn't set in the environment
+# where the server is running.
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise RuntimeError("GOOGLE_API_KEY not set in env variables.")
 
-# The google.generativeai library automatically uses the GOOGLE_API_KEY
-# environment variable, so an explicit genai.configure() call is not needed.
-
 # Model selection
-MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
 
 def get_client_ip(request: Request) -> str:
@@ -121,15 +123,15 @@ async def generate_answer(
         
         logger.info(f"Generating answer for question: {request.question}")
 
-        # The model will automatically use the API key from the environment variables
+        # The library implicitly uses the GOOGLE_API_KEY from the environment.
         model = GenerativeModel(
             model_name=MODEL_NAME,
             generation_config={"response_mime_type": "application/json"},
             safety_settings={
-                "HARASSMENT": "BLOCK_NONE",
-                "HATE_SPEECH": "BLOCK_NONE",
-                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
-                "DANGEROUS_CONTENT": "BLOCK_NONE",
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
             }
         )
 
@@ -168,15 +170,15 @@ async def generate_answers(
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")
 
-        # The model will automatically use the API key from the environment variables
+        # The library implicitly uses the GOOGLE_API_KEY from the environment.
         model = GenerativeModel(
             model_name=MODEL_NAME,
             generation_config={"response_mime_type": "application/json"},
             safety_settings={
-                "HARASSMENT": "BLOCK_NONE",
-                "HATE_SPEECH": "BLOCK_NONE",
-                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
-                "DANGEROUS_CONTENT": "BLOCK_NONE",
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
             }
         )
 

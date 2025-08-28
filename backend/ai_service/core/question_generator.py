@@ -67,7 +67,7 @@ class QuestionGenerator:
             "gemini-2.5-flash": {"provider": "google", "model_id": "gemini-2.5-flash"},
             "moonshot-k2": {"provider": "groq", "model_id": "moonshotai/kimi-k2-instruct"},
         }
-        self.priority_order = ["gemma2-9b","openai-oss-20b", "llama3-70b", "moonshot-k2", "gemini-2.5-flash", "gemini-2.5-pro","deepseek-r1"]
+        self.priority_order = ["gemma2-9b","openai-oss-20b", "llama3-70b", "moonshot-k2", "gemini-2.5-flash", "gemini-2.0-flash","deepseek-r1"]
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
         self._load_model_performance()

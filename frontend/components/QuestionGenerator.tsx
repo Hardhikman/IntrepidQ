@@ -162,7 +162,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             <div className="w-56 sm:w-72 bg-purple-50 border border-purple-300 rounded-lg">
               <input
                 type="text"
-                placeholder="Enter keywords (Max 3:comma-separated)"
+                placeholder="Enter a keyword"
                 value={keywordQuery}
                 onChange={(e) => setKeywordQuery(e.target.value)}
                 className="w-full px-3 py-2 text-sm border-0 bg-transparent focus:ring-0"

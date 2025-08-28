@@ -126,10 +126,10 @@ async def generate_answer(
             model_name=MODEL_NAME,
             generation_config={"response_mime_type": "application/json"},
             safety_settings={
-                "HARASSMENT": "BLOCK_ONLY_HIGH",
-                "HATE_SPEECH": "BLOCK_ONLY_HIGH",
-                "SEXUALLY_EXPLICIT": "BLOCK_ONLY_HIGH",
-                "DANGEROUS_CONTENT": "BLOCK_ONLY_HIGH",
+                "HARASSMENT": "BLOCK_NONE",
+                "HATE_SPEECH": "BLOCK_NONE",
+                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
+                "DANGEROUS_CONTENT": "BLOCK_NONE",
             }
         )
 
@@ -173,10 +173,10 @@ async def generate_answers(
             model_name=MODEL_NAME,
             generation_config={"response_mime_type": "application/json"},
             safety_settings={
-                "HARASSMENT": "BLOCK_ONLY_HIGH",
-                "HATE_SPEECH": "BLOCK_ONLY_HIGH",
-                "SEXUALLY_EXPLICIT": "BLOCK_ONLY_HIGH",
-                "DANGEROUS_CONTENT": "BLOCK_ONLY_HIGH",
+                "HARASSMENT": "BLOCK_NONE",
+                "HATE_SPEECH": "BLOCK_NONE",
+                "SEXUALLY_EXPLICIT": "BLOCK_NONE",
+                "DANGEROUS_CONTENT": "BLOCK_NONE",
             }
         )
 

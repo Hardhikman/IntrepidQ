@@ -11,6 +11,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 
 interface FloatingHeaderProps {
   user: any;
@@ -42,9 +43,9 @@ export default function FloatingHeader({
           {/* Logo/Title */}
           <div className="flex items-center">
             <div className="border-2 border-orange-500 border-t-orange-500 border-r-blue-500 border-b-blue-500 border-l-orange-500 rounded-lg bg-white shadow-sm">
-              <h1 className="text-base sm:text-lg font-bold text-gray-800 px-2 py-1 sm:px-3 sm:py-2">
-                IntrepidQ.ai
-              </h1>
+              <div className="px-2 py-1 sm:px-3 sm:py-2">
+                <AIntrepidQLogo size="small" />
+              </div>
             </div>
           </div>
 

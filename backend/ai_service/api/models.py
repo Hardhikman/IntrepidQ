@@ -44,7 +44,7 @@ class GenerateQuestionsRequest(BaseModel):
     
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "gemini-pro", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"]
+        allowed_models = ["llama3-70b", "deepseek-r1", "llama3-8b", "gemma2-9b", "openai-oss-20b", "gemini-2.5-pro", "gemini-2.5-flash", "moonshot-k2"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v

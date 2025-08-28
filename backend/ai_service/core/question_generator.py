@@ -63,7 +63,7 @@ class QuestionGenerator:
             "llama3-8b": {"provider": "groq", "model_id": "llama3-8b-8192"},
             "gemma2-9b": {"provider": "groq", "model_id": "gemma2-9b-it"},
             "openai-oss-20b": {"provider": "groq", "model_id": "openai/gpt-oss-20b"},
-            "gemini-2.5-pro": {"provider": "google", "model_id": "gemini-2.5-pro"},
+            "gemini-2.0-flash": {"provider": "google", "model_id": "models/gemini-2.0-flash"},
             "gemini-2.5-flash": {"provider": "google", "model_id": "gemini-2.5-flash"},
             "moonshot-k2": {"provider": "groq", "model_id": "moonshotai/kimi-k2-instruct"},
         }

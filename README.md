@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/status-production-green.svg" alt="Production Ready">
   <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Node.js-16+-green.svg" alt="Node.js">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  <img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue" alt="License">
 </div>
 
 <p align="center">

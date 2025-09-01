@@ -507,24 +507,6 @@ export default function UPSCQuestionGenerator() {
   // Return the main interface for both authenticated and guest users
   return (
     <>
-      <Head>
-        <title>IntrepidQ AI</title>
-        <meta name="description" content="Generate UPSC CSE mains questions with AI assistance" />
-        <meta name="application-name" content="IntrepidQ" />
-        <meta name="apple-mobile-web-app-title" content="IntrepidQ" />
-        <meta name="theme-color" content="#3b82f6" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
-      </Head>
-      
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         {/* Floating Header */}
         <FloatingHeader
@@ -537,148 +519,95 @@ export default function UPSCQuestionGenerator() {
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-16 p-4 space-y-6">
           {/* Mode selection card */}
-      <Card className="max-w-3xl mx-auto shadow-md bg-gradient-to-r from-orange-50 to-blue-50 border border-gray-200">
-        <CardContent className="py-4">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="font-bold text-orange-800 text-center text-lg sm:text-xl">
-               Select Question Generation Mode
-            </span>
-          </div>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
-            <button
-              className={cn(
-                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
-                mode === "topic"
-                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                  : "bg-white border border-orange-400 text-orange-700 hover:bg-orange-50"
-              )}
-              onClick={() => setMode("topic")}
-            >
-              📚 Topic-wise
-            </button>
-            
-            <button
-              className={cn(
-                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
-                mode === "keyword"
-                  ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
-                  : "bg-white border border-purple-400 text-purple-700 hover:bg-purple-50"
-              )}
-              onClick={() => setMode("keyword")}
-            >
-              🔍 Keyword-based
-            </button>
-            
-            <button
-              className={cn(
-                "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
-                mode === "paper"
-                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                  : "bg-white border border-blue-400 text-blue-700 hover:bg-blue-50"
-              )}
-              onClick={() => setMode("paper")}
-            >
-              📄 Whole Paper
-            </button>
-          </div>
-          
-          {mode === "paper" && (
-            <div className="text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full text-xs md:text-sm px-3 py-2 mt-3">
-              10 questions · 10 marks each · 1 hour · 100 marks
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Guest user information - Made responsive */}
-      {!user && (
-        <Card className="max-w-5xl mx-auto shadow-sm border-blue-200 bg-blue-50">
-          <CardContent className="py-4">
-            <div className="text-center">
-              <div className="text-blue-800 font-medium mb-2 text-sm sm:text-base">
-                {dailyLimitReached 
-                  ? '🚫 Daily limit reached! You have 0 question generations remaining today.' 
-                  : `🎆 Welcome, Guest! You have ${getRemainingGuestGenerations()} question generation${getRemainingGuestGenerations() === 1 ? '' : 's'} remaining today.`
-                }
-              </div>
-              <div className="text-blue-600 text-xs sm:text-sm">
-                {dailyLimitReached 
-                  ? '🚀 Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
-                  : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
-                }
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Authenticated user daily limit notification - Made responsive */}
-      {user && dailyLimitReached && (
-        <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
-          <CardContent className="py-4">
-            <div className="text-center">
-              <div className="text-orange-800 font-medium mb-2 text-sm sm:text-base">
-                🚫 Daily Limit Reached! You've used all 5 question generations today.
-              </div>
-              <div className="text-orange-600 text-xs sm:text-sm">
-                Your daily limit will reset tomorrow. You can still generate unlimited answers!
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* CONFIG + RESULTS - Made responsive */}
-      <section className="max-w-5xl mx-auto space-y-6">
-        <QuestionGenerator
-          subjects={subjects}
-          selectedSubject={selectedSubject}
-          selectedTopic={selectedTopic}
-          setSelectedTopic={setSelectedTopic}
-          handleSubjectChange={handleSubjectChange}
-          subjectsLoading={subjectsLoading}
-          numQuestions={numQuestions}
-          setNumQuestions={setNumQuestions}
-          useCurrentAffairs={useCurrentAffairs}
-          setUseCurrentAffairs={setUseCurrentAffairs}
-          selectedModel={selectedModel}
-          setSelectedModel={setSelectedModel}
-          isGenerateDisabled={loading || dailyLimitReached}
-          loading={loading}
-          onGenerate={handleGenerateQuestions}
-          mode={mode}
-          dailyLimitReached={dailyLimitReached}
-          // NEW: Pass keyword-related props
-          keywordQuery={keywordQuery}
-          setKeywordQuery={setKeywordQuery}
-          onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
-          // Models prop
-          models={models}
-        />
-
-        <div id="results-section">
-          {questions.length > 0 && Object.keys(answers).length === 0 && (
-            <div className="mb-4">
-              <Button
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
-                onClick={handleGenerateAllAnswers}
-                disabled={generatingAllAnswers}
-              >
-                {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
-              </Button>
-            </div>
+      
+          {/* Guest user information - Made responsive */}
+          {!user && (
+            <Card className="max-w-5xl mx-auto shadow-sm border-blue-200 bg-blue-50">
+              <CardContent className="py-4">
+                <div className="text-center">
+                  <div className="text-blue-800 font-medium mb-2 text-sm sm:text-base">
+                    {dailyLimitReached 
+                      ? '🚫 Daily limit reached! You have 0 question generations remaining today.' 
+                      : `🎆 Welcome, Guest! You have ${getRemainingGuestGenerations()} question generation${getRemainingGuestGenerations() === 1 ? '' : 's'} remaining today.`
+                    }
+                  </div>
+                  <div className="text-blue-600 text-xs sm:text-sm">
+                    {dailyLimitReached 
+                      ? '🚀 Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
+                      : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
+                    }
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-          <ChatWindow
-            questions={questions}
-            answers={answers}
-            loading={loading}
-            onGenerateAnswer={handleGenerateSingleAnswer}
-            answerLoadingIndex={answerLoadingIndex}
-          />
-        </div>
-      </section>
+          {/* Authenticated user daily limit notification - Made responsive */}
+          {user && dailyLimitReached && (
+            <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
+              <CardContent className="py-4">
+                <div className="text-center">
+                  <div className="text-orange-800 font-medium mb-2 text-sm sm:text-base">
+                    🚫 Daily Limit Reached! You've used all 5 question generations today.
+                  </div>
+                  <div className="text-orange-600 text-xs sm:text-sm">
+                    Your daily limit will reset tomorrow. You can still generate unlimited answers!
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CONFIG + RESULTS - Made responsive */}
+          <section className="max-w-5xl mx-auto space-y-6">
+            <QuestionGenerator
+              subjects={subjects}
+              selectedSubject={selectedSubject}
+              selectedTopic={selectedTopic}
+              setSelectedTopic={setSelectedTopic}
+              handleSubjectChange={handleSubjectChange}
+              subjectsLoading={subjectsLoading}
+              numQuestions={numQuestions}
+              setNumQuestions={setNumQuestions}
+              useCurrentAffairs={useCurrentAffairs}
+              setUseCurrentAffairs={setUseCurrentAffairs}
+              selectedModel={selectedModel}
+              setSelectedModel={setSelectedModel}
+              isGenerateDisabled={loading || dailyLimitReached}
+              loading={loading}
+              onGenerate={handleGenerateQuestions}
+              mode={mode}
+              dailyLimitReached={dailyLimitReached}
+              // NEW: Pass keyword-related props
+              keywordQuery={keywordQuery}
+              setKeywordQuery={setKeywordQuery}
+              onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
+              // Models prop
+              models={models}
+            />
+
+            <div id="results-section">
+              {questions.length > 0 && Object.keys(answers).length === 0 && (
+                <div className="mb-4">
+                  <Button
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
+                    onClick={handleGenerateAllAnswers}
+                    disabled={generatingAllAnswers}
+                  >
+                    {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
+                  </Button>
+                </div>
+              )}
+
+              <ChatWindow
+                questions={questions}
+                answers={answers}
+                loading={loading}
+                onGenerateAnswer={handleGenerateSingleAnswer}
+                answerLoadingIndex={answerLoadingIndex}
+              />
+            </div>
+          </section>
         </div>
       </div>
     </>

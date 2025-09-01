@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Head from "next/head";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
@@ -518,18 +519,37 @@ export default function UPSCQuestionGenerator() {
 
   // Return the main interface for both authenticated and guest users
   return (
-    <div className="min-h-screen bg-gradient-to-r from-orange-50 to-blue-50">
-      {/* Floating Header */}
-      <FloatingHeader
-        user={user}
-        authLoading={authLoading}
-        signOut={signOut}
-        signInWithGoogle={signInWithGoogle}
-      />
+    <>
+      <Head>
+        <title>IntrepidQ - UPSC Question Generator</title>
+        <meta name="description" content="Generate UPSC CSE mains questions with AI assistance" />
+        <meta name="application-name" content="IntrepidQ" />
+        <meta name="apple-mobile-web-app-title" content="IntrepidQ" />
+        <meta name="theme-color" content="#3b82f6" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
+      </Head>
+      
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        {/* Floating Header */}
+        <FloatingHeader
+          user={user}
+          authLoading={authLoading}
+          signOut={signOut}
+          signInWithGoogle={signInWithGoogle}
+        />
 
-      {/* Main Content with padding adjusted for taller floating header */}
-      <div className="pt-16 p-4 space-y-6">
-        {/* Mode selection card */}
+        {/* Main Content with padding adjusted for taller floating header */}
+        <div className="pt-16 p-4 space-y-6">
+          {/* Mode selection card */}
       <Card className="max-w-3xl mx-auto shadow-md bg-gradient-to-r from-orange-50 to-blue-50 border border-gray-200">
         <CardContent className="py-4">
           <div className="flex items-center justify-center gap-2 mb-3">
@@ -672,7 +692,8 @@ export default function UPSCQuestionGenerator() {
           />
         </div>
       </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

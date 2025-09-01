@@ -519,7 +519,60 @@ export default function UPSCQuestionGenerator() {
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-16 p-4 space-y-6">
           {/* Mode selection card */}
-      
+          <Card className="max-w-3xl mx-auto shadow-md bg-gradient-to-r from-orange-50 to-blue-50 border border-gray-200">
+            <CardContent className="py-4">
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="font-bold text-orange-800 text-center text-lg sm:text-xl">
+                   Select Question Generation Mode
+                </span>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+                <button
+                  className={cn(
+                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    mode === "topic"
+                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
+                      : "bg-white border border-orange-400 text-orange-700 hover:bg-orange-50"
+                  )}
+                  onClick={() => setMode("topic")}
+                >
+                  📚 Topic-wise
+                </button>
+                
+                <button
+                  className={cn(
+                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    mode === "keyword"
+                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
+                      : "bg-white border border-purple-400 text-purple-700 hover:bg-purple-50"
+                  )}
+                  onClick={() => setMode("keyword")}
+                >
+                  🔍 Keyword-based
+                </button>
+                
+                <button
+                  className={cn(
+                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    mode === "paper"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
+                      : "bg-white border border-blue-400 text-blue-700 hover:bg-blue-50"
+                  )}
+                  onClick={() => setMode("paper")}
+                >
+                  📄 Whole Paper
+                </button>
+              </div>
+              
+              {mode === "paper" && (
+                <div className="text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full text-xs md:text-sm px-3 py-2 mt-3">
+                  10 questions · 10 marks each · 1 hour · 100 marks
+                </div>
+              )}
+            </CardContent>
+          </Card>
+          
           {/* Guest user information - Made responsive */}
           {!user && (
             <Card className="max-w-5xl mx-auto shadow-sm border-blue-200 bg-blue-50">

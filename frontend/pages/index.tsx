@@ -508,7 +508,7 @@ export default function UPSCQuestionGenerator() {
   return (
     <>
       <Head>
-        <title>IntrepidQ - UPSC Question Generator</title>
+        <title>IntrepidQ AI</title>
         <meta name="description" content="Generate UPSC CSE mains questions with AI assistance" />
         <meta name="application-name" content="IntrepidQ" />
         <meta name="apple-mobile-web-app-title" content="IntrepidQ" />

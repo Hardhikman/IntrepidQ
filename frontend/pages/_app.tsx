@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import "../styles/globals.css";
 import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
+import Head from 'next/head';
 
 export default function App({ Component, pageProps }: AppProps) {
   const [session, setSession] = useState<Session | null>(null);
@@ -40,12 +41,25 @@ export default function App({ Component, pageProps }: AppProps) {
   }
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <div className="min-h-screen bg-background text-foreground">
-        <Component {...pageProps} session={session} />
-        <FloatingFeedbackButton />
-        <Toaster />
-      </div>
-    </ThemeProvider>
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="application-name" content="IntrepidQ" />
+        <meta name="apple-mobile-web-app-title" content="IntrepidQ" />
+        <meta name="theme-color" content="#3b82f6" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </Head>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <div className="min-h-screen bg-background text-foreground">
+          <Component {...pageProps} session={session} />
+          <FloatingFeedbackButton />
+          <Toaster />
+        </div>
+      </ThemeProvider>
+    </>
   );
 }

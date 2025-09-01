@@ -214,13 +214,17 @@ export default function FloatingFeedbackButton() {
           </CardContent>
         </Card>
       )}
-      <Button
-        className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white text-sm sm:text-base"
+      <button
         onClick={() => setOpen((v) => !v)}
-        variant={open ? "secondary" : "default"}
+        className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 ${
+          open 
+            ? "bg-gray-200 text-gray-700 hover:bg-gray-300" 
+            : "bg-gradient-to-r from-orange-500 to-blue-600 text-white hover:from-orange-600 hover:to-blue-700"
+        }`}
+        title="Provide Feedback"
       >
-        🗣️ Feedback
-      </Button>
+        <span className="text-xl">🗣️</span>
+      </button>
     </div>
   );
 }

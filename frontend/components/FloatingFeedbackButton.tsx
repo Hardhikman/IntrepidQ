@@ -25,7 +25,17 @@ export default function FloatingFeedbackButton() {
   const [supabase, setSupabase] = useState<any>(null);
   const { toast } = useToast();
 
-  // This useEffect hook dynamically loads the Supabase library via a script tag.This method bypasses the Next.js build process for this library,
+  // Add a state to track if the component has mounted
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted to true when component mounts
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  // This useEffect hook dynamically loads the Supabase library via a script tag.
+  // This method bypasses the Next.js build process for this library,
   // which should finally resolve the "Could not resolve" compilation error.
   useEffect(() => {
     // This function initializes the Supabase client once the script is loaded.
@@ -80,6 +90,14 @@ export default function FloatingFeedbackButton() {
     document.body.appendChild(script);
 
   }, [toast]);
+
+  // Reset form when component closes
+  useEffect(() => {
+    if (!open) {
+      setComment("");
+      setFeedbackType(null);
+    }
+  }, [open]);
 
   const submitFeedback = async () => {
     if (!feedbackType) {
@@ -168,6 +186,11 @@ export default function FloatingFeedbackButton() {
             </Button>
         </div>
     );
+  }
+
+  // Don't render anything until component is mounted to avoid hydration issues
+  if (!mounted) {
+    return null;
   }
 
   return (

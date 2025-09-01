@@ -25,20 +25,18 @@ export default function AuthForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Sign in or Sign up</CardTitle>
-          <CardDescription>
-            Use your Google account to continue. Email/password is not supported.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button type="button" className="w-full" onClick={handleGoogle}>
-            Continue with Google
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="w-full max-w-md">
+      <CardHeader>
+        <CardTitle>Sign in or Sign up</CardTitle>
+        <CardDescription>
+          Use your Google account to continue. Email/password is not supported.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button type="button" className="w-full" onClick={handleGoogle}>
+          Continue with Google
+        </Button>
+      </CardContent>
+    </Card>
   )
 }

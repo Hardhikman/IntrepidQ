@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,13 +38,13 @@ export default function FloatingHeader({
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm rounded-b-2xl">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16">
-          {/* Logo/Title */}
+          {/* Logo/Title - Now Clickable */}
           <div className="flex items-center">
-            <div className="bg-white">
+            <Link href="/" className="bg-white hover:bg-gray-50 rounded-lg transition-all duration-200" aria-label="Go to home page">
               <div className="px-1 py-1 sm:px-2 sm:py-2">
                 <AIntrepidQLogo size="small" />
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* Navigation */}

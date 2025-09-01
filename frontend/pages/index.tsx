@@ -323,21 +323,8 @@ export default function UPSCQuestionGenerator() {
   };
 
   const handleGoogleSignIn = async () => {
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-      toast({
-        title: "Success",
-        description: "Signing you in...",
-        variant: "default",
-      });
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err?.message || "Google sign-in failed",
-        variant: "destructive",
-      });
-    }
+    // Redirect to the dedicated signin page
+    router.push("/auth/signin");
   };
 
   const handleGenerateAllAnswers = async () => {

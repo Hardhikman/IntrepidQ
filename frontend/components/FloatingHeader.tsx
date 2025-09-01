@@ -29,11 +29,8 @@ export default function FloatingHeader({
   const router = useRouter();
 
   const handleGoogleSignIn = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (err: any) {
-      console.error("Google sign-in failed:", err?.message);
-    }
+    // Redirect to the dedicated signin page
+    router.push("/auth/signin");
   };
 
   return (

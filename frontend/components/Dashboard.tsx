@@ -34,7 +34,7 @@ interface HistoryItem {
   id: string;
   subject: string;
   topic?: string | null;
-  mode: "topic" | "paper";
+  mode: "topic" | "paper" | "keyword";
   questions: string;
   use_current_affairs: boolean;
   question_count: number;
@@ -55,7 +55,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
-  const [selectedMode, setSelectedMode] = useState<"topic" | "paper" | null>(null);
+  const [selectedMode, setSelectedMode] = useState<"topic" | "paper" | "keyword" | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDateRange, setSelectedDateRange] = useState<string | null>(null);
 
@@ -485,7 +485,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper"))}>
+            <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper" | "keyword"))}>
               <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
                 <SelectValue placeholder="Filter by Mode" />
               </SelectTrigger>
@@ -493,6 +493,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
                 <SelectItem value="all">All Modes</SelectItem>
                 <SelectItem value="topic">Topic-wise</SelectItem>
                 <SelectItem value="paper">Whole Paper</SelectItem>
+                <SelectItem value="keyword">Keyword-based</SelectItem>
               </SelectContent>
             </Select>
             <Select value={selectedDateRange || "all"} onValueChange={(value) => setSelectedDateRange(value === "all" ? null : value)}>
@@ -562,7 +563,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       {/* Footer - Made responsive */}
       <div className="max-w-6xl mx-auto flex items-center justify-end">
         <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto">
-           Back to Generator
+          🚀 Back to Generator
         </Button>
       </div>
     </div>

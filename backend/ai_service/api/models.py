@@ -66,7 +66,7 @@ class GenerateWholePaperRequest(BaseModel):
     
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "gemini-pro", "llama-3.1-70b-versatile", "llama-3.1-8b-instant"]
+        allowed_models = ["llama3-70b", "deepseek-r1", "llama3-8b", "gemma2-9b", "openai-oss-20b", "gemini-2.5-pro", "gemini-2.5-flash", "moonshot-k2"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v
@@ -86,8 +86,11 @@ class UserProfile(BaseModel):
     full_name: Optional[str] = Field(None, description="User's full name")
     username: Optional[str] = Field(None, description="Username")
     preferred_subjects: Optional[List[str]] = Field(None, description="User's preferred subjects")
+    study_streak: int = Field(default=0)
     total_questions_generated: int = Field(default=0, description="Total questions generated")
     total_papers_generated: int = Field(default=0, description="Total papers generated")
+    generation_count_today: int = Field(default=0)
+    last_generation_date: Optional[datetime] = Field(None)
     created_at: Optional[datetime] = Field(None, description="Account creation date")
 
 class UserProfileResponse(BaseModel):

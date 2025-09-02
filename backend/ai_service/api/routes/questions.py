@@ -217,16 +217,21 @@ async def generate_questions(
                 'model': model
             } for q_text in result["questions"]]
 
-            resp = None
-            if records_to_insert:
-                # Fix: Add proper null check for supabase client before using it
+            # Fix #1: Move study streak update outside database logic
+            if user:
+                # ✅ Always update study streak for authenticated users (regardless of DB success)
                 supabase_svc = supabase_service()
-                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
-                    logger.error("Supabase service or client not properly initialized")
-                else:
-                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
                     supabase_svc.update_study_streak(user['id'])
+                    
+                    # Database operations (separate from streak tracking)
+                    if records_to_insert:
+                        try:
+                            resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                        except Exception as e:
+                            logger.error(f"Failed to save questions to DB: {e}")
+                            # Study streak still updated even if DB fails
 
             return {
                 "questions": result["questions"],
@@ -312,16 +317,21 @@ async def generate_whole_paper(
                 'model': model
             } for q_text in result["questions"]]
 
-            resp = None
-            if records_to_insert:
-                # Fix: Add proper null check for supabase client before using it
+            # Fix #1: Move study streak update outside database logic
+            if user:
+                # ✅ Always update study streak for authenticated users (regardless of DB success)
                 supabase_svc = supabase_service()
-                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
-                    logger.error("Supabase service or client not properly initialized")
-                else:
-                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
                     supabase_svc.update_study_streak(user['id'])
+                    
+                    # Database operations (separate from streak tracking)
+                    if records_to_insert:
+                        try:
+                            resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                        except Exception as e:
+                            logger.error(f"Failed to save questions to DB: {e}")
+                            # Study streak still updated even if DB fails
 
             return {
                 "questions": result["questions"],
@@ -410,16 +420,21 @@ async def generate_questions_from_keywords(
                 'model': model
             } for q_text in result["questions"]]
 
-            resp = None
-            if records_to_insert:
-                # Fix: Add proper null check for supabase client before using it
+            # Fix #1: Move study streak update outside database logic
+            if user:
+                # ✅ Always update study streak for authenticated users (regardless of DB success)
                 supabase_svc = supabase_service()
-                if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
-                    logger.error("Supabase service or client not properly initialized")
-                else:
-                    resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
                     supabase_svc.update_study_streak(user['id'])
+                    
+                    # Database operations (separate from streak tracking)
+                    if records_to_insert:
+                        try:
+                            resp = supabase_svc.client.table('generated_questions').insert(records_to_insert).execute()
+                        except Exception as e:
+                            logger.error(f"Failed to save questions to DB: {e}")
+                            # Study streak still updated even if DB fails
 
             return {
                 "questions": result["questions"],

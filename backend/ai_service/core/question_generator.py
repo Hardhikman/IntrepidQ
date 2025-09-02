@@ -60,7 +60,6 @@ class QuestionGenerator:
         self.available_models = {
             "llama3-70b": {"provider": "groq", "model_id": "llama3-70b-8192"},
             "deepseek-r1": {"provider": "groq", "model_id": "deepseek-r1-distill-llama-70b"},
-            "llama3-8b": {"provider": "groq", "model_id": "llama3-8b-8192"},
             "gemma2-9b": {"provider": "groq", "model_id": "gemma2-9b-it"},
             "openai-oss-20b": {"provider": "groq", "model_id": "openai/gpt-oss-20b"},
             "gemini-2.0-flash": {"provider": "google", "model_id": "models/gemini-2.0-flash"},

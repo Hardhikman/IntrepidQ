@@ -28,7 +28,7 @@ export interface HistoryItem {
   id: string;
   subject: string;
   topic?: string | null;
-  mode: "topic" | "paper";
+  mode: "topic" | "paper" | "keyword";
   questions: string;
   use_current_affairs: boolean;
   question_count: number;
@@ -60,6 +60,9 @@ export interface UserProfile {
   preferred_subjects?: string[];
   generation_count_today: number;
   last_generation_date: string | null;
+  study_streak: number; // ✅ ADD THIS
+  updated_at?: string;  // ✅ ADD THIS
+  role?: string;        // ✅ ADD THIS
 }
 
 /* =====================

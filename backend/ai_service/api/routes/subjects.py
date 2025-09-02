@@ -98,7 +98,6 @@ async def get_available_models():
                 "deepseek-r1": "DeepSeek (R1)",
                 "openai-oss-20b":"OpenAI OSS (20B)",
                 "gemini-2.0-flash": "Gemini 2.0 (Flash)",
-                "llama3-8b": "Llama3 (8B)",
                 "moonshot-k2": "Moonshot (K2)",
                 "gemma2-9b": "Gemma2 (9B)",
                 "gemini-2.5-flash": "Gemini 2.5 (Flash)",

@@ -1,7 +1,6 @@
 """
-Rate limiting middleware for FastAPI with KeyDB backend
+Rate limiting middleware for FastAPI with upstash redis backend
 Implements IP-based tracking with configurable limits and 429 responses
-KeyDB provides better performance than Redis with multi-threading
 """
 import os
 import time

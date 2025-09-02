@@ -141,6 +141,7 @@ class SupabaseService:
                     "generation_count_today": 1,
                     "last_generation_date": str(today)
                 }).execute()
+                logger.info(f"[Supabase] Created new profile and set generation count to 1 for user {user_id}")
                 return
 
             profile = profile_resp.data[0]
@@ -161,6 +162,7 @@ class SupabaseService:
                 "generation_count_today": gen_count + 1,
                 "last_generation_date": str(today)
             }).eq("id", user_id).execute()
+            logger.info(f"[Supabase] Incremented generation count for user {user_id}: {gen_count} -> {gen_count + 1}")
         except Exception as e:
             logger.error(f"[Supabase] Increment generation count failed for user {user_id}: {e}")
 
@@ -210,7 +212,9 @@ class SupabaseService:
                 client.table("user_profiles").update({
                     "study_streak": new_streak
                 }).eq("id", user_id).execute()
-                logger.info(f"Updated study streak for user {user_id}: {current_streak} -> {new_streak}")
+                logger.info(f"[Supabase] Updated study streak for user {user_id}: {current_streak} -> {new_streak}")
+            else:
+                logger.debug(f"[Supabase] No study streak change needed for user {user_id} (current: {current_streak})")
                 
         except Exception as e:
             logger.error(f"[Supabase] Update study streak failed for user {user_id}: {e}")

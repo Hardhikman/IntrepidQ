@@ -205,7 +205,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
                   <div className="w-20 sm:w-24">
                     <Slider
                       min={1}
-                      max={10}
+                      max={3}
                       step={1}
                       value={[numQuestions]}
                       onValueChange={(v) => setNumQuestions(v[0])}

@@ -167,7 +167,7 @@ async def generate_questions(
     try:
         qg = get_question_generator()
         topic = request.get('topic', '')
-        num_questions = request.get('num', 5)
+        num_questions = request.get('num', 3)
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
@@ -369,7 +369,7 @@ async def generate_questions_from_keywords(
     try:
         qg = get_question_generator()
         keywords = request.get('keywords', [])
-        num_questions = request.get('num', 5)
+        num_questions = request.get('num', 3)
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')

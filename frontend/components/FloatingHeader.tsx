@@ -12,6 +12,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
+import { ChevronDown } from "lucide-react";
 import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 
 interface FloatingHeaderProps {
@@ -57,6 +58,7 @@ export default function FloatingHeader({
                   className="bg-transparent hover:bg-orange-50 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300"
                 >
                   Resources
+                  <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="min-w-[180px]">
@@ -95,6 +97,7 @@ export default function FloatingHeader({
                     className="bg-transparent hover:bg-blue-50 text-blue-600 border border-blue-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-blue-300"
                   >
                     Menu
+                    <ChevronDown className="ml-1 h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="min-w-[180px]">

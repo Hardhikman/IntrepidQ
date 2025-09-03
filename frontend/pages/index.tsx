@@ -52,7 +52,7 @@ export default function UPSCQuestionGenerator() {
   const [subjects, setSubjects] = useState<Record<string, Subject>>({});
   const [selectedSubject, setSelectedSubject] = useState("GS1");
   const [selectedTopic, setSelectedTopic] = useState("");
-  const [numQuestions, setNumQuestions] = useState(5);
+  const [numQuestions, setNumQuestions] = useState(3);
   const [useCurrentAffairs, setUseCurrentAffairs] = useState(false);
   const [mode, setMode] = useState<"topic" | "keyword" | "paper">("topic");
   const [loading, setLoading] = useState(false);

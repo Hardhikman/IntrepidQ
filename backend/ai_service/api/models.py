@@ -27,7 +27,7 @@ class SubjectsResponse(BaseModel):
 class GenerateQuestionsRequest(BaseModel):
     """Request model for generating questions with enhanced validation"""
     topic: str = Field(..., min_length=3, max_length=200, description="Topic for question generation")
-    num: int = Field(default=5, ge=1, le=10, description="Number of questions to generate")
+    num: int = Field(default=3, ge=1, le=3, description="Number of questions to generate")
     use_ca: bool = Field(default=False, description="Include current affairs")
     months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
     model: str = Field(default="llama3-70b", description="AI model to use")

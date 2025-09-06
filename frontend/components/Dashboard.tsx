@@ -563,7 +563,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       {/* Footer - Made responsive */}
       <div className="max-w-6xl mx-auto flex items-center justify-end">
         <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto">
-          🚀 Back to Generator
+           Back to Generator
         </Button>
       </div>
     </div>

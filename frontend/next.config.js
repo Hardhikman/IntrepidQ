@@ -19,7 +19,12 @@ const nextConfig = {
     // Redirect URLs with hwp parameter to clean URLs
     return [
       {
-        source: '/:path*((\\?|&|\\?)hwp=.*)',
+        source: '/:path*\\?hwp=:slug*',
+        destination: '/:path*',
+        permanent: true,
+      },
+      {
+        source: '/:path*&hwp=:slug*',
         destination: '/:path*',
         permanent: true,
       }

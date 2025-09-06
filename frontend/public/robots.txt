@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /*?hwp=
+Disallow: /*&hwp=
+Disallow: /*?_rsc=
+Disallow: /*&_rsc=
+
+Sitemap: https://intrepidq.xyz/sitemap.xml

@@ -15,7 +15,16 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    // Redirect URLs with hwp parameter to clean URLs
+    return [
+      {
+        source: '/:path*((\\?|&|\\?)hwp=.*)',
+        destination: '/:path*',
+        permanent: true,
+      }
+    ]
+  },
 };
 
 module.exports = nextConfig;
-

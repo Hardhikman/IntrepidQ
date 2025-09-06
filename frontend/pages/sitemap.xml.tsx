@@ -5,8 +5,7 @@ const Sitemap = () => {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-
+  const baseUrl = https://intrepidq.xyz
   const staticPages = [
     '',
     '/about',

@@ -34,6 +34,16 @@ export default function App({ Component, pageProps }: AppProps) {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Get the canonical URL without query parameters
+  const getCanonicalUrl = () => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.search = ''; // Remove all query parameters
+      return url.toString();
+    }
+    return '';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -53,6 +63,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="theme-color" content="#3b82f6" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="canonical" href={getCanonicalUrl()} />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />

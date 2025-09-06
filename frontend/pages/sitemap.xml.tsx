@@ -5,7 +5,7 @@ const Sitemap = () => {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  const baseUrl = https://intrepidq.xyz
+  const baseUrl = "https://intrepidq.xyz"
   const staticPages = [
     '',
     '/about',

@@ -55,8 +55,8 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Head>
-        <title>IntrepidQ AI</title>
-        <meta name="description" content="Generate UPSC CSE mains questions with AI assistance" />
+        <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation </title>
+        <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="application-name" content="IntrepidQ" />
         <meta name="apple-mobile-web-app-title" content="IntrepidQ" />

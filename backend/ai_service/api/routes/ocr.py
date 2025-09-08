@@ -19,7 +19,7 @@ from api.auth import get_optional_user
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-async def extract_text_with_gemini(image_data: bytes, model_name: str = "gemini-1.5-flash") -> str:
+async def extract_text_with_gemini(image_data: bytes, model_name: str = "gemini-2.0-flash") -> str:
     """
     Extract text from image using Google Gemini
     """
@@ -132,7 +132,7 @@ async def process_screenshot(
 async def evaluate_screenshot(
     files: List[UploadFile] = File(...),
     evaluation_prompt: str = "Evaluate this answer using the provided evaluation query and UPSC Mains criteria",
-    model: str = "gemini-1.5-flash",
+    model: str = "gemini-2.5-flash",
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """
@@ -332,3 +332,4 @@ async def evaluate_text_with_llm(text: str, prompt: str, model_name: str) -> Dic
     except Exception as e:
         logger.error(f"Error evaluating text with LLM: {e}")
         return {"error": f"Failed to evaluate with LLM: {str(e)}"}
+

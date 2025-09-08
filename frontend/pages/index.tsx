@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { QuestionGenerator } from "@/components/QuestionGenerator";
 import { ChatWindow } from "@/components/Chatwindow";
 import FloatingHeader from "@/components/FloatingHeader";
+import { ScreenshotUploader } from "@/components/ScreenshotUploader";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Types
 import { GeneratedQuestion } from "@/lib/supabase";
@@ -504,6 +506,13 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
+  // NEW: Handle text extracted from screenshots
+  const handleTextExtracted = (text: string) => {
+    // You can implement logic here to use the extracted text
+    // For example, you might want to generate questions based on the extracted text
+    console.log("Extracted text:", text);
+  };
+
   // Return the main interface for both authenticated and guest users
   return (
     <>
@@ -613,53 +622,124 @@ export default function UPSCQuestionGenerator() {
 
           {/* CONFIG + RESULTS - Made responsive */}
           <section className="max-w-5xl mx-auto space-y-6">
-            <QuestionGenerator
-              subjects={subjects}
-              selectedSubject={selectedSubject}
-              selectedTopic={selectedTopic}
-              setSelectedTopic={setSelectedTopic}
-              handleSubjectChange={handleSubjectChange}
-              subjectsLoading={subjectsLoading}
-              numQuestions={numQuestions}
-              setNumQuestions={setNumQuestions}
-              useCurrentAffairs={useCurrentAffairs}
-              setUseCurrentAffairs={setUseCurrentAffairs}
-              selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
-              isGenerateDisabled={loading || dailyLimitReached}
-              loading={loading}
-              onGenerate={handleGenerateQuestions}
-              mode={mode}
-              dailyLimitReached={dailyLimitReached}
-              // NEW: Pass keyword-related props
-              keywordQuery={keywordQuery}
-              setKeywordQuery={setKeywordQuery}
-              onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
-              // Models prop
-              models={models}
-            />
+            {/* Tabs for Question Generation and Screenshot Processing */}
+            <Tabs defaultValue="questions" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger 
+                  value="questions" 
+                  disabled={dailyLimitReached}
+                >
+                  Question Generation
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="screenshot"
+                  disabled={dailyLimitReached}
+                >
+                  Answer Evaluation
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="questions">
+                {dailyLimitReached ? (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="py-8 text-center">
+                      <div className="text-orange-800 font-medium mb-2 text-lg">
+                        🚫 Daily Limit Reached
+                      </div>
+                      <div className="text-orange-600 mb-4">
+                        You've used all your question generations for today.
+                      </div>
+                      <div className="text-orange-600 text-sm">
+                        {user 
+                          ? "Your daily limit will reset tomorrow. Sign in to get 5 question generations per day!" 
+                          : "Sign in with Google to get 5 question generations per day, save your history, and access premium features!"}
+                      </div>
+                      <Button 
+                        className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                        onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                      >
+                        {user ? "Go to Dashboard" : "Sign In with Google"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <QuestionGenerator
+                    subjects={subjects}
+                    selectedSubject={selectedSubject}
+                    selectedTopic={selectedTopic}
+                    setSelectedTopic={setSelectedTopic}
+                    handleSubjectChange={handleSubjectChange}
+                    subjectsLoading={subjectsLoading}
+                    numQuestions={numQuestions}
+                    setNumQuestions={setNumQuestions}
+                    useCurrentAffairs={useCurrentAffairs}
+                    setUseCurrentAffairs={setUseCurrentAffairs}
+                    selectedModel={selectedModel}
+                    setSelectedModel={setSelectedModel}
+                    isGenerateDisabled={loading || dailyLimitReached}
+                    loading={loading}
+                    onGenerate={handleGenerateQuestions}
+                    mode={mode}
+                    dailyLimitReached={dailyLimitReached}
+                    // NEW: Pass keyword-related props
+                    keywordQuery={keywordQuery}
+                    setKeywordQuery={setKeywordQuery}
+                    onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
+                    // Models prop
+                    models={models}
+                  />
+                )}
 
-            <div id="results-section">
-              {questions.length > 0 && Object.keys(answers).length === 0 && (
-                <div className="mb-4">
-                  <Button
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
-                    onClick={handleGenerateAllAnswers}
-                    disabled={generatingAllAnswers}
-                  >
-                    {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
-                  </Button>
+                <div id="results-section">
+                  {questions.length > 0 && Object.keys(answers).length === 0 && (
+                    <div className="mb-4">
+                      <Button
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
+                        onClick={handleGenerateAllAnswers}
+                        disabled={generatingAllAnswers}
+                      >
+                        {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
+                      </Button>
+                    </div>
+                  )}
+
+                  <ChatWindow
+                    questions={questions}
+                    answers={answers}
+                    loading={loading}
+                    onGenerateAnswer={handleGenerateSingleAnswer}
+                    answerLoadingIndex={answerLoadingIndex}
+                  />
                 </div>
-              )}
+              </TabsContent>
+              <TabsContent value="screenshot">
+                {dailyLimitReached ? (
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="py-8 text-center">
+                      <div className="text-orange-800 font-medium mb-2 text-lg">
+                        🚫 Daily Limit Reached
+                      </div>
+                      <div className="text-orange-600 mb-4">
+                        You've used all your question generations for today.
+                      </div>
+                      <div className="text-orange-600 text-sm">
+                        {user 
+                          ? "Your daily limit will reset tomorrow. Sign in to get 5 question generations per day!" 
+                          : "Sign in with Google to get 5 question generations per day, save your history, and access premium features!"}
+                      </div>
+                      <Button 
+                        className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                        onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                      >
+                        {user ? "Go to Dashboard" : "Sign In with Google"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <ScreenshotUploader onTextExtracted={handleTextExtracted} />
+                )}
+              </TabsContent>
+            </Tabs>
 
-              <ChatWindow
-                questions={questions}
-                answers={answers}
-                loading={loading}
-                onGenerateAnswer={handleGenerateSingleAnswer}
-                answerLoadingIndex={answerLoadingIndex}
-              />
-            </div>
           </section>
         </div>
       </div>

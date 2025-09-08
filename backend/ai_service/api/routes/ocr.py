@@ -1,18 +1,68 @@
 """
-API routes for OCR processing of uploaded screenshots
+API routes for OCR processing of uploaded screenshots using Google Gemini
 """
 import logging
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from typing import Dict, Any, Optional, List
 import sys
 import json
+import os
 sys.path.append('.')
 
+# Import Google Generative AI
+import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+from google.generativeai.generative_models import GenerativeModel
+
 from api.auth import get_optional_user
-from core.ocr_service import ocr_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+async def extract_text_with_gemini(image_data: bytes, model_name: str = "gemini-1.5-flash") -> str:
+    """
+    Extract text from image using Google Gemini
+    """
+    try:
+        # Get API key from environment
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        if not google_api_key:
+            raise ValueError("GOOGLE_API_KEY not set in environment variables")
+        
+        # Create model
+        model = GenerativeModel(
+            model_name=model_name,
+            generation_config={"response_mime_type": "text/plain"},
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
+            }
+        )
+        
+        # Create prompt for text extraction
+        prompt = """
+        Extract all readable text from this image. This may include handwritten text, printed text, 
+        diagrams, charts, or any other textual content visible in the image. 
+        Return only the extracted text without any additional formatting or explanation.
+        """
+        
+        # Process image
+        response = model.generate_content([
+            prompt,
+            {"mime_type": "image/jpeg", "data": image_data}
+        ])
+        
+        # Extract text from response
+        if hasattr(response, "text") and response.text:
+            return response.text.strip()
+        else:
+            return ""
+            
+    except Exception as e:
+        logger.error(f"Error extracting text with Gemini: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to extract text with Gemini: {str(e)}")
 
 @router.post("/process_screenshot")
 async def process_screenshot(
@@ -20,7 +70,7 @@ async def process_screenshot(
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """
-    Process uploaded screenshots (max 2 pages) using OCR and return extracted text
+    Process uploaded screenshots (max 2 pages) using Google Gemini and return extracted text
     """
     try:
         # Limit to 2 pages maximum
@@ -41,16 +91,29 @@ async def process_screenshot(
                 raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
             image_data_list.append(contents)
         
-        # Process OCR on all images
-        if len(image_data_list) == 1:
-            # Single image processing
-            extracted_text = ocr_service.extract_text(image_data_list[0])
-        else:
-            # Multiple images processing
-            extracted_text = ocr_service.extract_text_from_multiple_images(image_data_list)
+        # Process images with Gemini
+        extracted_texts = []
+        for i, image_data in enumerate(image_data_list):
+            try:
+                text = await extract_text_with_gemini(image_data)
+                if text:
+                    extracted_texts.append(text)
+                    logger.info(f"Successfully processed page {i+1}")
+                else:
+                    logger.warning(f"Failed to extract text from page {i+1}")
+            except Exception as e:
+                logger.error(f"Error processing page {i+1}: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to process page {i+1}: {str(e)}")
         
-        if not extracted_text:
+        # Combine extracted texts
+        if not extracted_texts:
             raise HTTPException(status_code=500, detail="Failed to extract text from image(s)")
+        
+        # Concatenate all extracted texts with page separators
+        if len(extracted_texts) == 1:
+            extracted_text = extracted_texts[0]
+        else:
+            extracted_text = "\n\n--- PAGE BREAK ---\n\n".join(extracted_texts)
         
         return {
             "extracted_text": extracted_text,
@@ -69,11 +132,11 @@ async def process_screenshot(
 async def evaluate_screenshot(
     files: List[UploadFile] = File(...),
     evaluation_prompt: str = "Evaluate the content in this image",
-    model: str = "gemini-2.5-flash",  # Updated to correct model name
+    model: str = "gemini-1.5-flash",
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """
-    Process uploaded screenshots (max 2 pages) using OCR, then evaluate content with LLM
+    Process uploaded screenshots (max 2 pages) using Google Gemini, then evaluate content with LLM
     """
     try:
         # Limit to 2 pages maximum
@@ -94,16 +157,29 @@ async def evaluate_screenshot(
                 raise HTTPException(status_code=400, detail="File size exceeds 5MB limit")
             image_data_list.append(contents)
         
-        # Process OCR on all images
-        if len(image_data_list) == 1:
-            # Single image processing
-            extracted_text = ocr_service.extract_text(image_data_list[0])
-        else:
-            # Multiple images processing
-            extracted_text = ocr_service.extract_text_from_multiple_images(image_data_list)
+        # Process images with Gemini
+        extracted_texts = []
+        for i, image_data in enumerate(image_data_list):
+            try:
+                text = await extract_text_with_gemini(image_data)
+                if text:
+                    extracted_texts.append(text)
+                    logger.info(f"Successfully processed page {i+1}")
+                else:
+                    logger.warning(f"Failed to extract text from page {i+1}")
+            except Exception as e:
+                logger.error(f"Error processing page {i+1}: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to process page {i+1}: {str(e)}")
         
-        if not extracted_text:
+        # Combine extracted texts
+        if not extracted_texts:
             raise HTTPException(status_code=500, detail="Failed to extract text from image(s)")
+        
+        # Concatenate all extracted texts with page separators
+        if len(extracted_texts) == 1:
+            extracted_text = extracted_texts[0]
+        else:
+            extracted_text = "\n\n--- PAGE BREAK ---\n\n".join(extracted_texts)
         
         # Evaluate with LLM
         evaluation_result = await evaluate_text_with_llm(extracted_text, evaluation_prompt, model)

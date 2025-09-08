@@ -25,7 +25,7 @@ export const AIntrepidQLogo: React.FC<AIntrepidQLogoProps> = ({ size = "medium",
       <div className="inline-flex items-center">
         {/* AI letters with gradient border and no background */}
         <div
-          className="inline-flex items-center px-2 py-1 rounded-lg border"
+          className="inline-flex items-center px-0.5 py-0 rounded-full border"
           style={{
             borderImage: "linear-gradient(90deg, #FFB366 0%, #87CEEB 100%) 1",
             background: "transparent",

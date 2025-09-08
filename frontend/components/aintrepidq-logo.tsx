@@ -9,15 +9,15 @@ export interface AIntrepidQLogoProps {
 export const AIntrepidQLogo: React.FC<AIntrepidQLogoProps> = ({ size = "medium", className = "" }) => {
   // Define responsive size classes
   const sizeClasses = {
-    small: "text-2xl xs:text-3xl sm:text-4xl",
-    medium: "text-4xl xs:text-5xl sm:text-6xl",
-    large: "text-6xl xs:text-7xl sm:text-8xl",
-  }
-
-  const smallerSizeClasses = {
     small: "text-lg xs:text-xl sm:text-2xl",
     medium: "text-2xl xs:text-3xl sm:text-4xl",
     large: "text-4xl xs:text-5xl sm:text-6xl",
+  }
+
+  const smallerSizeClasses = {
+    small: "text-sm xs:text-base sm:text-lg",
+    medium: "text-lg xs:text-xl sm:text-2xl",
+    large: "text-xl xs:text-2xl sm:text-3xl",
   }
 
   return (

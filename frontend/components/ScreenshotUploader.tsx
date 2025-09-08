@@ -150,7 +150,7 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({ onTextEx
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileImage className="h-5 w-5" />
-          Strictly one written answer (max 5 pages) per request
+          Strictly one *legible* answer per request for effective evaluation
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -389,3 +389,4 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({ onTextEx
     </Card>
   );
 };
+

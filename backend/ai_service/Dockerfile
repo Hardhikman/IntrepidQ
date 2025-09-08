@@ -12,8 +12,6 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxrender1 \
     libxext6 \
-    tesseract-ocr \
-    libtesseract-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (better layer caching)

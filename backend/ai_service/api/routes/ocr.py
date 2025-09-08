@@ -131,7 +131,7 @@ async def process_screenshot(
 @router.post("/evaluate_screenshot")
 async def evaluate_screenshot(
     files: List[UploadFile] = File(...),
-    evaluation_prompt: str = "Evaluate the content in this image",
+    evaluation_prompt: str = "Evaluate this answer using the provided evaluation query and UPSC Mains criteria",
     model: str = "gemini-1.5-flash",
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
@@ -227,12 +227,12 @@ async def evaluate_text_with_llm(text: str, prompt: str, model_name: str) -> Dic
         
         # Build evaluation prompt with your specific criteria
         full_prompt = f"""
-        {prompt}
         
-        Content extracted from image:
-        {text}
+        Please evaluate the following answer according to the user's evaluation query and the UPSC Mains evaluation criteria.
         
-        Please evaluate this answer using the following UPSC Mains evaluation criteria:
+        User's evaluation query: {prompt}
+        
+        Answer to evaluate: {text}
         
         Evaluation Parameters:
         1. Directive Keyword: Was the core directive (e.g., "Critically analyze," "Discuss," "Elucidate") correctly interpreted and executed?

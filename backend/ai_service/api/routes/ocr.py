@@ -70,12 +70,12 @@ async def process_screenshot(
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """
-    Process uploaded screenshots (max 2 pages) using Google Gemini and return extracted text
+    Process uploaded screenshots (max 5 pages) using Google Gemini and return extracted text
     """
     try:
-        # Limit to 2 pages maximum
-        if len(files) > 2:
-            raise HTTPException(status_code=400, detail="Maximum 2 pages allowed")
+        # Limit to 5 pages maximum
+        if len(files) > 5:
+            raise HTTPException(status_code=400, detail="Maximum 5 pages allowed")
         
         # Validate file types
         for file in files:
@@ -136,12 +136,12 @@ async def evaluate_screenshot(
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     """
-    Process uploaded screenshots (max 2 pages) using Google Gemini, then evaluate content with LLM
+    Process uploaded screenshots (max 5 pages) using Google Gemini, then evaluate content with LLM
     """
     try:
-        # Limit to 2 pages maximum
-        if len(files) > 2:
-            raise HTTPException(status_code=400, detail="Maximum 2 pages allowed")
+        # Limit to 5 pages maximum
+        if len(files) > 5:
+            raise HTTPException(status_code=400, detail="Maximum 5 pages allowed")
         
         # Validate file types
         for file in files:

@@ -249,27 +249,139 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({ onTextEx
           )}
         </Button>
 
-        {/* Extracted Text */}
-        {extractedText && (
-          <div className="space-y-2">
-            <Label>Extracted Text</Label>
-            <Textarea
-              value={extractedText}
-              readOnly
-              rows={6}
-              className="font-mono text-sm"
-            />
-          </div>
-        )}
-
-        {/* Evaluation Results */}
+        {/* Evaluation Results - Improved Display */}
         {evaluationResult && (
-          <div className="space-y-2">
-            <Label>Evaluation Results</Label>
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <pre className="text-xs overflow-x-auto">
-                {JSON.stringify(evaluationResult, null, 2)}
-              </pre>
+          <div className="space-y-4">
+            <Label className="text-lg font-semibold">Evaluation Results</Label>
+            <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+              {/* Overall Rating */}
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h3 className="font-bold text-lg text-blue-800">Overall Rating: {evaluationResult.overall_rating}</h3>
+              </div>
+
+              {/* Evaluation Details */}
+              {Object.entries(evaluationResult.evaluation).map(([category, details]: [string, any]) => (
+                <div key={category} className="border border-gray-200 rounded-lg p-4">
+                  <h3 className="font-bold text-md capitalize mb-3 text-gray-800">
+                    {category.replace(/_/g, ' ')}
+                  </h3>
+                  
+                  {typeof details === 'object' && details !== null ? (
+                    <div className="space-y-3">
+                      {/* Rating */}
+                      {details.rating && (
+                        <div className="flex items-center">
+                          <span className="font-medium mr-2">Rating:</span>
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${
+                            details.rating === 'Good' ? 'bg-green-100 text-green-800' :
+                            details.rating === 'Better' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {details.rating}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Strengths */}
+                      {details.strengths && details.strengths.length > 0 && (
+                        <div>
+                          <span className="font-medium text-green-700">Strengths:</span>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            {details.strengths.map((strength: string, index: number) => (
+                              <li key={index} className="text-green-600">{strength}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Weaknesses */}
+                      {details.weaknesses && details.weaknesses.length > 0 && (
+                        <div>
+                          <span className="font-medium text-red-700">Areas for Improvement:</span>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            {details.weaknesses.map((weakness: string, index: number) => (
+                              <li key={index} className="text-red-600">{weakness}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Improvements */}
+                      {details.improvements && details.improvements.length > 0 && (
+                        <div>
+                          <span className="font-medium text-blue-700">Suggestions:</span>
+                          <ul className="list-disc list-inside mt-1 space-y-1">
+                            {details.improvements.map((improvement: string, index: number) => (
+                              <li key={index} className="text-blue-600">{improvement}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Nested Categories (like in body section) */}
+                      {Object.entries(details).map(([subCategory, subDetails]: [string, any]) => {
+                        if (subCategory !== 'rating' && subCategory !== 'strengths' && subCategory !== 'weaknesses' && subCategory !== 'improvements' && typeof subDetails === 'object' && subDetails !== null) {
+                          return (
+                            <div key={subCategory} className="ml-4 mt-3 pt-3 border-t border-gray-100">
+                              <h4 className="font-semibold capitalize text-gray-700">{subCategory.replace(/_/g, ' ')}</h4>
+                              <div className="mt-2 space-y-2">
+                                {subDetails.rating && (
+                                  <div className="flex items-center">
+                                    <span className="font-medium mr-2">Rating:</span>
+                                    <span className={`px-2 py-1 rounded text-sm font-medium ${
+                                      subDetails.rating === 'Good' ? 'bg-green-100 text-green-800' :
+                                      subDetails.rating === 'Better' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'
+                                    }`}>
+                                      {subDetails.rating}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {subDetails.strengths && subDetails.strengths.length > 0 && (
+                                  <div>
+                                    <span className="font-medium text-green-700">Strengths:</span>
+                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                      {subDetails.strengths.map((strength: string, index: number) => (
+                                        <li key={index} className="text-green-600">{strength}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {subDetails.weaknesses && subDetails.weaknesses.length > 0 && (
+                                  <div>
+                                    <span className="font-medium text-red-700">Areas for Improvement:</span>
+                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                      {subDetails.weaknesses.map((weakness: string, index: number) => (
+                                        <li key={index} className="text-red-600">{weakness}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                
+                                {subDetails.improvements && subDetails.improvements.length > 0 && (
+                                  <div>
+                                    <span className="font-medium text-blue-700">Suggestions:</span>
+                                    <ul className="list-disc list-inside mt-1 space-y-1">
+                                      {subDetails.improvements.map((improvement: string, index: number) => (
+                                        <li key={index} className="text-blue-600">{improvement}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  ) : (
+                    <p>{String(details)}</p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         )}

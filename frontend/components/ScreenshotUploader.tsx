@@ -29,11 +29,11 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({ onTextEx
     if (selectedFiles) {
       const fileArray = Array.from(selectedFiles);
       
-      // Check file count (max 2)
-      if (fileArray.length > 2) {
+      // Check file count (max 5)
+      if (fileArray.length > 5) {
         toast({
           title: "Too many files",
-          description: "You can upload maximum 2 images",
+          description: "You can upload maximum 5 images",
           variant: "destructive"
         });
         return;
@@ -150,13 +150,13 @@ export const ScreenshotUploader: React.FC<ScreenshotUploaderProps> = ({ onTextEx
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileImage className="h-5 w-5" />
-          Strictly one written answer (max 2 pages) per request
+          Strictly one written answer (max 5 pages) per request
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* File Upload Area */}
         <div className="space-y-2">
-          <Label>Upload Image/s with no question (Max 2 - 5MB each)</Label>
+          <Label>Upload Image/s with no question (Max 5 - 5MB each)</Label>
           <div 
             className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
             onClick={handleUploadClick}

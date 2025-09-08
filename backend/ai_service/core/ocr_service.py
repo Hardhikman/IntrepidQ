@@ -36,8 +36,30 @@ class OCRService:
         Preprocess image to improve OCR accuracy
         """
         if not CV2_AVAILABLE or cv2 is None:
-            logger.warning("OpenCV not available, returning original image")
-            return image
+            logger.warning("OpenCV not available, using basic Pillow preprocessing")
+            try:
+                # Convert to grayscale
+                if image.mode != 'L':
+                    grayscale = image.convert('L')
+                else:
+                    grayscale = image
+                
+                # Enhance contrast
+                from PIL import ImageEnhance
+                enhancer = ImageEnhance.Contrast(grayscale)
+                enhanced = enhancer.enhance(1.5)  # Increase contrast by 50%
+                
+                # Apply a simple threshold
+                threshold = 128
+                # Define explicit function for type checking compatibility
+                def threshold_func(x):
+                    return 255 if x > threshold else 0
+                thresholded = enhanced.point(threshold_func, mode='1')
+                
+                return thresholded
+            except Exception as e:
+                logger.error(f"Error during basic image preprocessing: {e}")
+                return image
             
         try:
             # Convert PIL image to OpenCV format

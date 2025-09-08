@@ -1,96 +1,90 @@
-interface AIntrepidQLogoProps {
+import type React from "react"
+
+// Consolidated interface with all required props
+export interface AIntrepidQLogoProps {
   size?: "small" | "medium" | "large"
   className?: string
 }
 
-export function AIntrepidQLogo({ size = "medium", className = "" }: AIntrepidQLogoProps) {
+export const AIntrepidQLogo: React.FC<AIntrepidQLogoProps> = ({ size = "medium", className = "" }) => {
   // Define responsive size classes
   const sizeClasses = {
-    small: "text-xl xs:text-2xl sm:text-3xl",
-    medium: "text-3xl xs:text-4xl sm:text-5xl",
-    large: "text-5xl xs:text-6xl sm:text-7xl",
+    small: "text-2xl xs:text-3xl sm:text-4xl",
+    medium: "text-4xl xs:text-5xl sm:text-6xl",
+    large: "text-6xl xs:text-7xl sm:text-8xl",
+  }
+
+  const smallerSizeClasses = {
+    small: "text-lg xs:text-xl sm:text-2xl",
+    medium: "text-2xl xs:text-3xl sm:text-4xl",
+    large: "text-4xl xs:text-5xl sm:text-6xl",
   }
 
   return (
-    <div className={`inline-block ${sizeClasses[size]} ${className}`}>
-      <div
-        className="relative inline-flex items-center"
-        style={{
-          fontFamily: "cursive",
-          transform: "rotate(-1deg)",
-          letterSpacing: "0.03em",
-        }}
-      >
-        {/* A with slight forward lean - reduced size */}
-        <span
-          className="text-blue-600"
+    <div className={`inline-block ${className}`}>
+      <div className="inline-flex items-center">
+        {/* AI letters with gradient border and no background */}
+        <div
+          className="inline-flex items-center px-2 py-1 rounded-lg border"
           style={{
-            transform: "rotate(3deg) translateY(-1px)",
-            fontWeight: "300",
-            display: "inline-block",
-            fontSize: "0.95em",
+            borderImage: "linear-gradient(90deg, #FFB366 0%, #87CEEB 100%) 1",
+            background: "transparent",
           }}
         >
-          A
-        </span>
+          <div className={`inline-flex items-center ${sizeClasses[size]}`}>
+            <span
+              className="font-bold"
+              style={{
+                color: "#4169E1",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "700",
+              }}
+            >
+              A
+            </span>
 
-        {/* Slanted I positioned after A - with underline */}
-        <span
-          className="text-orange-500 relative"
-          style={{
-            transform: "rotate(15deg) translateX(-4px) translateY(-1px)",
-            fontSize: "0.8em",
-            fontWeight: "400",
-            display: "inline-block",
-            marginLeft: "-0.2em",
-          }}
-        >
-          I
-          {/* Decorative underline flourish for I */}
-          <div
-            className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 opacity-60"
+            <span
+              className="font-bold"
+              style={{
+                color: "#FF6347",
+                fontFamily: "system-ui, -apple-system, sans-serif",
+                fontWeight: "700",
+              }}
+            >
+              I
+            </span>
+          </div>
+        </div>
+
+        <div className={`inline-flex items-center ${smallerSizeClasses[size]}`}>
+          {/* ntrepid in orange color */}
+          <span
+            className="font-bold"
             style={{
-              transform: "rotate(-2deg) scaleX(1.1)",
-              borderRadius: "1px",
+              color: "#FF6347",
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontWeight: "700",
             }}
-          />
-        </span>
+          >
+            ntrepid
+          </span>
 
-        {/* ntrepid flowing naturally */}
-        <span
-          className="text-blue-600"
-          style={{
-            transform: "translateX(-2px)",
-            fontWeight: "300",
-            display: "inline-block",
-            marginLeft: "-0.1em",
-          }}
-        >
-          ntrepid
-        </span>
-
-        {/* Q with flourish - further reduced size */}
-        <span
-          className="text-orange-500 relative"
-          style={{
-            transform: "rotate(-1deg)",
-            fontWeight: "400",
-            display: "inline-block",
-            marginLeft: "-0.1em",
-            fontSize: "0.85em",
-          }}
-        >
-          Q
-          {/* Decorative underline flourish for Q */}
-          <div
-            className="absolute -bottom-1 left-0 w-full h-0.5 bg-orange-500 opacity-60"
+          {/* Q in blue color matching the A */}
+          <span
+            className="font-bold"
             style={{
-              transform: "rotate(-2deg) scaleX(1.1)",
-              borderRadius: "1px",
+              color: "#4169E1",
+              fontFamily: "system-ui, -apple-system, sans-serif",
+              fontWeight: "700",
+              marginLeft: "0.1em",
             }}
-          />
-        </span>
+          >
+            Q
+          </span>
+        </div>
       </div>
     </div>
   )
 }
+
+export default AIntrepidQLogo

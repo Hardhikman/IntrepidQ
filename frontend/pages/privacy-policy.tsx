@@ -221,7 +221,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify mt-2">
                 <span className="inline-block w-8"></span>
-                Email: hardhikm.08@gmail.com
+                Email: support@intrepidq.xyz
               </p>
             </div>
 

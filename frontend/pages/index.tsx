@@ -516,6 +516,11 @@ export default function UPSCQuestionGenerator() {
   // Return the main interface for both authenticated and guest users
   return (
     <>
+      <Head>
+        <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation</title>
+        <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      </Head>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         {/* Floating Header */}
         <FloatingHeader

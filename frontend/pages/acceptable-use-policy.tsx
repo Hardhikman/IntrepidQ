@@ -156,7 +156,7 @@ export default function AcceptableUsePolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                If you become aware of any violations of this policy, please contact us at: support@intrepidq.com
+                If you become aware of any violations of this policy, please contact us at: support@intrepidq.xyz
               </p>
 
               <h2 className="text-lg md:text-xl font-serif font-bold text-gray-800 mb-3 mt-6 border-b pb-2">

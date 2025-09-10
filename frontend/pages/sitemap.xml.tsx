@@ -6,17 +6,14 @@ const Sitemap = () => {
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://intrepidq.xyz"
-  
+
   const staticPages = [
     '',
     '/about',
     '/blog',
     '/privacy-policy',
     '/terms-of-service',
-    '/acceptable-use-policy',
-    '/auth/signin',
-    '/dashboard',
-    '/profile'
+    '/acceptable-use-policy'
   ]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

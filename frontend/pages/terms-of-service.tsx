@@ -17,7 +17,7 @@ export default function TermsOfServicePage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            Last Updated: August 24, 2025
+            Last Updated: September 10, 2025
           </p>
         </CardHeader>
       </Card>
@@ -33,7 +33,7 @@ export default function TermsOfServicePage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                By accessing or using the IntrepidQ service ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the Service.
+                By accessing or using the IntrepidQ AI service ("Service"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the Service.
               </p>
             </div>
 
@@ -44,14 +44,14 @@ export default function TermsOfServicePage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                IntrepidQ is an educational platform that generates UPSC Mains examination questions using artificial intelligence. The Service allows users to:
+                IntrepidQ AI is an educational platform that generates UPSC Mains examination questions using artificial intelligence. The Service allows users to:
               </p>
               <ul className="list-disc pl-12 space-y-1 text-sm md:text-base text-gray-700">
                 <li>Generate subject-specific questions based on UPSC syllabus</li>
                 <li>Create full mock papers for practice</li>
                 <li>Generate answers to questions</li>
-                <li>Track study progress and streaks</li>
-                <li>Provide feedback on generated content</li>
+                <li>Plan daily study topics with the topic planner</li>
+                <li>Provide website feedback</li>
               </ul>
             </div>
             
@@ -220,6 +220,14 @@ export default function TermsOfServicePage() {
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
                 We may update these Terms from time to time. We will notify you of any changes by posting the new Terms on this page.
+              </p>
+
+              <h2 className="text-lg md:text-xl font-serif font-bold text-gray-800 mb-3 mt-6 border-b pb-2">
+                13. Contact Information
+              </h2>
+              <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
+                <span className="inline-block w-8"></span>
+                If you have any questions about these Terms, please contact us at: support@intrepidq.xyz
               </p>
             </div>
 

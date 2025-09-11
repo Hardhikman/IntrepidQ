@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                This Privacy Policy describes how IntrepidQ2 ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services. We are committed to protecting your privacy and ensuring the security of your personal information.
+                This Privacy Policy describes how IntrepidQ AI ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services. We are committed to protecting your privacy and ensuring the security of your personal information.
               </p>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify mt-3">
                 <span className="inline-block w-8"></span>

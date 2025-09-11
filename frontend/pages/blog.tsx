@@ -9,19 +9,29 @@ const blogPosts = [
   {
     id: 1,
     title: "How IntrepidQ Enhances UPSC Preparation",
-    date: "August 24, 2025",
-    excerpt: "IntrepidQ offers a unique approach to UPSC preparation by leveraging advanced AI models to generate context-aware questions that closely mimic the actual examination pattern..."
+    date: "September 10, 2025",
+    excerpt: "Every UPSC aspirant knows that answer writing practice is the key to cracking Mains. But current test series often copy PYQs or use chatbot-generated questions that don't match UPSC standards..."
   },
   {
     id: 2,
     title: "Webapp Updates and New Features",
-    date: "August 20, 2025",
-    excerpt: "We're constantly improving IntrepidQ with new features and updates to enhance your UPSC preparation experience. This post covers the latest webapp updates..."
+    date: "September 10, 2025",
+    excerpt: "We're constantly improving IntrepidQ with new features and updates to enhance your UPSC preparation experience. This post covers the latest webapp updates that are now available to all users..."
   }
 ];
 
 export default function BlogPage() {
   const router = useRouter();
+
+  const handleReadMore = (postId) => {
+    if (postId === 1) {
+      router.push('/blog/how-intrepidq-enhances-upsc-preparation');
+    } else if (postId === 2) {
+      router.push('/blog/webapp-updates-and-new-features');
+    } else {
+      // Handle other posts as needed
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-orange-50 to-blue-50 p-4 space-y-6">
@@ -60,6 +70,7 @@ export default function BlogPage() {
                   <Button
                     variant="outline"
                     className="text-purple-600 border-purple-300 hover:bg-purple-50"
+                    onClick={() => handleReadMore(post.id)}
                   >
                     Read More
                   </Button>

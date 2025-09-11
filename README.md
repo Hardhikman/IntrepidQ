@@ -386,7 +386,7 @@ cd frontend
 vercel --prod
 ```
 
-**Backend (Railway/Heroku)**:
+**Backend (Railway/Render)**:
 ```bash
 # Configure environment variables in platform dashboard
 # Deploy using platform-specific methods
@@ -440,7 +440,7 @@ This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENS
 
 ## 🆘 Support & Community
 
-- 📧 **Email**: [support@intrepidq.com](mailto:support@intrepidq.com)
+- 📧 **Email**: [support@intrepidq.xyz](mailto:support@intrepidq.xyz)
 - 🐛 **Bug Reports**: [GitHub Issues](https://github.com/Hardhikman/IntrepidQ/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/Hardhikman/IntrepidQ/discussions)
 - 📖 **Documentation**: [Wiki](https://github.com/Hardhikman/IntrepidQ/wiki)

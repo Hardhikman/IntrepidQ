@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            Last Updated: August 24, 2025
+            Last Updated: Septemeber 10, 2025
           </p>
         </CardHeader>
       </Card>
@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                This Privacy Policy describes how IntrepidQ ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services. We are committed to protecting your privacy and ensuring the security of your personal information.
+                This Privacy Policy describes how IntrepidQ2 ("we", "our", or "us") collects, uses, and protects your personal information when you use our website and services. We are committed to protecting your privacy and ensuring the security of your personal information.
               </p>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify mt-3">
                 <span className="inline-block w-8"></span>
@@ -56,8 +56,8 @@ export default function PrivacyPolicyPage() {
               <ul className="list-disc pl-12 space-y-1 text-sm md:text-base text-gray-700">
                 <li>Account Information: Email address, full name, username</li>
                 <li>User Preferences: Preferred subjects for question generation</li>
-                <li>Usage Data: Questions generated, study streaks, generation history</li>
-                <li>Feedback: Ratings and comments you provide on generated questions</li>
+                <li>Usage Data: Questions generated, topic planning, generation history</li>
+                <li>Website Feedback: Bugs and features comment</li>
               </ul>
 
               <h3 className="text-base md:text-lg font-serif font-semibold text-gray-800 mb-3 mt-4">

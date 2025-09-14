@@ -1,12 +1,17 @@
 {
-  "name": "IntrepidQ AI",
+  "name": "IntrepidQ - UPSC CSE Preparation AI",
   "short_name": "IntrepidQ",
-  "description": "Generate UPSC CSE mains questions with AI assistance",
+  "description": "India's first NLP and RAG based AI assistant for UPSC CSE preparation",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
+  "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
     {
       "src": "/android-chrome-192x192.png",
       "sizes": "192x192",

@@ -33,4 +33,19 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// PWA config - minimal implementation for install only
+const withPWA = require('next-pwa')({
+  dest: 'public',
+  disable: process.env.NODE_ENV === 'development',
+  register: true,
+  skipWaiting: true,
+  // Disable caching to prevent offline access
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
+  dynamicStartUrlRedirect: false,
+  dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
+  // Minimal caching - only cache static assets
+  runtimeCaching: []
+})
+
+module.exports = withPWA(nextConfig);

@@ -52,7 +52,7 @@ export default function SignInPage() {
               Welcome to <span className="text-orange-500 font-bold">IntrepidQ</span>
             </h1>
             <p className="mt-3 text-gray-700 dark:text-gray-300">
-              Sign in below (we'll increase your question limits if you do <span className="inline-block">😊</span>)
+              Sign in below (we'll increase your Q request limits if you do <span className="inline-block">😊</span>)
             </p>
           </div>
           

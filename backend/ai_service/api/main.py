@@ -20,6 +20,9 @@ from core.vector_indexer import load_index
 from core.question_generator import create_question_generator
 from core.rate_limiter import RateLimitMiddleware
 
+# Add the Upstash search client import
+from core.upstash_search_client import UpstashSearchClient
+
 from api.models import HealthResponse
 from api.routes.questions import router as questions_router
 from api.routes.subjects import router as subjects_router
@@ -55,6 +58,9 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
 # Global state
 app_state = {}
+
+# Initialize Upstash Search client
+upstash_client = UpstashSearchClient()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

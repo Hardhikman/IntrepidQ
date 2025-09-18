@@ -56,7 +56,7 @@ export default function UPSCQuestionGenerator() {
   const [selectedTopic, setSelectedTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState(3);
   const [useCurrentAffairs, setUseCurrentAffairs] = useState(false);
-  const [mode, setMode] = useState<"topic" | "keyword" | "paper">("topic");
+  const [mode, setMode] = useState<"topic" | "keyword" | "paper" | "currentAffairs">("topic");
   const [loading, setLoading] = useState(false);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<number, any>>({});
@@ -67,14 +67,19 @@ export default function UPSCQuestionGenerator() {
   // Add models state
   const [models, setModels] = useState<{ id: string; name: string }[]>([
     { id: "llama3-70b", name: "Llama3 (70B)" },
-    { id: "deepseek-r1", name: "DeepSeek (R1)" },
-    { id: "deepseek-v3", name: "DeepSeek (V3)" },
     { id: "moonshot-k2", name: "Moonshot (K2)" },
     { id: "gemma2-9b", name: "Gemma2 (9B)" },
   ]);
 
   // NEW: Keyword query state for keyword mode
   const [keywordQuery, setKeywordQuery] = useState("");
+  
+  // NEW: Keywords fetched from Upstash for current affairs mode
+  const [fetchedKeywords, setFetchedKeywords] = useState<string[]>([]);
+  const [selectedKeyword, setSelectedKeyword] = useState("");
+
+  // NEW: News source state
+  const [newsSource, setNewsSource] = useState("all");
 
   // Daily limit tracking
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
@@ -193,14 +198,63 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
+  // NEW: Fetch keywords from Upstash when topic is selected in current affairs mode
+  const fetchKeywordsForTopic = async (topic: string) => {
+    if (!topic || mode !== "currentAffairs") return;
+    
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "";
+      const response = await fetch(`${baseUrl}/api/get_keywords_for_topic`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setFetchedKeywords(data.keywords || []);
+      
+      // Auto-select the first keyword if available
+      if (data.keywords && data.keywords.length > 0) {
+        setSelectedKeyword(data.keywords[0]);
+      } else {
+        setSelectedKeyword("");
+      }
+    } catch (err: any) {
+      console.error("Error fetching keywords:", err);
+      toast({ title: "Error", description: "Failed to fetch keywords for topic", variant: "destructive" });
+      setFetchedKeywords([]);
+      setSelectedKeyword("");
+    }
+  };
+
+  // Effect to fetch keywords when topic changes in current affairs mode
+  useEffect(() => {
+    if (mode === "currentAffairs" && selectedTopic) {
+      fetchKeywordsForTopic(selectedTopic);
+    } else {
+      setFetchedKeywords([]);
+      setSelectedKeyword("");
+    }
+  }, [selectedTopic, mode]);
+
   const handleGenerateQuestions = async () => {
-    if (mode === "topic" && !selectedTopic) {
+    if ((mode === "topic" || mode === "currentAffairs") && !selectedTopic) {
       toast({ title: "Warning", description: "Please select a topic", variant: "destructive" });
       return;
     }
     
     if (mode === "keyword" && !keywordQuery.trim()) {
       toast({ title: "Warning", description: "Please enter keywords", variant: "destructive" });
+      return;
+    }
+    
+    // NEW: Check if in current affairs mode and a keyword is selected
+    if (mode === "currentAffairs" && !selectedKeyword) {
+      toast({ title: "Warning", description: "No keywords available for this topic", variant: "destructive" });
       return;
     }
     
@@ -213,7 +267,8 @@ export default function UPSCQuestionGenerator() {
       
       if (mode === "paper") {
         endpoint = "/api/generate_whole_paper";
-        payload = { subject: selectedSubject, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
+        // Set use_ca to false to disable current affairs in paper mode
+        payload = { subject: selectedSubject, use_ca: false, months: 6, model: selectedModel, news_source: newsSource };
       } else if (mode === "keyword") {
         endpoint = "/api/generate_questions_from_keywords";
         // Only use the first keyword instead of all keywords
@@ -224,11 +279,26 @@ export default function UPSCQuestionGenerator() {
           use_ca: useCurrentAffairs, 
           months: 6, 
           model: selectedModel,
-          subject: selectedSubject
+          subject: selectedSubject,
+          news_source: newsSource
+        };
+      } else if (mode === "currentAffairs") {
+        // Current Affairs mode - use topic-based endpoint with current affairs enabled and selected keyword
+        endpoint = "/api/generate_questions";
+        payload = { 
+          topic: selectedTopic, 
+          num: numQuestions, 
+          use_ca: true, // Always enable current affairs for this mode
+          months: 6, 
+          model: selectedModel,
+          subject: selectedSubject,
+          news_source: newsSource,
+          // Pass the selected keyword to enhance the current affairs context
+          keyword_context: selectedKeyword
         };
       } else {
         endpoint = "/api/generate_questions";
-        payload = { topic: selectedTopic, num: numQuestions, use_ca: useCurrentAffairs, months: 6, model: selectedModel };
+        payload = { topic: selectedTopic, num: numQuestions, use_ca: useCurrentAffairs, months: 6, model: selectedModel, news_source: newsSource };
       }
 
       const sessionResponse = await supabase.auth.getSession();
@@ -251,7 +321,7 @@ export default function UPSCQuestionGenerator() {
             // Guest user hit limit - show special toast with sign-in option
             toast({
               title: "Question Generation Limit Reached",
-              description: `You've reached your daily limit of ${errorData.guest_daily_limit} question generations. Sign in with Google to get ${errorData.user_daily_limit} question generations per day! You can still generate unlimited answers.`,
+              description: `You've reached your daily limit of ${errorData.guest_daily_limit} question generations. Sign in with Google to get ${errorData.user_daily_limit} question generations per day!`,
               variant: "destructive",
               action: (
                 <Button 
@@ -287,7 +357,7 @@ export default function UPSCQuestionGenerator() {
               mode,
               question: q,
               thinking: "",
-              use_current_affairs: useCurrentAffairs,
+              use_current_affairs: mode === "currentAffairs" ? true : useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
             }
@@ -298,7 +368,7 @@ export default function UPSCQuestionGenerator() {
               mode,
               question: q.question || q.questions,
               thinking: q.thinking || "",
-              use_current_affairs: useCurrentAffairs,
+              use_current_affairs: mode === "currentAffairs" ? true : useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
             }
@@ -532,55 +602,143 @@ export default function UPSCQuestionGenerator() {
 
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-16 p-4 space-y-6">
+          {/* New Info Section - Increased width */}
+          <section className="max-w-4xl mx-auto bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                The Modern solution for<br />
+                UPSC Aspirants in AI age
+              </h1>
+              <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
+                IntrepidQ AI is born for the aspirants who are fearless to change their preparation style to cut short their UPSC cycle. 
+                It is not another complex AI product, it is a comprehensive and free AI system to develop answer writing with brainstorming and creative thinking abilities.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Customization</h3>
+                  <p className="text-gray-700">Search options for every type of aspirants</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Prediction</h3>
+                  <p className="text-gray-700">Question prediction on the base of PYQ made easy</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">No FOMO</h3>
+                  <p className="text-gray-700">Coverage of extensive context aware questions</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Balance</h3>
+                  <p className="text-gray-700">Balance the time between revision and practice</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Mode selection card */}
-          <Card className="max-w-3xl mx-auto shadow-md bg-gradient-to-r from-orange-50 to-blue-50 border border-gray-200">
-            <CardContent className="py-4">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="font-bold text-orange-800 text-center text-lg sm:text-xl">
+          <Card className="max-w-4xl mx-auto shadow-lg bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl">
+            <CardContent className="py-5">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <span className="font-extrabold text-indigo-800 text-center text-xl sm:text-2xl tracking-wide">
                    Select Question Generation Mode
                 </span>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
                 <button
                   className={cn(
-                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                     mode === "topic"
-                      ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                      : "bg-white border border-orange-400 text-orange-700 hover:bg-orange-50"
+                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white transform scale-105"
+                      : "bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400"
                   )}
                   onClick={() => setMode("topic")}
                 >
-                  📚 Topic-wise
+                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                  <div className="relative z-10">
+                    📚 Topic-wise
+                  </div>
                 </button>
                 
                 <button
                   className={cn(
-                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                     mode === "keyword"
-                      ? "bg-gradient-to-r from-purple-500 to-indigo-500 text-white"
-                      : "bg-white border border-purple-400 text-purple-700 hover:bg-purple-50"
+                      ? "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white transform scale-105"
+                      : "bg-white border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
                   )}
                   onClick={() => setMode("keyword")}
                 >
-                  🔍 Keyword-based
+                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                  <div className="relative z-10">
+                    🔍 Keyword-based
+                  </div>
                 </button>
                 
                 <button
                   className={cn(
-                    "rounded-xl font-semibold transition-all shadow-sm w-full sm:w-auto px-5 py-2.5 text-base",
+                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
+                    mode === "currentAffairs"
+                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-105"
+                      : "bg-white border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
+                  )}
+                  onClick={() => setMode("currentAffairs")}
+                >
+                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                  <div className="relative z-10">
+                    📰 Current Affairs
+                  </div>
+                </button>
+                
+                <button
+                  className={cn(
+                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                     mode === "paper"
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white"
-                      : "bg-white border border-blue-400 text-blue-700 hover:bg-blue-50"
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white transform scale-105"
+                      : "bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
                   )}
                   onClick={() => setMode("paper")}
                 >
-                  📄 Whole Paper
+                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                  <div className="relative z-10">
+                    📄 Whole Paper
+                  </div>
                 </button>
               </div>
               
               {mode === "paper" && (
-                <div className="text-blue-800 bg-blue-50 border border-blue-200 rounded-md text-center w-full text-xs md:text-sm px-3 py-2 mt-3">
+                <div className="text-blue-800 bg-blue-100 border-2 border-blue-300 rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
                   10 questions · 10 marks each · 1 hour · 100 marks
                 </div>
               )}
@@ -600,7 +758,7 @@ export default function UPSCQuestionGenerator() {
                   </div>
                   <div className="text-blue-600 text-xs sm:text-sm">
                     {dailyLimitReached 
-                      ? '🚀 Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
+                      ? ' Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
                       : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
                     }
                   </div>
@@ -634,38 +792,25 @@ export default function UPSCQuestionGenerator() {
                   value="questions" 
                   disabled={dailyLimitReached}
                 >
-                  Question Generation
+                  Question Generator
                 </TabsTrigger>
                 <TabsTrigger 
                   value="screenshot"
                   disabled={dailyLimitReached}
                 >
-                  Answer Evaluation
+                  Answer Evaluator
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="questions">
                 {dailyLimitReached ? (
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="py-8 text-center">
-                      <div className="text-orange-800 font-medium mb-2 text-lg">
-                        🚫 Daily Limit Reached
-                      </div>
-                      <div className="text-orange-600 mb-4">
-                        You've used all your question generations for today.
-                      </div>
-                      <div className="text-orange-600 text-sm">
-                        {user 
-                          ? "Your daily limit will reset tomorrow. Sign in to get 5 question generations per day!" 
-                          : "Sign in with Google to get 5 question generations per day, save your history, and access premium features!"}
-                      </div>
-                      <Button 
-                        className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                        onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
-                      >
-                        {user ? "Go to Dashboard" : "Sign In with Google"}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-8">
+                    <Button 
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                      onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                    >
+                      {user ? "Go to Dashboard" : "Sign In with Google"}
+                    </Button>
+                  </div>
                 ) : (
                   <QuestionGenerator
                     subjects={subjects}
@@ -691,6 +836,13 @@ export default function UPSCQuestionGenerator() {
                     onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
                     // Models prop
                     models={models}
+                    // NEW: News source props
+                    newsSource={newsSource}
+                    setNewsSource={setNewsSource}
+                    // NEW: Keywords for current affairs mode
+                    fetchedKeywords={fetchedKeywords}
+                    selectedKeyword={selectedKeyword}
+                    setSelectedKeyword={setSelectedKeyword}
                   />
                 )}
 
@@ -718,27 +870,14 @@ export default function UPSCQuestionGenerator() {
               </TabsContent>
               <TabsContent value="screenshot">
                 {dailyLimitReached ? (
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="py-8 text-center">
-                      <div className="text-orange-800 font-medium mb-2 text-lg">
-                        🚫 Daily Limit Reached
-                      </div>
-                      <div className="text-orange-600 mb-4">
-                        You've used all your question generations for today.
-                      </div>
-                      <div className="text-orange-600 text-sm">
-                        {user 
-                          ? "Your daily limit will reset tomorrow. Sign in to get 5 question generations per day!" 
-                          : "Sign in with Google to get 5 question generations per day, save your history, and access premium features!"}
-                      </div>
-                      <Button 
-                        className="mt-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
-                        onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
-                      >
-                        {user ? "Go to Dashboard" : "Sign In with Google"}
-                      </Button>
-                    </CardContent>
-                  </Card>
+                  <div className="text-center py-8">
+                    <Button 
+                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                      onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                    >
+                      {user ? "Go to Dashboard" : "Sign In with Google"}
+                    </Button>
+                  </div>
                 ) : (
                   <ScreenshotUploader onTextExtracted={handleTextExtracted} />
                 )}

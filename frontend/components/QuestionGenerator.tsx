@@ -46,7 +46,7 @@ interface QuestionGeneratorProps {
   isGenerateDisabled: boolean;
   loading: boolean;
   onGenerate: () => void;
-  mode: "topic" | "keyword" | "paper";
+  mode: "topic" | "keyword" | "paper" | "currentAffairs";
   dailyLimitReached?: boolean;
   
   // NEW: Keyword query props for mutually exclusive keyword mode
@@ -55,6 +55,15 @@ interface QuestionGeneratorProps {
   onGenerateFromKeywords: () => void;
   // Models prop
   models: { id: string; name: string }[];
+  
+  // NEW: News source selection
+  newsSource: string;
+  setNewsSource: (val: string) => void;
+  
+  // NEW: Keywords for current affairs mode
+  fetchedKeywords: string[];
+  selectedKeyword: string;
+  setSelectedKeyword: (val: string) => void;
 }
 
 export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
@@ -81,6 +90,13 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
   onGenerateFromKeywords,
   // Models prop
   models,
+  // NEW: News source props
+  newsSource,
+  setNewsSource,
+  // NEW: Keywords for current affairs mode
+  fetchedKeywords,
+  selectedKeyword,
+  setSelectedKeyword,
 }) => {
   return (
     <TooltipProvider delayDuration={0}>
@@ -134,7 +150,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           </Select>
 
           {/* Topic Combobox - Made responsive - only shown when in topic mode */}
-          {mode === "topic" && (
+          {(mode === "topic" || mode === "currentAffairs") && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="w-56 sm:w-72 bg-orange-50 border border-orange-300 rounded-lg">
@@ -157,6 +173,24 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </Tooltip>
           )}
 
+          {/* Keyword selection dropdown - only shown when in current affairs mode and keywords are available */}
+          {mode === "currentAffairs" && fetchedKeywords.length > 0 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="w-56 sm:w-72 bg-green-50 border border-green-300 rounded-lg">
+                  <TopicCombobox
+                    items={fetchedKeywords}
+                    value={selectedKeyword}
+                    onChange={setSelectedKeyword}
+                    placeholder="Select or search keywords..."
+                    className="w-full text-sm"
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent><p>Select Keyword for Current Affairs Search</p></TooltipContent>
+            </Tooltip>
+          )}
+
           {/* Keyword input field - only shown when in keyword mode */}
           {mode === "keyword" && (
             <div className="w-56 sm:w-72 bg-purple-50 border border-purple-300 rounded-lg">
@@ -171,34 +205,34 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </div>
           )}
 
-          {/* Current Affairs Toggle - Made responsive */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="useCurrentAffairs"
-                  checked={useCurrentAffairs}
-                  onCheckedChange={setUseCurrentAffairs}
-                />
-                <Label
-                  htmlFor="useCurrentAffairs"
-                  className="text-xs font-medium text-gray-700 cursor-pointer"
-                >
-                  📰 CA
-                </Label>
-              </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Include Current Affairs (6 months)</p>
-            </TooltipContent>
-          </Tooltip>
+          {/* Current Affairs Toggle - Made responsive - only shown in paper mode */}
+          {/* Removed this section to disable current affairs in paper mode */}
+
+          {/* News Source Selector - only shown when current affairs is enabled */}
+          {mode === "currentAffairs" && (
+            <Select value={newsSource} onValueChange={setNewsSource}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <SelectTrigger className="h-10 w-36 bg-green-50 border border-green-300 rounded-lg text-sm">
+                    <SelectValue placeholder="News Source" />
+                  </SelectTrigger>
+                </TooltipTrigger>
+                <TooltipContent><p>Select News Source</p></TooltipContent>
+              </Tooltip>
+              <SelectContent>
+                <SelectItem value="all">All Sources</SelectItem>
+                <SelectItem value="indianexpress">Indian Express</SelectItem>
+                <SelectItem value="thehindu">The Hindu</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           {/* Slider - Made responsive */}
-          {(mode === "topic" || mode === "keyword") && (
+          {(mode === "topic" || mode === "keyword" || mode === "currentAffairs") && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-gray-700 text-xs">#</span>
+                  <span className="text-gray-800 font-semibold text-sm">How many?</span>
                   <span className="text-gray-800 font-semibold text-sm">
                     {numQuestions}
                   </span>
@@ -229,7 +263,9 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
                     ? 'bg-gray-400 cursor-not-allowed' 
                     : mode === "keyword"
                       ? 'bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600'
-                      : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600'
+                      : mode === "currentAffairs"
+                        ? 'bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                        : 'bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600'
                 }`}
               >
                 {loading ? (
@@ -244,7 +280,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{dailyLimitReached ? "Daily Limit Reached" : mode === "keyword" ? "Generate from Keywords" : "Send Request"}</p>
+              <p>{dailyLimitReached ? "Daily Limit Reached" : mode === "keyword" ? "Generate from Keywords" : mode === "currentAffairs" ? "Generate with Current Affairs" : "Send Request"}</p>
             </TooltipContent>
           </Tooltip>
           

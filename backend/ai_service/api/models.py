@@ -85,9 +85,7 @@ class UserProfile(BaseModel):
     email: str = Field(..., description="User email")
     full_name: Optional[str] = Field(None, description="User's full name")
     username: Optional[str] = Field(None, description="Username")
-    preferred_subjects: Optional[List[str]] = Field(None, description="User's preferred subjects")
     total_questions_generated: int = Field(default=0, description="Total questions generated")
-    total_papers_generated: int = Field(default=0, description="Total papers generated")
     generation_count_today: int = Field(default=0)
     last_generation_date: Optional[datetime] = Field(None)
     created_at: Optional[datetime] = Field(None, description="Account creation date")
@@ -165,9 +163,6 @@ class UserStatsResponse(BaseModel):
     feedback_count: int
     individual_feedback_count: int
     generation_feedback_count: int
-    overall_average_rating: float
-    individual_average_rating: float
-    generation_average_rating: float
     subject_breakdown: Dict[str, int]
     mode_breakdown: ModeBreakdown
     current_affairs_usage: int

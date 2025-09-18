@@ -421,7 +421,15 @@ Now return ONLY the JSON array:"""
             if include_domains: search_params["include_domains"] = include_domains
             response = client.search(**search_params)
             articles = response.get("results", [])
-            news_items = [f"- {article.get('content', 'No content').strip().replace('\n', ' ').replace('\r', ' ')[:300]}..." for article in articles]
+            # Process the content outside of the f-string to avoid backslash errors
+            news_items = []
+            for article in articles:
+                content = article.get('content', 'No content').strip()
+                # Replace newlines and carriage returns
+                content = content.replace('\n', ' ').replace('\r', ' ')
+                # Truncate to 300 characters and add ellipsis
+                content = content[:300] + "..."
+                news_items.append(f"- {content}")
             news = "\n".join(news_items)
             logger.info(f"Tavily fetch successful. Found {len(articles)} articles.")
             return news if news else "No news articles found."

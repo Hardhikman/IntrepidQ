@@ -489,7 +489,8 @@ Now return ONLY the JSON array:"""
             all_examples = db_examples + cached_examples
             news = self.fetch_recent_news(keyword_context or topic, months, news_source)
             logger.info(f"Total examples for prompt: {len(all_examples)}. News content length: {len(news)} chars.")
-            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples='\n'.join(all_examples), num=num)}\n\nRecent News:\n{news}"
+            examples_text = "\n".join(all_examples)
+            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)}\n\nRecent News:\n{news}"
             result = self._try_models(models_to_try, prompt)
             questions = self.safe_parse_questions(result.get("output", ""), num)
             if questions and result.get("status") == "success": self._cache_questions(self._get_cache_key(subject, topic, num, True, months), questions, subject, topic)
@@ -518,7 +519,8 @@ Now return ONLY the JSON array:"""
             cached_examples = self._get_all_cached_questions_for_examples(subject, max_examples=5)
             all_examples = topic_examples_list + cached_examples
             
-            prompt = self.whole_paper_prompt.format(subject=subject, topic_examples="\n".join(all_examples))
+            examples_text = "\n".join(all_examples)
+            prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=examples_text)
             if use_ca:
                 logger.info("Enhancing whole paper with Current Affairs.")
                 prompt = self._get_ca_paper_prompt(subject, selected_topics, "\n".join(all_examples), months, news_source)

@@ -18,9 +18,6 @@ interface UserStats {
   feedback_count: number;
   individual_feedback_count: number;
   generation_feedback_count: number;
-  overall_average_rating: number;
-  individual_average_rating: number;
-  generation_average_rating: number;
   subject_breakdown: Record<string, number>;
   mode_breakdown: {
     topic: number;

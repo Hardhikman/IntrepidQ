@@ -50,6 +50,19 @@ def get_question_generator():
         raise HTTPException(status_code=503, detail="AI service not available")
 
 
+def get_upstash_client():
+    """Get Upstash search client instance from app state"""
+    try:
+        import importlib
+        main_module = importlib.import_module('api.main')
+        upstash_client = getattr(main_module, 'upstash_client', None)
+        if not upstash_client:
+            raise HTTPException(status_code=503, detail="Upstash search service not initialized")
+        return upstash_client
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Upstash search service not available")
+
+
 def serialize_date_fields(data):
     """Recursively convert any date objects to ISO strings"""
     if isinstance(data, list):
@@ -82,7 +95,6 @@ def get_user_stats(user_id: str):
             return {
                 "generation_count_today": generation_count_today,
                 "remaining_today": remaining_today,
-                "streak": profile.get("study_streak", 0),
                 "last_generation_date": profile.get("last_generation_date")
             }
     except Exception as e:
@@ -171,6 +183,8 @@ async def generate_questions(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
+        news_source = request.get('news_source', 'all')  # Add news_source parameter
+        keyword_context = request.get('keyword_context', None)  # Get keyword context if provided
 
         # Rate limiting logic
         if user:
@@ -201,7 +215,9 @@ async def generate_questions(
             num=num_questions,
             use_ca=use_ca,
             months=months,
-            requested_model=model
+            requested_model=model,
+            news_source=news_source,  # Pass news_source parameter
+            keyword_context=keyword_context  # Pass keyword context if provided
         )
 
         if user:
@@ -223,7 +239,6 @@ async def generate_questions(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    supabase_svc.update_study_streak(user['id'])
                     
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
@@ -275,6 +290,7 @@ async def generate_whole_paper(
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
+        news_source = request.get('news_source', 'all')  # Add news_source parameter
 
         # Rate limiting logic
         if user:
@@ -302,7 +318,8 @@ async def generate_whole_paper(
             subject=subject,
             use_ca=use_ca,
             months=months,
-            requested_model=model
+            requested_model=model,
+            news_source=news_source  # Pass news_source parameter
         )
 
         if user:
@@ -323,7 +340,6 @@ async def generate_whole_paper(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    supabase_svc.update_study_streak(user['id'])
                     
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
@@ -374,6 +390,7 @@ async def generate_questions_from_keywords(
         months = request.get('months', 6)
         model = request.get('model', 'llama3-70b')
         subject = request.get('subject', 'GS1')  # Get subject from request, default to GS1
+        #news_source = request.get('news_source', 'all')  # Add news_source parameter
 
         # Rate limiting logic
         if user:
@@ -404,7 +421,8 @@ async def generate_questions_from_keywords(
             use_ca=use_ca,
             months=months,
             requested_model=model,
-            subject=subject  # Pass subject to the method
+            subject=subject,  # Pass subject to the method
+            #news_source=news_source  # Pass news_source parameter
         )
 
         if user:
@@ -426,7 +444,6 @@ async def generate_questions_from_keywords(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    supabase_svc.update_study_streak(user['id'])
                     
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
@@ -461,3 +478,35 @@ async def generate_questions_from_keywords(
     except Exception as e:
         logger.error(f"Error generating questions from keywords: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to generate questions from keywords: {str(e)}")
+
+
+@router.post("/get_keywords_for_topic")
+async def get_keywords_for_topic(
+    request: Dict[str, Any],
+    user: Optional[Dict[str, Any]] = Depends(get_optional_user)
+):
+    """Get keywords associated with a specific topic from Upstash"""
+    try:
+        # Get Upstash client
+        upstash_client = get_upstash_client()
+        
+        # Get topic from request
+        topic = request.get('topic', '')
+        
+        if not topic:
+            raise HTTPException(status_code=400, detail="Topic is required")
+        
+        # Search for keywords
+        keywords = upstash_client.search_keywords_by_topic(topic)
+        
+        return {
+            "topic": topic,
+            "keywords": keywords,
+            "count": len(keywords)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching keywords for topic: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch keywords for topic: {str(e)}")

@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { AnalyticsCard } from "./AnalyticsCard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
-
    //Types from backend
 
 interface UserStats {
@@ -149,7 +148,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
   const achievementBadges = useMemo(() => {
     const badges = [];
     const totalGenerations = stats?.total_generations ?? 0;
-    const currentStreak = profile?.study_streak ?? 0;
     const subjectBreakdown = stats?.subject_breakdown || {};
     const subjectCount = Object.keys(subjectBreakdown).length;
     
@@ -167,17 +165,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
       badges.push({ icon: '🌟', title: 'Century Club', description: '100+ questions generated', category: 'generation' });
     }
     
-    // Consistency streaks
-    if (currentStreak >= 3) {
-      badges.push({ icon: '📈', title: 'Getting Consistent', description: '3+ days streak', category: 'streak' });
-    }
-    if (currentStreak >= 7) {
-      badges.push({ icon: '🔥', title: 'Week Warrior', description: '7+ days streak', category: 'streak' });
-    }
-    if (currentStreak >= 30) {
-      badges.push({ icon: '👑', title: 'Consistency Champion', description: '30+ days streak', category: 'streak' });
-    }
-    
     // Subject diversity - All-Rounder for all 4 GS Papers
     const hasGS1 = subjectBreakdown['GS1'] > 0;
     const hasGS2 = subjectBreakdown['GS2'] > 0;
@@ -189,7 +176,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
     }
     
     return badges;
-  }, [stats, profile]);
+  }, [stats]);
 
   /* Daily limit logic */
   const DAILY_LIMIT = 5;
@@ -215,7 +202,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
         <CardHeader className="text-center">
           <CardTitle className="text-2xl sm:text-3xl font-bold">📊 Your Activity Dashboard</CardTitle>
           <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            This dashboard summarizes your question generation activity, study streaks, and progress.
+            This dashboard summarizes your question generation activity , progress and recent history.
           </p>
         </CardHeader>
       </Card>
@@ -270,204 +257,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
           </CardContent>
         </Card>
         
-        {/* Achievement Badges */}
-        <Card className="md:col-span-2 h-fit">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
-              🏆 Achievement Badges
-              <span className="text-xs sm:text-sm font-normal text-gray-500">({achievementBadges.length} earned)</span>
-            </CardTitle>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1">Unlock badges by generating questions, maintaining streaks, and exploring subjects</p>
-          </CardHeader>
-          <CardContent className="pt-0">
-            {achievementBadges.length === 0 ? (
-              <div className="text-center py-6 sm:py-8 text-gray-500">
-                <div className="text-3xl sm:text-4xl mb-3">🌟</div>
-                <div className="text-base sm:text-lg font-medium mb-2">Ready to Start Your Journey?</div>
-                <div className="text-xs sm:text-sm">Generate your first question to unlock achievement badges!</div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Badge Categories */}
-                {['generation', 'streak', 'diversity'].map(category => {
-                  const categoryBadges = achievementBadges.filter(badge => badge.category === category);
-                  if (categoryBadges.length === 0) return null;
-                  
-                  const categoryInfo = {
-                    generation: { title: 'Generation Milestones', color: 'from-blue-50 to-blue-100 border-blue-200' },
-                    streak: { title: 'Consistency Streaks', color: 'from-orange-50 to-orange-100 border-orange-200' },
-                    diversity: { title: 'Subject Mastery', color: 'from-green-50 to-green-100 border-green-200' }
-                  };
-                  
-                  return (
-                    <div key={category} className="space-y-2">
-                      <h4 className="text-xs sm:text-sm font-semibold text-gray-700 flex items-center gap-2">
-                        {categoryInfo[category]?.title}
-                        <span className="text-xs text-gray-500">({categoryBadges.length})</span>
-                      </h4>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                        {categoryBadges.map((badge, index) => (
-                          <div
-                            key={`${category}-${index}`}
-                            className={`bg-gradient-to-br ${categoryInfo[category]?.color} rounded-lg p-2 sm:p-3 text-center hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-105 group border`}
-                            title={badge.description}
-                          >
-                            <div className="text-xl sm:text-2xl mb-2 group-hover:scale-110 transition-transform duration-200">{badge.icon}</div>
-                            <div className="text-xs font-semibold text-gray-800 truncate" title={badge.title}>{badge.title}</div>
-                            <div className="text-xs text-gray-600 mt-1 leading-tight" title={badge.description}>
-                              {badge.description}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {/* Progress indicators for next achievements */}
-                <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-semibold text-gray-700 mb-2 sm:mb-3 flex items-center gap-2">
-                    🎯 Next Achievements
-                  </h4>
-                  <div className="space-y-2 text-xs text-gray-600">
-                    {(() => {
-                      const nextAchievements = [];
-                      const totalGenerations = stats?.total_generations ?? 0;
-                      const currentStreak = profile?.study_streak ?? 0;
-                      const subjectBreakdown = stats?.subject_breakdown || {};
-                      
-                      // Next generation milestone
-                      if (totalGenerations === 0) {
-                        nextAchievements.push(`Generate your first question to unlock 'First Question Generated'`);
-                      } else if (totalGenerations < 10) {
-                        const remaining = 10 - totalGenerations;
-                        nextAchievements.push(`Generate ${remaining} more questions for 'Question Explorer'`);
-                      } else if (totalGenerations < 50) {
-                        const remaining = 50 - totalGenerations;
-                        nextAchievements.push(`Generate ${remaining} more questions for 'Question Master'`);
-                      } else if (totalGenerations < 100) {
-                        const remaining = 100 - totalGenerations;
-                        nextAchievements.push(`Generate ${remaining} more questions for 'Century Club'`);
-                      }
-                      
-                      // Next streak milestone
-                      if (currentStreak < 3) {
-                        const remaining = 3 - currentStreak;
-                        nextAchievements.push(`Maintain streak for ${remaining} more days for 'Getting Consistent'`);
-                      } else if (currentStreak < 7) {
-                        const remaining = 7 - currentStreak;
-                        nextAchievements.push(`Maintain streak for ${remaining} more days for 'Week Warrior'`);
-                      } else if (currentStreak < 30) {
-                        const remaining = 30 - currentStreak;
-                        nextAchievements.push(`Maintain streak for ${remaining} more days for 'Consistency Champion'`);
-                      }
-                      
-                      // All-Rounder achievement
-                      const hasGS1 = subjectBreakdown['GS1'] > 0;
-                      const hasGS2 = subjectBreakdown['GS2'] > 0;
-                      const hasGS3 = subjectBreakdown['GS3'] > 0;
-                      const hasGS4 = subjectBreakdown['GS4'] > 0;
-                      const missingSubjects = [];
-                      
-                      if (!hasGS1) missingSubjects.push('GS1');
-                      if (!hasGS2) missingSubjects.push('GS2');
-                      if (!hasGS3) missingSubjects.push('GS3');
-                      if (!hasGS4) missingSubjects.push('GS4');
-                      
-                      if (missingSubjects.length > 0) {
-                        nextAchievements.push(`Try ${missingSubjects.join(', ')} for 'All-Rounder' badge`);
-                      }
-                      
-                      return nextAchievements.slice(0, 3).map((achievement, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-                          <span>{achievement}</span>
-                        </div>
-                      ));
-                    })()}
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Achievement Badges - REMOVED */}
       </div>
-
-      {/* Analytics */}
-      <AnalyticsCard stats={stats} />
-
-      {/* Streak Calendar - Made responsive */}
-      <Card className="max-w-6xl mx-auto">
-        <CardHeader>
-          <CardTitle>🔥 Study Streak Calendar</CardTitle>
-          <p className="text-xs sm:text-sm text-gray-600">Your daily activity over the past month</p>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 text-center">
-            <div className="text-2xl sm:text-3xl font-bold text-orange-600">{profile?.study_streak ?? 0}</div>
-            <div className="text-xs sm:text-sm text-gray-600">Current Streak (days)</div>
-            <div className="text-xs text-gray-500 mt-1">
-              {profile?.study_streak >= 30 ? '🏆 Consistency Master!' : 
-               profile?.study_streak >= 14 ? '🔥 On Fire!' : 
-               profile?.study_streak >= 7 ? '💪 Building Momentum!' : 
-               profile?.study_streak >= 3 ? '📈 Getting Started!' : 
-               '🌟 Begin Your Journey!'}
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
-            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, index) => (
-              <div key={index} className="text-center text-xs font-medium text-gray-500 p-1">
-                {day}
-              </div>
-            ))}
-          </div>
-          
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
-            {[...Array(35)].map((_, i) => {
-              const dayIndex = i - 28; // Show last 4 weeks + current week
-              const isToday = dayIndex === 0;
-              const isPastActive = dayIndex < 0 && dayIndex >= -(profile?.study_streak ?? 0);
-              const isFutureDay = dayIndex > 0;
-              
-              return (
-                <div
-                  key={i}
-                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center text-xs font-medium transition-colors ${
-                    isToday
-                      ? 'bg-blue-500 text-white ring-1 sm:ring-2 ring-blue-200 shadow-md'
-                      : isPastActive
-                      ? 'bg-green-500 text-white hover:bg-green-600'
-                      : isFutureDay
-                      ? 'bg-gray-100 text-gray-400'
-                      : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
-                  }`}
-                  title={isToday ? 'Today' : isPastActive ? 'Active day' : isFutureDay ? 'Future' : 'Inactive'}
-                >
-                  {isToday ? '📍' : 
-                   isPastActive ? '✓' : 
-                   isFutureDay ? '○' : '·'}
-                </div>
-              );
-            })}
-          </div>
-          
-          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-4 sm:mt-6 text-xs text-gray-500">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded-md sm:rounded-lg"></div>
-              <span>Active day</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-md sm:rounded-lg"></div>
-              <span>Today</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-200 rounded-md sm:rounded-lg"></div>
-              <span>Inactive</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* History - Made responsive */}
       <Card className="max-w-6xl mx-auto">
@@ -559,6 +350,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
           )}
         </CardContent>
       </Card>
+
+      {/* Analytics */}
+      <AnalyticsCard stats={stats} />
+
+      {/* Simple Topic Planner - REMOVED */}
+      {/* <SimpleTopicPlanner /> */}
 
       {/* Footer - Made responsive */}
       <div className="max-w-6xl mx-auto flex items-center justify-end">

@@ -13,7 +13,7 @@ export default function AboutPage() {
       <Card className="max-w-4xl mx-auto shadow-xl border-0">
         <CardHeader className="py-10 text-center bg-white">
           <CardTitle className="text-2xl md:text-3xl lg:text-4xl font-serif font-bold text-gray-800 mb-6 leading-tight">
-            IntrepidQ: A Minimalistic AI RAG System
+            IntrepidQ: A Minimalistic AI (NLP+RAG) System
             <br />
             that Curates Context-Aware Q&A
             <br />
@@ -21,7 +21,7 @@ export default function AboutPage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            An intelligent retrieval-augmented generation platform for 
+            An intelligent AI-driven platform for 
             UPSC Civil Services Examination preparation methodology
           </p>
           <p className="text-xs md:text-sm text-gray-500 font-serif mt-6">
@@ -173,13 +173,6 @@ export default function AboutPage() {
 
           {/* Call to Action - Academic Style */}
           <div className="text-center bg-gray-50 border-2 border-gray-200 rounded-lg p-6 md:p-8 mt-10">
-            <h3 className="text-lg md:text-xl font-serif font-bold text-gray-800 mb-4">
-              Begin Your Enhanced Preparation Journey
-            </h3>
-            <p className="text-sm md:text-base text-gray-600 font-serif mb-6 max-w-2xl mx-auto leading-relaxed">
-              Experience the future of UPSC preparation through scientifically-designed, 
-              AI-powered question generation tailored to contemporary examination standards.
-            </p>
             <Button 
               onClick={() => router.push('/')}
               className="bg-gradient-to-r from-orange-600 to-blue-600 hover:from-orange-700 hover:to-blue-700 text-white font-serif px-6 md:px-8 py-2 md:py-3 text-sm md:text-base"
@@ -187,7 +180,6 @@ export default function AboutPage() {
               Access Platform →
             </Button>
           </div>
-
         </CardContent>
       </Card>
     </div>

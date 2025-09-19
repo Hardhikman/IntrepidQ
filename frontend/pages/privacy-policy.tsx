@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            Last Updated: Septemeber 10, 2025
+            Last Updated: Sept 19, 2025
           </p>
         </CardHeader>
       </Card>
@@ -55,9 +55,8 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul className="list-disc pl-12 space-y-1 text-sm md:text-base text-gray-700">
                 <li>Account Information: Email address, full name, username</li>
-                <li>User Preferences: Preferred subjects for question generation</li>
-                <li>Usage Data: Questions generated, topic planning, generation history</li>
-                <li>Website Feedback: Bugs and features comment</li>
+                <li>Usage Data: Question generation and history</li>
+                <li>Website Feedback</li>
               </ul>
 
               <h3 className="text-base md:text-lg font-serif font-semibold text-gray-800 mb-3 mt-4">

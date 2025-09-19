@@ -17,7 +17,7 @@ export default function TermsOfServicePage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            Last Updated: September 10, 2025
+            Last Updated: September 19, 2025
           </p>
         </CardHeader>
       </Card>
@@ -49,8 +49,8 @@ export default function TermsOfServicePage() {
               <ul className="list-disc pl-12 space-y-1 text-sm md:text-base text-gray-700">
                 <li>Generate subject-specific questions based on UPSC syllabus</li>
                 <li>Create full mock papers for practice</li>
+                <li>Request keyword and current affairs specific questions</li>
                 <li>Generate answers to questions</li>
-                <li>Plan daily study topics with the topic planner</li>
                 <li>Provide website feedback</li>
               </ul>
             </div>

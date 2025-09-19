@@ -419,22 +419,21 @@ Now return ONLY the JSON array:"""
             include_domains = ["https://indianexpress.com"] if news_source == "indianexpress" else ["https://thehindu.com"] if news_source == "thehindu" else []
             search_params = {"query": search_topic, "search_depth": "advanced", "start_date": start_date.isoformat(), "end_date": end_date.isoformat(), "include_raw_content": False, "max_results": 3, "chunks_per_source": 1}
             if include_domains: search_params["include_domains"] = include_domains
+            logger.info(f"Fetching news from source: {news_source}")
             response = client.search(**search_params)
             articles = response.get("results", [])
             # Process the content outside of the f-string to avoid backslash errors
             news_items = []
             for article in articles:
                 content = article.get('content', 'No content').strip()
-                # Replace newlines and carriage returns
                 content = content.replace('\n', ' ').replace('\r', ' ')
-                # Truncate to 300 characters and add ellipsis
                 content = content[:300] + "..."
                 news_items.append(f"- {content}")
             news = "\n".join(news_items)
-            logger.info(f"Tavily fetch successful. Found {len(articles)} articles.")
+            logger.info(f"Tavily fetch successful. Found {len(articles)} articles from {news_source}.")
             return news if news else "No news articles found."
         except Exception as e:
-            logger.error(f"Tavily fetch failed: {e}")
+            logger.error(f"Tavily fetch failed for source {news_source}: {e}")
             return f"Error fetching news: {e}"
 
     def safe_parse_questions(self, output: str, num: Optional[int] = None) -> List[dict]:

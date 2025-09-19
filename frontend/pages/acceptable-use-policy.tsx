@@ -17,7 +17,7 @@ export default function AcceptableUsePolicyPage() {
           </CardTitle>
           <div className="h-px bg-gray-300 w-24 mx-auto mb-6"></div>
           <p className="text-base md:text-lg text-gray-600 font-serif italic max-w-3xl mx-auto leading-relaxed">
-            Last Updated: August 24, 2025
+            Last Updated: Sept 19, 2025
           </p>
         </CardHeader>
       </Card>
@@ -33,7 +33,7 @@ export default function AcceptableUsePolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                This Acceptable Use Policy outlines the standards of behavior expected from all users of the IntrepidQ service. By using our service, you agree to comply with this policy.
+                This Acceptable Use Policy outlines the standards of behavior expected from all users of the IntrepidQ AI service. By using our service, you agree to comply with this policy.
               </p>
             </div>
 
@@ -44,7 +44,7 @@ export default function AcceptableUsePolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                You may use IntrepidQ for:
+                You may use IntrepidQ AI for:
               </p>
               <ul className="list-disc pl-12 space-y-1 text-sm md:text-base text-gray-700">
                 <li>Personal UPSC examination preparation</li>
@@ -61,7 +61,7 @@ export default function AcceptableUsePolicyPage() {
               </h2>
               <p className="text-sm md:text-base text-gray-700 leading-relaxed font-serif text-justify">
                 <span className="inline-block w-8"></span>
-                You must not use IntrepidQ for any of the following activities:
+                You must not use IntrepidQ AI for any of the following activities:
               </p>
               
               <h3 className="text-base md:text-lg font-serif font-semibold text-gray-800 mb-3 mt-4">

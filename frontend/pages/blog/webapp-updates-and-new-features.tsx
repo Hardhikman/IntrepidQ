@@ -26,7 +26,7 @@ export default function WebappUpdatesAndNewFeatures() {
             <CardTitle className="text-2xl md:text-3xl font-serif font-bold text-gray-800 leading-tight">
               Webapp Updates and New Features
             </CardTitle>
-            <p className="text-gray-500 mt-2">September 10, 2025</p>
+            <p className="text-gray-500 mt-2">September 19, 2025</p>
           </CardHeader>
           <CardContent className="p-8 bg-white">
             <div className="space-y-6 font-serif text-gray-800">
@@ -44,9 +44,10 @@ export default function WebappUpdatesAndNewFeatures() {
               </p>
               
               <ul className="list-disc pl-8 mb-4 space-y-2">
-                <li><strong>Topic-wise Mode</strong> - Generate questions based on specific UPSC topics</li>
-                <li><strong>Keyword-based Mode</strong> - Create questions around specific keywords or concepts</li>
-                <li><strong>Whole Paper Mode</strong> - Generate a complete 10-question paper for full-length practice</li>
+                <li><strong>Topic-wise Mode</strong> - Generate questions based on specific UPSC syallbus topics</li>
+                <li><strong>Keyword-based Mode</strong> - Create questions around specific keywords or concepts of USC CSE syllabus</li>
+                <li><strong>Whole Paper Mode</strong> - Generate a complete 10-question each paper for full-length practice</li>
+                <li><strong>Current affairs Mode</strong> - Create upto 3 CA questions for each keyword under syallbus topics</li>
               </ul>
               
               <h2 className="text-xl font-bold mt-8 mb-4">Enhanced Answer Evaluation System</h2>
@@ -69,10 +70,11 @@ export default function WebappUpdatesAndNewFeatures() {
               </p>
               
               <ul className="list-disc pl-8 mb-4 space-y-2">
-                <li>Achievement badges for milestones and consistent practice</li>
-                <li>Daily topic planner calendar to maintain consistency</li>
-                <li>Detailed analytics on subject coverage and mode usage</li>
-                <li>History filtering by subject, mode, and date range</li>
+                <li>A comprehensive overview of your test preparation journey</li>
+                <li>Daily task limit tracking</li>
+                <li>Track your progress towards each topic</li>
+                <li>Detailed analytics on subject, topic, and mode usage</li>
+                <li>History filtering by subject, mode, and time range</li>
               </ul>
               
               <h2 className="text-xl font-bold mt-8 mb-4">Model Selection and Customization</h2>
@@ -82,7 +84,7 @@ export default function WebappUpdatesAndNewFeatures() {
               </p>
               
               <ul className="list-disc pl-8 mb-4 space-y-2">
-                <li>Multiple AI models to choose from including Llama, DeepSeek, gemini, and Moonshot</li>
+                <li>Multiple AI models to choose from including Llama, gemini, OpenAI and Moonshot</li>
                 <li>Dynamic model selection based on performance metrics</li>
                 <li>Ability to customize the number of questions generated</li>
               </ul>
@@ -90,11 +92,11 @@ export default function WebappUpdatesAndNewFeatures() {
               <h2 className="text-xl font-bold mt-8 mb-4">Current Affairs Integration</h2>
               
               <p className="mb-4">
-                All question generation modes now support current affairs integration:
+                Only Current affairs mode supports latest news inclusion for question generation:
               </p>
               
               <ul className="list-disc pl-8 mb-4 space-y-2">
-                <li>Toggle to include recent current affairs (last 6 months)</li>
+                <li>User control over the news source</li>
                 <li>Context-aware questions that incorporate recent events</li>
                 <li>Relevant for both topic-wise and keyword-based generation</li>
               </ul>
@@ -116,14 +118,13 @@ export default function WebappUpdatesAndNewFeatures() {
               <h2 className="text-xl font-bold mt-8 mb-4">Future Roadmap</h2>
               
               <p className="mb-4">
-                We're continuously working to make IntrepidQ even better. Upcoming features include:
+                We're continuously working to make IntrepidQ AI even better. Upcoming features include:
               </p>
               
               <ul className="list-disc pl-8 mb-4 space-y-2">
-                <li>Mobile app for iOS and Android</li>
-                <li>Advanced analytics and progress tracking</li>
-                <li>Community features for peer learning</li>
-                <li>Additional AI models and customization options</li>
+                <li>Improved question generation logic</li>
+                <li>Enhanced user experience and interface</li>
+                <li>Evaluation of performance of AI models with respect to retrieval and generation</li>
               </ul>
               
               <blockquote className="border-l-4 border-orange-400 pl-4 italic my-6">

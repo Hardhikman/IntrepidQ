@@ -25,9 +25,9 @@ export default function HowIntrepidQEnhancesUPSC() {
         <Card className="shadow-xl border-0">
           <CardHeader className="py-8 bg-white">
             <CardTitle className="text-2xl md:text-3xl font-serif font-bold text-gray-800 leading-tight">
-              How IntrepidQ Enhances UPSC Preparation
+              How IntrepidQ Enhances an aspirant UPSC Preparation when there is a competition among 10 Lakh aspirants ?
             </CardTitle>
-            <p className="text-gray-500 mt-2">September 10, 2025</p>
+            <p className="text-gray-500 mt-2">September 19, 2025</p>
           </CardHeader>
           <CardContent className="p-8 bg-white">
             <div className="space-y-6 font-serif text-gray-800">
@@ -78,6 +78,7 @@ export default function HowIntrepidQEnhancesUPSC() {
                 <li><strong>Topic-Wise Mode</strong> → Perfect for beginners who want to build a strong foundation and cover the syllabus step by step.</li>
                 <li><strong>Keyword Mode</strong> → Ideal for experienced aspirants who want to sharpen their skills and practice answer writing around UPSC keywords.</li>
                 <li><strong>Both the above modes</strong> → Designed for working professionals also who have limited time and need <strong>distraction-free, high-quality practice questions</strong>.</li>
+                <li><strong>Current affairs Mode</strong> → For those who prefer a more challenging and diverse question bank.</li>
               </ul>
               
               {/* Image placeholder for Topic PYQ vs IQ comparison */}

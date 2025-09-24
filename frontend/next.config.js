@@ -92,4 +92,4 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/middleware-manifest.json$/],
 });
 
-module.exports = withPWA(withNextra(nextConfig));
+module.exports = withNextra(withPWA(nextConfig));

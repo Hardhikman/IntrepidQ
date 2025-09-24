@@ -108,7 +108,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             
             key = f"rate_limit:{client_ip}"
             
-            # Use KeyDB pipeline for atomic operations
+            # Use upstash pipeline for atomic operations
             pipe = self.redis_client.pipeline()
             
             # Remove old entries outside the window

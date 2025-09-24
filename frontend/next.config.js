@@ -1,7 +1,17 @@
+const withNextra = require('nextra')({
+  theme: 'nextra-theme-docs',
+  themeConfig: './theme.config.tsx',
+  latex: true,
+  flexsearch: {
+    codeblocks: false,
+  },
+  staticImage: true,
+  defaultShowCopyCode: true,
+})
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   output: 'standalone',
   
   webpack: (config, { isServer }) => {
@@ -82,4 +92,4 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/middleware-manifest.json$/],
 });
 
-module.exports = withPWA(nextConfig);
+module.exports = withPWA(withNextra(nextConfig));

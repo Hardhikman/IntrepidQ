@@ -44,15 +44,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Initialize Redis connection
         self.redis_client = None
         if enable_redis:
-            # Railway Redis URL detection with fallback order
+            # upstash Redis URL detection with fallback order
             actual_redis_url = (
-                os.getenv('REDISCLOUD_URL') or      # Railway Redis Cloud
-                os.getenv('REDIS_PRIVATE_URL') or  # Railway Redis Private
+                os.getenv('REDISCLOUD_URL') or      
+                os.getenv('REDIS_PRIVATE_URL') or  
                 os.getenv('REDIS_URL') or          # Standard Redis URL
                 redis_url                           # Passed parameter or default
             )
             
-            # Ensure proper protocol prefix for Railway compatibility
             actual_redis_url = _ensure_redis_protocol(actual_redis_url)
             
             # Log which URL we're trying to use (masked for security)
@@ -97,7 +96,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return any(path.startswith(exempt) for exempt in exempt_paths)
     
     async def check_rate_limit_redis(self, client_ip: str) -> tuple[bool, int, int]:
-        """Check rate limit using KeyDB with sliding window"""
+        """Check rate limit using upstash redis with sliding window"""
         # Additional safety check to ensure redis_client is not None
         if not self.redis_client:
             logger.warning("Redis client is not available, falling back to memory-based rate limiting")
@@ -134,7 +133,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return allowed, current_requests + 1, remaining
             
         except Exception as e:
-            logger.error(f"KeyDB rate limit check failed: {e}")
+            logger.error(f"upstash redis rate limit check failed: {e}")
             # Fallback to memory-based checking
             return self.check_rate_limit_memory(client_ip)
 

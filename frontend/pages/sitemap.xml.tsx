@@ -13,7 +13,20 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/blog',
     '/privacy-policy',
     '/terms-of-service',
-    '/acceptable-use-policy'
+    '/acceptable-use-policy',
+    '/docs',
+    '/docs/PROJECT_OVERVIEW',
+    '/docs/TECHNOLOGY_STACK',
+    '/docs/DIRECTORY_STRUCTURE',
+    '/docs/GETTING_STARTED',
+    '/docs/FRONTEND_ARCHITECTURE',
+    '/docs/BACKEND_ARCHITECTURE',
+    '/docs/API_REFERENCE',
+    '/docs/DATA_MODELS',
+    '/docs/CORE_FEATURES',
+    '/docs/DEPLOYMENT_OPERATIONS',
+    '/docs/CONTRIBUTING',
+    '/docs/CHANGELOG'
   ]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

@@ -48,24 +48,38 @@ const nextConfig = {
     ];
   },
   
-  // Headers for better security and performance
+  
   async headers() {
     return [
       {
-        source: '/(.*)',
+        source: '/favicon.ico',
         headers: [
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: 'Cache-Control',
+            value: 'public, immutable, max-age=31536000',
           },
+        ],
+      },
+      {
+        source: '/apple-touch-icon.png',
+        headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: 'Cache-Control',
+            value: 'public, immutable, max-age=31536000',
           },
         ],
       },
     ];
   },
+  
+  async rewrites() {
+    return [
+      {
+        source: '/favicon.ico',
+        destination: '/favicon.ico',
+      },
+    ];
+  }
 };
 
 // PWA config optimized for web apps

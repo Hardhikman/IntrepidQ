@@ -2,10 +2,27 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
+  
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        path: false,
+        os: false,
+        crypto: false,
+        stream: false,
+        util: false,
+      };
+    }
+    return config;
+  },
+  
   async rewrites() {
     const apiUrl =
       process.env.NODE_ENV === 'production'
-        ? `${process.env.NEXT_PUBLIC_API_URL}`
+        ? process.env.NEXT_PUBLIC_API_URL
         : 'http://localhost:8000';
 
     return [
@@ -15,8 +32,8 @@ const nextConfig = {
       },
     ];
   },
+  
   async redirects() {
-    // Redirect URLs with hwp parameter to clean URLs
     return [
       {
         source: '/:path*',
@@ -29,23 +46,40 @@ const nextConfig = {
         destination: '/:path*',
         permanent: true,
       }
-    ]
+    ];
+  },
+  
+  // Headers for better security and performance
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
+      },
+    ];
   },
 };
 
-// PWA config - minimal implementation for install only
+// PWA config optimized for web apps
 const withPWA = require('next-pwa')({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
   register: true,
   skipWaiting: true,
-  // Disable caching to prevent offline access
   cacheStartUrl: false,
   dynamicStartUrl: false,
   dynamicStartUrlRedirect: false,
-  dontCacheBustURLsMatching: /\.[0-9a-f]{8}\./,
-  // Minimal caching - only cache static assets
-  runtimeCaching: []
-})
+  runtimeCaching: [],
+  buildExcludes: [/middleware-manifest.json$/],
+});
 
 module.exports = withPWA(nextConfig);

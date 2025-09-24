@@ -45,40 +45,13 @@ export default function FloatingHeader({
 
         {/* Navigation */}
         <div className="flex items-center space-x-2">
-          {/* Resources Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                className="bg-transparent hover:bg-orange-50 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300"
-              >
-                Resources
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px]">
-              <DropdownMenuLabel className="text-purple-600 font-semibold">
-                Information & Resources
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/about")}>
-                About IntrepidQ
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/blog")}>
-                Blog
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push("/privacy-policy")}>
-                Privacy Policy
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/terms-of-service")}>
-                Terms of Service
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => router.push("/acceptable-use-policy")}>
-                Acceptable Use
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <Button
+            size="sm"
+            onClick={() => router.push("/about")}
+            className="bg-white hover:bg-orange-50 text-orange-600 border border-orange-300 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
+          >
+            About
+          </Button>
 
           {/* Separator */}
           <Separator orientation="vertical" className="h-6 bg-gray-300" />

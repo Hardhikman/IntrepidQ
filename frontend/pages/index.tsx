@@ -610,8 +610,8 @@ export default function UPSCQuestionGenerator() {
                 UPSC Aspirants in AI age
               </h1>
               <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                IntrepidQ AI is born for the aspirants who are fearless to change their preparation style to cut short their UPSC cycle. 
-                It is not another complex AI product, it is a comprehensive and free AI system to develop answer writing with brainstorming and creative thinking abilities.
+                IntrepidQ AI is a AI system for the aspirants who are fearless to change their preparation style to cut short their UPSC cycle. 
+                It is not another complex AI product, it is a comprehensive , minimalistic and free platform to develop answer writing with brainstorming and creative thinking abilities.
               </p>
             </div>
 

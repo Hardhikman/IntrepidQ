@@ -1,7 +1,13 @@
 import { GetServerSideProps } from 'next'
 
-const Sitemap = () => {
-  return null
+export default function Sitemap() {
+  return (
+    <div>
+      <meta name="title" content="IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation" />
+      <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
+      <link rel="icon" href="/favicon.ico" />
+    </div>
+  );
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
@@ -54,5 +60,3 @@ ${staticPages
     props: {},
   }
 }
-
-export default Sitemap

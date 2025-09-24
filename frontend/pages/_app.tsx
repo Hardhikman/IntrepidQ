@@ -11,6 +11,7 @@ import "../styles/globals.css";
 import FloatingFeedbackButton from "@/components/FloatingFeedbackButton";
 import Head from 'next/head';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import Footer from "@/components/Footer";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [session, setSession] = useState<Session | null>(null);
@@ -74,8 +75,13 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
       </Head>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="min-h-screen bg-background text-foreground">
-          <Component {...pageProps} session={session} />
+        <div className="min-h-screen flex flex-col bg-background text-foreground">
+          <main className="flex-grow">
+            <Component {...pageProps} session={session} />
+          </main>
+          <div className="w-full">
+            <Footer />
+          </div>
           <FloatingFeedbackButton />
           <Toaster />
         </div>

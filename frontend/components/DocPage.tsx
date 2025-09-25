@@ -5,6 +5,19 @@ import remarkGfm from 'remark-gfm'
 import {remarkMermaid} from '@theguild/remark-mermaid'
 import DocSidebar from '@/components/DocSidebar'
 
+// Dynamically import mermaid only on the client side
+let mermaid: any;
+if (typeof window !== 'undefined') {
+  import('mermaid').then((module) => {
+    mermaid = module.default;
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'default',
+      securityLevel: 'loose',
+    });
+  });
+}
+
 interface DocPageProps {
   title: string
   description?: string
@@ -95,6 +108,17 @@ export default function DocPage({ title, description, content, docId }: DocPageP
 
   useEffect(() => {
     setMounted(true)
+    
+    // Initialize mermaid diagrams after component mounts
+    if (typeof window !== 'undefined' && mermaid) {
+      setTimeout(() => {
+        try {
+          mermaid.init(undefined, '.mermaid-container pre code.language-mermaid');
+        } catch (error) {
+          console.error('Mermaid initialization error:', error);
+        }
+      }, 100);
+    }
   }, [])
 
   if (!mounted) {

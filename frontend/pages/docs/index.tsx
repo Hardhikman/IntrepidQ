@@ -50,10 +50,10 @@ export default function DocsIndex() {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           <div className="p-6 border-b border-gray-200 dark:border-gray-700">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              IntrepidQ Documentation
+              IntrepidQ AI Documentation
             </h1>
             <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
-              Comprehensive guide to understanding and using IntrepidQ
+              Comprehensive guide to understanding and using IntrepidQ AI
             </p>
           </div>
           
@@ -95,4 +95,5 @@ export default function DocsIndex() {
       </div>
     </div>
   )
+
 }

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-// Remove remarkMermaid plugin - we'll handle it manually
 import DocSidebar from '@/components/DocSidebar'
 
 interface DocPageProps {
@@ -43,7 +42,25 @@ const MermaidDiagram = ({ chart }: { chart: string }) => {
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
-          fontFamily: 'inherit'
+          fontFamily: 'inherit',
+          themeVariables: {
+            fontFamily: 'inherit',
+            fontSize: '14px'
+          },
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            nodeSpacing: 50,
+            rankSpacing: 50,
+            curve: 'basis'
+          },
+          sequence: {
+            useMaxWidth: true,
+            wrap: true
+          },
+          gantt: {
+            useMaxWidth: true
+          }
         })
 
         const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
@@ -78,10 +95,13 @@ const MermaidDiagram = ({ chart }: { chart: string }) => {
   }
 
   return (
-    <div 
-      className="mermaid-container my-6 flex justify-center bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <div className="mermaid-container my-6 w-full overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+      <div 
+        className="min-w-full"
+        dangerouslySetInnerHTML={{ __html: svg }}
+        style={{ minWidth: 'max-content' }}
+      />
+    </div>
   )
 }
 

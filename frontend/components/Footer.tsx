@@ -19,7 +19,7 @@ const Footer = () => {
               © {new Date().getFullYear()} IntrepidQ AI. All rights reserved.
             </p>
             <p className="text-sm text-gray-600 mt-2">
-              Contact Email : <a href="mailto:support@intrepidq.xyz" className="text-indigo-600 hover:text-indigo-800" title="Email"><Mail className="w-4 h-4 inline" /></a>
+              Contact Email : <a href="mailto:hardhikmgowda@intrepidq.xyz" className="text-indigo-600 hover:text-indigo-800" title="Email"><Mail className="w-4 h-4 inline" /></a>
             </p>
           </div>
           
@@ -88,3 +88,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

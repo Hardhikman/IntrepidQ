@@ -1,20 +1,11 @@
 import { GetServerSideProps } from 'next'
 
 export default function Sitemap() {
-  return (
-    <div>
-      <meta name="title" content="IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation" />
-      <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
-      <link rel="icon" href="/favicon.ico" />
-    </div>
-  );
+  return null
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
-  // Use the request host as fallback to ensure correct domain
-  const host = req.headers.host || 'intrepidq.xyz'
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`
+  const baseUrl = 'https://intrepidq.xyz'
 
   const staticPages = [
     '',
@@ -42,8 +33,10 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticPages
   .map((path) => {
+    // Handle the root path correctly
+    const loc = path === '' ? baseUrl : `${baseUrl}${path}`
     return `  <url>
-    <loc>${baseUrl}${path}</loc>
+    <loc>${loc}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

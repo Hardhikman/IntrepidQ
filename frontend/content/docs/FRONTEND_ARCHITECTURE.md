@@ -49,7 +49,7 @@ The UI primitives are built using shadcn/ui components which provide accessible,
    - Sign in and sign up flows
    - Guest access options
 
-6. ### QuestionDisplay Component
+6. #### QuestionDisplay Component
    Responsible for displaying generated questions:
    - Proper formatting and styling
    - Question navigation controls
@@ -90,12 +90,12 @@ The frontend uses a combination of:
 
 ## Routing and Page Structure
 The application follows a page-based routing structure:
-- `/` - Home page with question generation interface
-- `/dashboard` - User dashboard with analytics
-- `/auth/signin` - Authentication page
-- `/profile` - User profile and settings
-- `/about` - About page with project information
-- `/blog` - Blog listing and individual posts
+- / - Home page with question generation interface
+- /dashboard - User dashboard with analytics
+- /auth/signin - Authentication page
+- /profile - User profile and settings
+- /about - About page with project information
+- /blog  - Blog listing and individual posts
 
 ## API Integration Layer
 The frontend integrates with the backend through:
@@ -123,4 +123,5 @@ The question generation interface now supports keyword-based generation:
 Enhanced model selection capabilities:
 - Support for multiple AI providers
 - Real-time model performance indicators
+
 - User preference saving

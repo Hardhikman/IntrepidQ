@@ -2,21 +2,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import {remarkMermaid} from '@theguild/remark-mermaid'
+// Remove remarkMermaid plugin - we'll handle it manually
 import DocSidebar from '@/components/DocSidebar'
-
-// Dynamically import mermaid only on the client side
-let mermaid: any;
-if (typeof window !== 'undefined') {
-  import('mermaid').then((module) => {
-    mermaid = module.default;
-    mermaid.initialize({
-      startOnLoad: true,
-      theme: 'default',
-      securityLevel: 'loose',
-    });
-  });
-}
 
 interface DocPageProps {
   title: string
@@ -41,6 +28,63 @@ const CustomHeading = ({ level, children, ...props }: any) => {
   return <Tag className={headingClasses[level as keyof typeof headingClasses]} {...props}>{children}</Tag>;
 };
 
+// Dedicated Mermaid component
+const MermaidDiagram = ({ chart }: { chart: string }) => {
+  const [svg, setSvg] = useState<string>('')
+  const [error, setError] = useState<string>('')
+
+  useEffect(() => {
+    const renderMermaid = async () => {
+      try {
+        const mermaidModule = await import('mermaid')
+        const mermaid = mermaidModule.default
+
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'inherit'
+        })
+
+        const id = `mermaid-${Math.random().toString(36).substr(2, 9)}`
+        const { svg: renderedSvg } = await mermaid.render(id, chart.trim())
+        setSvg(renderedSvg)
+      } catch (err) {
+        console.error('Mermaid rendering error:', err)
+        setError('Failed to render diagram')
+      }
+    }
+
+    if (chart) {
+      renderMermaid()
+    }
+  }, [chart])
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 my-4">
+        <p className="text-red-600">Error rendering diagram: {error}</p>
+        <pre className="mt-2 text-sm text-red-500 overflow-x-auto">{chart}</pre>
+      </div>
+    )
+  }
+
+  if (!svg) {
+    return (
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 my-4 animate-pulse">
+        <div className="text-gray-500">Loading diagram...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div 
+      className="mermaid-container my-6 flex justify-center bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
+      dangerouslySetInnerHTML={{ __html: svg }}
+    />
+  )
+}
+
 // Custom component for handling code blocks
 const CustomCodeBlock = ({ inline, className, children, ...props }: any) => {
   const match = /language-(\w+)/.exec(className || '')
@@ -48,13 +92,7 @@ const CustomCodeBlock = ({ inline, className, children, ...props }: any) => {
   
   // Handle mermaid diagrams
   if (language === 'mermaid') {
-    return (
-      <div className="mermaid-container my-4 rounded-lg overflow-hidden">
-        <pre className="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-x-auto" {...props}>
-          <code className="language-mermaid">{children}</code>
-        </pre>
-      </div>
-    )
+    return <MermaidDiagram chart={String(children)} />
   }
   
   // For inline code
@@ -108,17 +146,6 @@ export default function DocPage({ title, description, content, docId }: DocPageP
 
   useEffect(() => {
     setMounted(true)
-    
-    // Initialize mermaid diagrams after component mounts
-    if (typeof window !== 'undefined' && mermaid) {
-      setTimeout(() => {
-        try {
-          mermaid.init(undefined, '.mermaid-container pre code.language-mermaid');
-        } catch (error) {
-          console.error('Mermaid initialization error:', error);
-        }
-      }, 100);
-    }
   }, [])
 
   if (!mounted) {
@@ -164,7 +191,7 @@ export default function DocPage({ title, description, content, docId }: DocPageP
               <div className="p-6">
                 <div className="prose max-w-none dark:prose-invert prose-p:mb-4 prose-p:text-gray-700 dark:prose-p:text-gray-300 prose-code:before:hidden prose-code:after:hidden prose-code:bg-gray-100 dark:prose-code:bg-gray-700 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:font-mono prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-pre:p-4 prose-pre:rounded-lg prose-pre:my-4 prose-pre:overflow-x-auto prose-li:ml-4 prose-li:mb-1 prose-ul:mt-2 prose-ul:mb-4 prose-ul:ml-4 prose-ul:space-y-1 prose-ol:mt-2 prose-ol:mb-4 prose-ol:ml-4 prose-ol:space-y-1 prose-a:text-blue-600 prose-a:hover:text-blue-800 prose-a:underline dark:prose-a:text-blue-400 dark:prose-a:hover:text-blue-300">
                   <ReactMarkdown 
-                    remarkPlugins={[remarkGfm, remarkMermaid]}
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       h1: (props) => <CustomHeading level={1} {...props} />,
                       h2: (props) => <CustomHeading level={2} {...props} />,

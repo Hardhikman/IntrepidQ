@@ -27,7 +27,7 @@ const CustomHeading = ({ level, children, ...props }: any) => {
   return <Tag className={headingClasses[level as keyof typeof headingClasses]} {...props}>{children}</Tag>;
 };
 
-// Dedicated Mermaid component
+// Dedicated Mermaid component with scrollable container
 const MermaidDiagram = ({ chart }: { chart: string }) => {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
@@ -45,21 +45,30 @@ const MermaidDiagram = ({ chart }: { chart: string }) => {
           fontFamily: 'inherit',
           themeVariables: {
             fontFamily: 'inherit',
-            fontSize: '14px'
+            fontSize: '14px',
+            primaryColor: '#f3f4f6',
+            primaryTextColor: '#374151',
+            primaryBorderColor: '#d1d5db',
+            lineColor: '#6b7280'
           },
           flowchart: {
-            useMaxWidth: true,
+            useMaxWidth: false,
             htmlLabels: true,
-            nodeSpacing: 50,
-            rankSpacing: 50,
-            curve: 'basis'
+            nodeSpacing: 120,
+            rankSpacing: 80,
+            curve: 'basis',
+            padding: 30
           },
           sequence: {
-            useMaxWidth: true,
-            wrap: true
+            useMaxWidth: false,
+            wrap: true,
+            messageMargin: 35,
+            boxMargin: 10
           },
           gantt: {
-            useMaxWidth: true
+            useMaxWidth: false,
+            leftPadding: 75,
+            gridLineStartPadding: 35
           }
         })
 
@@ -95,12 +104,22 @@ const MermaidDiagram = ({ chart }: { chart: string }) => {
   }
 
   return (
-    <div className="mermaid-container my-6 w-full overflow-x-auto bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-      <div 
-        className="min-w-full"
-        dangerouslySetInnerHTML={{ __html: svg }}
-        style={{ minWidth: 'max-content' }}
-      />
+    <div className="mermaid-container my-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+      {/* Scrollable container */}
+      <div className="overflow-x-auto overflow-y-hidden p-4">
+        <div 
+          className="inline-block min-w-full"
+          dangerouslySetInnerHTML={{ __html: svg }}
+          style={{ 
+            minWidth: 'max-content',
+            width: 'auto'
+          }}
+        />
+      </div>
+      {/* Scroll hint */}
+      <div className="text-xs text-gray-500 dark:text-gray-400 text-center pb-2">
+        ← Scroll horizontally to view full diagram →
+      </div>
     </div>
   )
 }

@@ -29,6 +29,10 @@ const nextConfig = {
         source: '/api/:path*',
         destination: `${apiUrl}/api/:path*`,
       },
+      {
+        source: '/favicon.ico',
+        destination: '/favicon.ico',
+      },
     ];
   },
   
@@ -68,15 +72,6 @@ const nextConfig = {
             value: 'public, immutable, max-age=31536000',
           },
         ],
-      },
-    ];
-  },
-  
-  async rewrites() {
-    return [
-      {
-        source: '/favicon.ico',
-        destination: '/favicon.ico',
       },
     ];
   }

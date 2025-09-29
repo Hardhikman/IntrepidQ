@@ -606,12 +606,11 @@ export default function UPSCQuestionGenerator() {
           <section className="max-w-4xl mx-auto bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                The Modern solution for<br />
-                UPSC Aspirants in AI age
+                The Modern solution for UPSC CSE Aspirants in AI age
               </h1>
               <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
                 IntrepidQ AI is a AI system for the aspirants who are fearless to change their preparation style to cut short their UPSC cycle. 
-                It is not another complex AI product, it is a comprehensive , minimalistic and free platform to develop answer writing with brainstorming and creative thinking abilities.
+                It is not another complex AI product, it is a comprehensive , minimalistic ,and free platform to develop answer writing with brainstorming and creative thinking abilities.
               </p>
             </div>
 
@@ -659,7 +658,7 @@ export default function UPSCQuestionGenerator() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Balance</h3>
+                  <h3 className="font-semibold text-gray-900">Time value of money</h3>
                   <p className="text-gray-700">Balance the time between revision and practice</p>
                 </div>
               </div>

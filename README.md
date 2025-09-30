@@ -11,7 +11,7 @@
 </div>
 
 <p align="center">
-  <strong>Transform your UPSC preparation with cutting-edge AI technology</strong><br>
+  <strong>Transform your UPSC preparation with India's first NLP + RAG based UPSC-CSE prep platform</strong><br>
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
 

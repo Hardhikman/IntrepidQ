@@ -34,7 +34,7 @@ const config = {
     link: 'https://github.com/Hardhikman/IntrepidQ',
   },
   docsRepositoryBase:
-    'https://github.com/Hardhikman/IntrepidQ/blob/main/frontend/pages/docs',
+    'https://github.com/Hardhikman/IntrepidQ/blob/main/frontend',
   useNextSeoProps() {
     return {
       titleTemplate: '%s – IntrepidQ',
@@ -43,10 +43,10 @@ const config = {
   head: (
     <>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <meta property="og:title" content="IntrepidQ Documentation" />
+      <meta property="og:title" content="IntrepidQ AI Documentation" />
       <meta
         property="og:description"
-        content="Documentation for IntrepidQ - India's first NLP and RAG based AI assistant for UPSC CSE preparation"
+        content="Documentation for IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation"
       />
     </>
   ),

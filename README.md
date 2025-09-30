@@ -11,7 +11,7 @@
 </div>
 
 <p align="center">
-  <strong>Transform your UPSC preparation with India's first NLP + RAG based UPSC-CSE prep platform</strong><br>
+  <strong>Transform your UPSC preparation with India's first NLP + RAG based UPSC CSE AI platform</strong><br>
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
 
@@ -33,6 +33,7 @@
 🔐 **Enterprise Security**: Row-Level Security (RLS) and JWT authentication  
 📊 **Advanced Analytics**: Comprehensive user statistics and feedback tracking  
 🐳 **Docker Ready**: Full containerization for seamless deployment  
+📦 **Intelligent current affairs support**: Generate current affairs with users choice of news source
 
 ## 🎯 Features
 
@@ -85,8 +86,6 @@
 - **Recharts**: Beautiful data visualization
 - **Supabase Client**: Real-time database and auth integration
 
-[**Live Demo**](https://intrepid-q1-nzmt.vercel.app/) | [**Report a Bug**](https://github.com/Hardhikman/IntrepidQ1/issues/new) | [**Request a Feature**](https://github.com/Hardhikman/IntrepidQ1/issues/new)
-
 
 #### ⚡ Backend
 - **FastAPI**: High-performance Python web framework
@@ -101,6 +100,7 @@
 - **Sentence Transformers**: Text embedding generation
 - **FAISS**: Efficient similarity search
 - **PyTorch**: Machine learning computations
+- **Tavily search**:  News API for effective search
 
 #### 🗃️ Database & Infrastructure
 - **Supabase**: Backend-as-a-Service platform for authentication and database

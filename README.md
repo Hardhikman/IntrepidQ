@@ -15,7 +15,7 @@
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
 
-**Click below to watch the demo** 
+**Click below to watch the demo 👇** 
 [![Watch the demo video](demos/demo-images/thumbnail.png)](https://youtu.be/L_sTf2JZlJc?feature=shared)
 
 ![Four Marque modes-Topic | Keyword | Current affairs | Whole paper](demos/demo-images/four-modes.png)

@@ -14,6 +14,8 @@
   <strong>Transform your UPSC preparation with India's first NLP + RAG based UPSC CSE AI platform</strong><br>
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
+
+![Alt text](https://github.com/Hardhikman/IntrepidQ/blob/main/demo%20images/All%20four%20modes%20demo.png"four modes for Question generation")
 -------------------------------------------------------------------------------------------------------------------------
 
 ## 🌟 What's New in IntrepidQ

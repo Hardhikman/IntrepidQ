@@ -15,6 +15,8 @@
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
 
+![Four Marque modes-Topic | Keyword | Current affairs | Whole paper](https://youtu.be/L_sTf2JZlJc?feature=shared)
+
 ![Four Marque modes-Topic | Keyword | Current affairs | Whole paper](demos/demo-images/four-modes.png)
 -------------------------------------------------------------------------------------------------------------------------
 

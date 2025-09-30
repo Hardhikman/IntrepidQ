@@ -1,4 +1,4 @@
--- Performance optimization indexes for IntrepidQ2
+-- Performance optimization indexes for IntrepidQ AI
 -- Add missing database indexes for performance optimization on usage_analytics and generated_questions tables
 
 -- ============================================================================
@@ -74,19 +74,15 @@ ON question_feedback(rating, created_at DESC);
 -- USER PROFILES TABLE INDEXES
 -- ============================================================================
 
--- Index for role-based queries (admin functions)
+-- Index for user profiles role
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_profiles_role 
 ON user_profiles(role) 
 WHERE role IS NOT NULL;
 
--- Index for generation count analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_profiles_generation_count 
-ON user_profiles(generation_count_today, last_generation_date);
-
--- Index for study streak analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_profiles_study_streak 
-ON user_profiles(study_streak) 
-WHERE study_streak > 0;
+-- Index for last generation date analysis
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_profiles_last_generation_date 
+ON user_profiles(last_generation_date) 
+WHERE last_generation_date IS NOT NULL;
 
 -- ============================================================================
 -- GUEST GENERATIONS TABLE INDEXES

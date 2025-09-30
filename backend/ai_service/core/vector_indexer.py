@@ -162,7 +162,7 @@ class VectorIndexer:
 
 
 # Factory functions
-def create_vector_indexer(embedding_model: str = None) -> VectorIndexer:
+def create_vector_indexer(embedding_model: str | None = None) -> VectorIndexer:
     """Factory function to create vector indexer"""
     model = embedding_model or os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
     return VectorIndexer(model)

@@ -1,0 +1,213 @@
+---
+title: Getting Started
+description: Setup and configuration guide for IntrepidQ AI
+---
+
+# Getting Started
+
+## Prerequisites
+
+- **Python 3.8+** with pip
+- **Node.js 16+** with npm
+- **Docker** (optional, recommended)
+- **Supabase Account** (free tier available)
+- **API Keys**: Groq, Google Gemini (optional)
+- **Upstash Account** (for Redis and Search services)
+
+## Quick Start
+
+### Docker Setup (Recommended)
+
+```bash
+# Clone the repository
+git clone https://github.com/Hardhikman/IntrepidQ.git
+cd IntrepidQ
+
+# Start all services
+docker-compose up --build
+
+# Access the application
+# Frontend: http://localhost:3000
+# Backend API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
+
+### Manual Setup
+
+#### 1. Backend Setup
+
+```bash
+# Navigate to backend
+cd backend/ai_service
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys and database credentials
+
+# Start backend server
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+#### 2. Frontend Setup
+
+```bash
+# Open new terminal and navigate to frontend
+cd frontend
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.local.example .env.local
+# Edit .env.local with your Supabase configuration
+
+# Start development server
+npm run dev
+```
+
+#### 3. Database Setup
+
+```bash
+# In Supabase SQL Editor, run these files in order:
+# 1. backend/db/01_user_management.sql
+# 2. backend/db/02_question_generation.sql
+# 3. backend/db/03_analytics_feedback.sql
+# 4. backend/db/04_caching_performance.sql
+# 5. backend/db/05_guest_management.sql
+# 6. backend/db/06_statistics_dashboard.sql
+# 7. backend/db/07_utilities.sql
+# 8. backend/db/08_vector_storage.sql
+
+# Optional: Setup automatic cleanup
+# backend/db/setup_automatic_cleanup.sql
+
+# Verify deployment
+# backend/db/verify_deployment.sql
+```
+
+## Configuration
+
+### Environment Variables
+
+#### Backend (.env)
+```properties
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# AI Model APIs
+GROQ_API_KEY=your_groq_api_key
+GOOGLE_API_KEY=your_google_api_key  # Optional
+OPENROUTER_API_KEY=your_openrouter_key  # Optional
+
+# Application Settings
+SECRET_KEY=your_jwt_secret_key
+CORS_ORIGINS=http://localhost:3000
+ENVIRONMENT=development
+
+# Model Configuration
+GROQ_TEMPERATURE=0.7
+DEFAULT_MODEL=llama3-70b
+
+# Rate Limiting
+DAILY_LIMIT=5
+GUEST_DAILY_LIMIT=2
+
+# Upstash Configuration (for search functionality)
+UPSTASH_SEARCH_REST_URL=your_upstash_url
+UPSTASH_SEARCH_REST_TOKEN=your_upstash_token
+UPSTASH_SEARCH_INDEX=your_upstash_index
+
+# Upstash Redis Configuration
+REDIS_URL=your_upstash_redis_url
+```
+
+#### Frontend (.env.local)
+```properties
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+
+# API Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Feature Flags
+NEXT_PUBLIC_ENABLE_ANALYTICS=true
+NEXT_PUBLIC_ENABLE_GUEST_MODE=true
+```
+
+## Recent Setup Changes
+
+### Hybrid Technology Stack
+The system now uses a hybrid approach with both local and managed services:
+1. **pgvector**: For vector similarity search in the local PostgreSQL database
+2. **Upstash Redis**: For caching and rate limiting
+3. **Upstash Search**: For keyword-based question generation
+
+### Database Migrations
+Several database migrations need to be applied:
+1. Run `backend/db/migration_add_model_column.sql` to add the model column
+2. Run `backend/db/migration_add_feedback_type_column.sql` to add feedback type column
+3. Run `backend/db/migration_add keyword mode.sql` to add keyword mode support
+
+## Testing the Setup
+
+### Backend Testing
+```bash
+cd backend/ai_service
+pip install pytest pytest-asyncio httpx
+pytest tests/ -v
+```
+
+### Frontend Testing
+```bash
+cd frontend
+npm test
+npm test -- --coverage
+```
+
+### Upstash Testing
+```bash
+cd backend/ai_service
+python test_upstash.py
+```
+
+### Redis Testing
+```bash
+cd backend/ai_service
+python redis_connection.py
+```
+
+## Verification Steps
+
+1. Test Upstash services connection:
+   ```bash
+   # Check logs for successful connection
+   docker-compose logs ai-service
+   ```
+
+2. Test the health endpoint:
+   ```bash
+   curl http://localhost:8000/health
+   ```
+
+3. Test question generation:
+   ```bash
+   curl -X POST http://localhost:8000/api/generate_questions \
+     -H "Content-Type: application/json" \
+     -d '{"topic": "Indian Constitution", "num": 2}'
+   ```
+
+4. Check cache statistics:
+   ```bash
+   curl http://localhost:8000/api/cache/stats
+   ```

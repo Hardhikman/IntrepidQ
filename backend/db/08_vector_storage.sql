@@ -11,7 +11,9 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Drop the old table and function if they exist to start clean
 DROP TABLE IF EXISTS public.documents;
-DROP FUNCTION IF EXISTS match_documents;
+DROP FUNCTION IF EXISTS match_documents(vector, int, jsonb);
+DROP FUNCTION IF EXISTS match_documents(jsonb, int, vector);
+DROP FUNCTION IF EXISTS match_documents(jsonb, vector);
 
 -- Create the table with a UUID primary key
 CREATE TABLE public.documents (
@@ -21,11 +23,11 @@ CREATE TABLE public.documents (
     embedding vector(384) -- 384 is the dimension of the all-MiniLM-L6-v2 model
 );
 
--- Create a function to search for documents
+-- Create a function to search for documents with the signature that LangChain expects
 CREATE OR REPLACE FUNCTION match_documents (
+    filter jsonb,
     query_embedding vector(384),
-    match_count int,
-    filter jsonb DEFAULT '{}'
+    match_count int DEFAULT 10
 ) 
 RETURNS TABLE (
     id uuid, -- Changed from bigint to uuid

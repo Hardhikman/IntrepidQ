@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS public.question_feedback (
     user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
     rating integer CHECK (rating BETWEEN 1 AND 5),
     comment text,
+    feedback_type text, -- New column for feedback type (bug, feature, general)
     created_at timestamp with time zone DEFAULT now()
 );
 
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.question_feedback (
 
 CREATE INDEX IF NOT EXISTS idx_question_feedback_user ON public.question_feedback (user_id);
 CREATE INDEX IF NOT EXISTS idx_question_feedback_question ON public.question_feedback (question_id);
+CREATE INDEX IF NOT EXISTS idx_question_feedback_type ON public.question_feedback (feedback_type);
 
 -- ---------------------------------------------------------
 -- ROW LEVEL SECURITY

@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
     username text UNIQUE,
     full_name text,
     preferred_subjects text[] DEFAULT '{}',
-    study_streak integer DEFAULT 0,
     total_questions_generated integer DEFAULT 0,
     total_papers_generated integer DEFAULT 0,
     generation_count_today integer NOT NULL DEFAULT 0,

@@ -77,6 +77,17 @@ const nextConfig = {
   }
 };
 
+// Import Nextra - Configuration for Nextra v3
+const nextra = require('nextra');
+
+const withNextra = nextra.default || nextra;
+
+module.exports = withNextra({
+  theme: 'nextra-theme-docs',
+  themeConfig: './theme.config.tsx',
+  defaultShowCopyCode: true
+})(nextConfig);
+
 // PWA config optimized for web apps
 const withPWA = require('next-pwa')({
   dest: 'public',
@@ -90,4 +101,4 @@ const withPWA = require('next-pwa')({
   buildExcludes: [/middleware-manifest.json$/],
 });
 
-module.exports = withPWA(nextConfig);
+module.exports = withPWA(module.exports);

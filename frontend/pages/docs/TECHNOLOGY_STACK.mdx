@@ -1,0 +1,65 @@
+---
+title: Technology Stack
+description: Overview of the technologies used in the IntrepidQ AI system
+---
+
+# Technology Stack
+
+## Frontend
+- **Next.js 14+**: React framework with SSR/SG capabilities
+- **TypeScript**: Type-safe development
+- **Tailwind CSS**: Utility-first CSS framework
+- **shadcn/ui**: High-quality UI component library
+- **React Hook Form**: Efficient form handling with validation
+- **Recharts**: Beautiful data visualization
+- **Supabase Client**: Real-time database and auth integration
+
+## Backend
+- **FastAPI**: High-performance Python web framework
+- **LangChain**: LLM application development framework
+- **Pydantic**: Data validation and settings management
+- **Uvicorn**: Lightning-fast ASGI server
+- **Python 3.8+**: Core runtime environment
+
+## AI & ML
+- **Groq**: Ultra-fast LLM inference
+- **Google Gemini**: Advanced language understanding
+- **OpenRouter**: Multi-model API access
+- **Sentence Transformers**: Text embedding generation
+- **FAISS**: Efficient similarity search
+- **PyTorch**: Machine learning computations
+
+## Database & Infrastructure
+- **Supabase**: Backend-as-a-Service platform
+- **PostgreSQL**: Robust relational database
+- **pgvector**: Vector similarity search extension
+- **Upstash Redis**: High-performance caching and rate limiting solution
+- **Docker**: Containerization platform
+- **Vercel**: Frontend deployment platform
+
+## Recent Technology Updates
+
+### Upstash Redis Integration
+The system now uses Upstash Redis for caching and rate limiting:
+- Fully managed Redis service with global replication
+- Better performance with reduced latency
+- Automatic scaling and high availability
+- Zero maintenance required
+
+### Vector Search Enhancement
+The system continues to use pgvector for vector similarity search:
+- Enhanced document embedding storage
+- Improved similarity search performance
+- Better integration with PostgreSQL
+
+### Model Provider Updates
+The system now supports multiple AI model providers:
+- **Groq**: Primary provider with models like Llama3-70b
+- **Google Gemini**: Alternative provider for redundancy
+- **OpenRouter**: Access to additional models like DeepSeek and Moonshot
+
+### Database Enhancements
+Several database improvements have been implemented:
+- Added `model` column to track which AI model was used for question generation
+- Added `feedback_type` column to categorize user feedback
+- Extended `mode` field to support keyword-based and current affairs question generation

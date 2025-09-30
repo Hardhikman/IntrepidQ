@@ -41,6 +41,13 @@ interface DashboardProps {
   onNavigateToGenerator: () => void;
 }
 
+// Define the badge type
+interface Badge {
+  icon: string;
+  title: string;
+  description: string;
+  category: string;
+}
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) => {
   const { user, profile } = useAuth();
@@ -143,7 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
 
   // Achievement badges calculation (feedback-free)
   const achievementBadges = useMemo(() => {
-    const badges = [];
+    const badges: Badge[] = [];
     const totalGenerations = stats?.total_generations ?? 0;
     const subjectBreakdown = stats?.subject_breakdown || {};
     const subjectCount = Object.keys(subjectBreakdown).length;
@@ -243,12 +250,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
             </div>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="text-xs text-gray-500 text-center">
-                {stats?.total_generations >= 100 ? '🏆 Century achiever!' :
-                 stats?.total_generations >= 50 ? '🥇 Gold level!' :
-                 stats?.total_generations >= 25 ? '🥈 Silver level!' :
-                 stats?.total_generations >= 10 ? '🥉 Bronze level!' :
-                 stats?.total_generations >= 1 ? '⭐ Getting started!' :
-                 '🌟 Ready to begin!'}
+                {(() => {
+                  const totalGenerations = stats?.total_generations ?? 0;
+                  return totalGenerations >= 100 ? '🏆 Century achiever!' :
+                         totalGenerations >= 50 ? '🥇 Gold level!' :
+                         totalGenerations >= 25 ? '🥈 Silver level!' :
+                         totalGenerations >= 10 ? '🥉 Bronze level!' :
+                         totalGenerations >= 1 ? '⭐ Getting started!' :
+                         '🌟 Ready to begin!';
+                })()}
               </div>
             </div>
           </CardContent>

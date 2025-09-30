@@ -45,7 +45,7 @@ ON public.model_performance (model_name);
 ALTER TABLE public.model_performance ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Service key can manage model performance" ON public.model_performance;
-CREATE POLICY "Service key can manage model performance"
+CREATE POLICY "Service key can manage model_performance"
 ON public.model_performance FOR ALL
 TO service_role;
 
@@ -59,7 +59,16 @@ SELECT cron.schedule(
     $$
 );
 
--- STEP 5: Verify all jobs were created successfully
+-- STEP 5: Schedule User Generated Questions Cleanup
+-- Runs weekly on Mondays at 5:00 AM UTC
+-- Removes user generated questions older than 30 days
+SELECT cron.schedule(
+    'questions-cleanup',
+    '0 5 * * 1',
+    'SELECT public.cleanup_old_generated_questions();'
+);
+
+-- STEP 6: Verify all jobs were created successfully
 SELECT 
     jobid,
     jobname,
@@ -69,10 +78,11 @@ SELECT
 FROM cron.job 
 ORDER BY jobid DESC;
 
--- Expected output should show 3 jobs:
+-- Expected output should show 4 jobs:
 -- 1. guest-cleanup (every 2 days at 2 AM)
 -- 2. cache-cleanup (daily at 3 AM) 
 -- 3. model-performance-cleanup (weekly on Sunday at 4 AM)
+-- 4. questions-cleanup (weekly on Monday at 5 AM)
 
 -- =========================================================
 -- Monitoring and Management Commands
@@ -100,6 +110,7 @@ ORDER BY jobid DESC;
 -- SELECT cron.unschedule('guest-cleanup');
 -- SELECT cron.unschedule('cache-cleanup');
 -- SELECT cron.unschedule('model-performance-cleanup');
+-- SELECT cron.unschedule('questions-cleanup');
 
 -- To modify a job schedule:
 -- SELECT cron.unschedule('cache-cleanup');
@@ -112,6 +123,7 @@ ORDER BY jobid DESC;
 -- Test cleanup functions manually:
 -- SELECT public.cleanup_old_guest_generations();
 -- SELECT public.cleanup_expired_cache();
+-- SELECT public.cleanup_old_generated_questions();
 
 -- Check what would be cleaned up (without actually deleting):
 -- SELECT COUNT(*) as old_guest_records 
@@ -125,3 +137,7 @@ ORDER BY jobid DESC;
 -- SELECT COUNT(*) as expired_topic_index_entries  
 -- FROM public.topic_questions_index
 -- WHERE expires_at < NOW();
+
+-- SELECT COUNT(*) as old_generated_questions
+-- FROM public.generated_questions 
+-- WHERE created_at < NOW() - INTERVAL '30 days';

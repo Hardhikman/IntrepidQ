@@ -64,7 +64,6 @@ BEGIN
             'username', p.username,
             'full_name', p.full_name,
             'preferred_subjects', COALESCE(p.preferred_subjects, '{}'),
-            'study_streak', COALESCE(p.study_streak, 0),
             'total_questions_generated', COALESCE(p.total_questions_generated, 0),
             'total_papers_generated', COALESCE(p.total_papers_generated, 0),
             'generation_count_today', COALESCE(p.generation_count_today, 0),
@@ -99,9 +98,10 @@ BEGIN
     ) sb ON g.subject = sb.subject
     LEFT JOIN question_feedback f ON f.user_id = p.id
     WHERE p.id = uid
-    GROUP BY p.id, p.username, p.full_name, p.preferred_subjects, 
-             p.study_streak, p.total_questions_generated, p.total_papers_generated,
-             p.generation_count_today, p.last_generation_date, p.role;
+    GROUP BY p.id, p.username, p.full_name, p.preferred_subjects,
+            p.preferred_subjects, p.last_generation_date,
+            p.total_questions_generated, p.total_papers_generated,
+            p.generation_count_today, p.created_at, p.updated_at;
 
     RETURN result;
 END;

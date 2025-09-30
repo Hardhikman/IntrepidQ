@@ -176,7 +176,6 @@ cp .env.local.example .env.local
 npm run dev
 ```
 
-```
 ## ⚙️ Configuration
 
 ### Environment Variables

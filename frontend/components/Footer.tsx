@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { AIntrepidQLogo } from '@/components/aintrepidq-logo';
-import { Youtube, Github, Mail } from 'lucide-react';
+import { Youtube, Twitter, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -72,13 +72,13 @@ const Footer = () => {
               Medium
             </a>
             <a 
-              href="https://github.com/Hardhikman/IntrepidQ" 
+              href="https://x.com/IntrepidQai" 
               target="_blank" 
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-gray-700 hover:text-orange-600 transition-colors flex items-center justify-center gap-1"
-              title="GitHub"
+              title="X (Twitter)"
             >
-              <Github className="w-4 h-4" />
+              <Twitter className="w-4 h-4" />
             </a>
           </div>
         </div>

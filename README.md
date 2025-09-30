@@ -14,14 +14,6 @@
   <strong>Transform your UPSC preparation with India's first NLP + RAG based UPSC CSE AI platform</strong><br>
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
-
-<div align="center">
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-deployment">Deployment</a>
-</div>
-
 ---
 
 ## 🌟 What's New in IntrepidQ

@@ -15,7 +15,7 @@
   Generate contextually-aware, high-quality UPSC Mains questions powered by advanced NLP and vector search
 </p>
 
-![Alt text](demos/demo-images/four-modes.png)
+![Four Marque modes-Topic | Keyword | Current affairs | Whole paper](demos/demo-images/four-modes.png)
 -------------------------------------------------------------------------------------------------------------------------
 
 ## 🌟 What's New in IntrepidQ

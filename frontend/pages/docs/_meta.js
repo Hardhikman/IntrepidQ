@@ -32,6 +32,9 @@ module.exports = {
   DEPLOYMENT_OPERATIONS: {
     title: "Deployment Operations"
   },
+  BLOG: {
+    title: "Blog Documentation"
+  },
   CONTRIBUTING: {
     title: "Contributing"
   },

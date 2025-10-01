@@ -49,7 +49,7 @@ const Footer = () => {
               Terms
             </Link>
             <Link 
-              href="/blog" 
+              href="/blogs" 
               className="text-xs sm:text-sm text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap text-center"
             >
               Blogs

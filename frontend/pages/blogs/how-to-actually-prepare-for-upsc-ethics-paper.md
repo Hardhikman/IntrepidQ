@@ -11,37 +11,38 @@ description: Master the effective tips and strategy to prepare for upsc ethics p
 - ## What is an Efficient Ethics Preparation Framework?
 	- ### 1. Syllabus Breakdown and Value Mapping
 		- List each topic of the Ethics syllabus.
-		- Map key values related to each topic (for example: honesty, integrity, empathy).
-		- Make short notes on any conflicting issues for each topic (just write the keywords).
-		- Add two examples to every topic, preferably with names (leaders, reformers, or administrators).
-	- ### 2. Human Values: Division and Application
+			- Map key values related to each topic (for example: honesty, integrity, empathy).
+			- Make short notes on any conflicting issues for each topic (just write the keywords).
+			- Add two examples to every topic, preferably with names (leaders, reformers, or administrators).
+	- ### 2. Human Values
 		
 		Divide human values into two groups:
 		- **Political, Economical, Social, Environmental, Cultural**
 		- **Core, Moral, Personal, Professional, Relational**
 			
-			For every value:
+		For every value:
 			- Map synonyms (similar attributes).
 			- Note how the value is shown in everyday life.
 			- Describe its impact on society or administration.
 			- Give 1-2 case studies of reformers or administrators (e.g., E. Sreedharan for integrity).
-	- ### 3. Human Attitude: Types, Attributes, and Impact
+	- ### 3. Human Attitude
 		- Make a list of attitude types (eg positive, negative, neutral, assertive).
-		- Map important attributes.
-		- Describe how attitudes are shown or expressed.
-		- Write about the impact of attitudes on ethics and administration.
-		- Explain how different attitudes help in ethical decision-making.
+		For every attitude:
+			- Map important attributes.
+			- Describe how it is shown or expressed.
+			- Write about the impact on ethics and administration.
+			- Explain how it helps in ethical decision-making.
 	- ### 4. Moral Thinkers and Philosophers
 		- Divide into Western and Indian thinkers.
-		- Map their main ethical principles.
-		- Explain how their ideas help solve contemporary problems.
-		- Collect two broad quotes from each thinker.
-		- Write two life stories that showcase their core values.
-	- ### 5. Citizen Charter: Principles and Impact
+			- Map their main ethical principles.
+			- Explain how their ideas help solve contemporary problems.
+			- Collect two broad quotes from each thinker.
+			- Write two life stories that showcase their core values.
+	- ### 5. Citizen Charter
 		- Note down the principles (transparency, accountability, courtesy, responsiveness).
-		- Highlight key attributes.
-		- Describe how these principles are applied.
-		- Summarize their impact in administration.
+			- Highlight key attributes under each principles.
+			- Describe how these principles are applied across domains.
+			- Summarize their impact in administration.
 	- ### 6. Code of Ethics vs. Code of Conduct : For example
 		
 		| Feature           | Code of Ethics                   | Code of Conduct                |
@@ -55,8 +56,8 @@ description: Master the effective tips and strategy to prepare for upsc ethics p
 	- ### 8. Social Influence and Persuasion
 		- Types: Ethical, Rational, Emotional, Tech-based, Linguistic.
 		- List behavioral techniques for persuasion.
-		- Explain how to use these techniques in daily life.
-		- Describe their impact in psychology, administration, and governance.
+			- Explain how to use these techniques in daily life.
+			- Describe their impact in psychology, administration, and governance.
 - ## How to Tackle Case Study Questions?
 	- ### Steps for Solving Case Studies
 		

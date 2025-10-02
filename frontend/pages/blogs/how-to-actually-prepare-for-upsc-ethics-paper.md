@@ -27,6 +27,7 @@ description: Master the effective tips and strategy to prepare for upsc ethics p
 			- Give 1-2 case studies of reformers or administrators (e.g., E. Sreedharan for integrity).
 	- ### 3. Human Attitude
 		- Make a list of attitude types (eg positive, negative, neutral, assertive).
+
 			For every attitude:
 			- Map important attributes.
 			- Describe how it is shown or expressed.

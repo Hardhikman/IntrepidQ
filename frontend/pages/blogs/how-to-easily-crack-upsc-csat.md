@@ -88,8 +88,12 @@ description: Master the strategy to solve UPSC CSAT Reading Comprehension questi
   Scoring 66-70 marks (33% of 200) is the qualifying threshold; aiming for 80-100 provides a comfortable buffer.
 - ## One-sentence takeaway
   Solve RC first in 40 minutes using PYQ-built intuition to spot traps, mark topics and tone, distinguish facts from opinions, trust your gut on close calls, then pick 30 easy Quant/Reasoning questions to comfortably cross the CSAT cutoff and focus energy on Mains preparation.
--
 - ## UPSC CSAT RC Examples Using IntrepidQ AI Framework
+- **Solved Examples from official PYQ :**
+
+    -![csat_pyq](/images/rc-worked-examples.png)
+
+
 	- ### Example 1: Known Topic (Environment/Climate Change)
 	- ### Passage
 	  "Climate change is one of the most significant challenges facing humanity. Rising global temperatures have led to melting ice caps, rising sea levels, and extreme weather events. While developed nations have historically contributed the most to greenhouse gas emissions, developing nations are often the most vulnerable to climate impacts. International cooperation through frameworks like the Paris Agreement attempts to balance responsibility and capability in addressing this global crisis."

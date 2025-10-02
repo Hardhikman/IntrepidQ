@@ -332,8 +332,8 @@ description: Learn the framework for writing high-scoring UPSC Mains General Stu
 - ### One-sentence takeaway
   Build a mental framework first, practice rough outlines with keywords and action words, then write timed answers that combine evidence, multi-dimensional thinking, and conclusion phrases—so every answer shows clarity, depth, and direction.
 
-- ### UPSC CSE Mains PYQ examples in exact format from the answer-writing guide
-	- #### Example 1: GS2 PYQ — "What is the significance of constitutional morality, and how does the SC uphold it?"
+- ### UPSC CSE Mains examples in exact format from the answer-writing guide
+	- #### Example 1: GS2 — "What is the significance of constitutional morality, and how does the SC uphold it?"
 		- ##### Introduction (Definition)
 		  
 		  Constitutional morality refers to the adherence to constitutional values—liberty, equality, fraternity, and justice—beyond the text of law, guiding interpretation when social customs clash with fundamental rights.
@@ -358,7 +358,7 @@ description: Learn the framework for writing high-scoring UPSC Mains General Stu
 		  Constitutional morality bridges legal ideals and lived reality when courts defend rights over customs. Strengthen judicial monitoring, legislative dialogue, and public awareness to uphold dignity for all. The path aligns with constitutional morality and due process, ensuring justice, liberty, equality, and fraternity in spirit.
 		  
 		  ---
-	- #### Example 2: GS3 PYQ — "Examine the challenges faced by MSMEs in India. Suggest measures to improve their competitiveness."
+	- #### Example 2: GS3 — "Examine the challenges faced by MSMEs in India. Suggest measures to improve their competitiveness."
 		- ##### Introduction (Data + Context)
 		  
 		  MSMEs contribute 30% to India's GDP and employ 11 crore workers, yet face credit access barriers, technology gaps, compliance overload, and delayed payments worth ₹6.5 lakh crore per MSME Samadhaan portal data.
@@ -410,7 +410,7 @@ description: Learn the framework for writing high-scoring UPSC Mains General Stu
 		  MSMEs can shift from survival to value creation through timely credit, tech adoption, and compliance ease. These steps shift the state from spending to value creation across the chain, ensuring inclusive growth led by MSMEs and women's collectives measured in jobs created and export competitiveness gained.
 		  
 		  ---
-	- #### Example 3: GS1 PYQ — "Critically examine how growing cities in India are becoming vulnerable to climate change."
+	- #### Example 3: GS1  — "Critically examine how growing cities in India are becoming vulnerable to climate change."
 		- ##### Introduction (Current affairs + Data)
 		  
 		  India's urban population will reach 600 million by 2031; cities contribute 70% of emissions yet face rising heat islands, floods, and water stress, with Chennai 2015 and Mumbai 2021 floods causing ₹25,000 crore damages.

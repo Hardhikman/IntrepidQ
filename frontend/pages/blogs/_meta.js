@@ -5,9 +5,6 @@ module.exports = {
   "how-intrepidq-enhances-upsc-preparation": {
     title: "How IntrepidQ Enhances UPSC Preparation"
   },
-  "webapp-updates-and-new-features": {
-    title: "Webapp Updates and New Features"
-  },
   "how-to-easily-crack-upsc-csat": {
     title: "How to Easily Crack UPSC CSAT by Just Solving RC"
   },
@@ -23,4 +20,7 @@ module.exports = {
   "how-to-prepare-currentaffairs-for-upsc": {
     title: "How to use current affairs and newspaper for UPSC preparation"
   },
+  "webapp-updates-and-new-features": {
+    title: "Webapp Updates and New Features"
+  }
 };

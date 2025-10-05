@@ -5,6 +5,9 @@ module.exports = {
   "how-intrepidq-enhances-upsc-preparation": {
     title: "How IntrepidQ Enhances UPSC Preparation"
   },
+  "about-intrepidq": {
+    title: "About IntrepidQ - Research Paper"
+  },
   "how-to-easily-crack-upsc-csat": {
     title: "How to Easily Crack UPSC CSAT by Just Solving RC"
   },

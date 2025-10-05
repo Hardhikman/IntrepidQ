@@ -39,18 +39,31 @@ export default function FloatingHeader({
     <header className="fixed top-2 z-50 bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg rounded-full max-w-3xl left-1/2 -translate-x-1/2 w-full">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2">
         {/* Logo */}
-        <Link href="/" className="hover:opacity-80 transition-opacity duration-200" aria-label="Go to home page">
+        <div 
+          onClick={() => router.push("/")}
+          className="hover:opacity-80 transition-opacity duration-200 cursor-pointer"
+          aria-label="Go to home page"
+        >
           <AIntrepidQLogo size="small" />
-        </Link>
+        </div>
 
         {/* Navigation */}
         <div className="flex items-center space-x-2">
           <Button
             size="sm"
-            onClick={() => router.push("/about")}
+            onClick={() => router.push("/blogs/about-intrepidq")}
             className="bg-white hover:bg-orange-50 text-orange-600 border border-orange-300 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
           >
             About
+          </Button>
+          
+          {/* New Why IntrepidQ button */}
+          <Button
+            size="sm"
+            onClick={() => router.push("/blogs/how-intrepidq-enhances-upsc-preparation")}
+            className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-300 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
+          >
+            Why ?
           </Button>
 
           {/* Separator */}
@@ -92,7 +105,7 @@ export default function FloatingHeader({
               className="bg-transparent hover:bg-gradient-to-r hover:from-orange-100 hover:to-blue-100 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300 whitespace-nowrap"
               disabled={authLoading}
             >
-              {authLoading ? "Loading..." : "Sign in with Google"}
+              {authLoading ? "Loading..." : "Sign in"}
             </Button>
           )}
         </div>

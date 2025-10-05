@@ -7258,3 +7258,45 @@ postgrest.exceptions.APIError: {'message': "Could not find the 'model' column of
 2025-10-01 14:02:45,996 INFO api.main Question generator initialized
 2025-10-01 14:02:45,996 INFO api.main AI services ready
 2025-10-01 14:37:59,109 INFO api.main AI services shut down
+2025-10-05 22:12:02,636 INFO core.upstash_search_client Upstash Search client initialized with index: keywords_index
+2025-10-05 22:12:02,636 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-10-05 22:12:02,637 INFO api.main Using Redis URL: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:12:02,646 INFO core.rate_limiter Rate limiter attempting Redis connection to: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:12:03,046 INFO core.rate_limiter Rate limiter connected to Redis: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:12:03,047 INFO api.main Initializing AI services...
+2025-10-05 22:12:05,765 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-10-05 22:12:05,765 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-05 22:12:10,337 INFO api.main Supabase vectorstore loaded successfully
+2025-10-05 22:12:10,338 INFO core.question_generator Initializing QuestionGenerator...
+2025-10-05 22:12:11,454 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-10-05 22:12:11,557 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-10-05 22:12:11,558 INFO core.question_generator Loaded model performance history: {'gemma2-9b': [0.655, 0.655], 'moonshot-k2': [2.37, 2.37], 'gemini-2.5-flash': [11.1133, 11.1133, 11.1133], 'openai-oss-20b': [0.686667, 0.686667, 0.686667], 'llama3-70b': [1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429]}
+2025-10-05 22:12:11,558 INFO core.question_generator QuestionGenerator initialized successfully.
+2025-10-05 22:12:11,559 INFO api.main Question generator initialized
+2025-10-05 22:12:11,559 INFO api.main AI services ready
+2025-10-05 22:13:43,615 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:16:16,208 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:20:50,621 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:21:07,312 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:21:13,158 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:21:50,674 INFO api.main AI services shut down
+2025-10-05 22:28:08,055 INFO core.upstash_search_client Upstash Search client initialized with index: keywords_index
+2025-10-05 22:28:08,055 INFO api.main CORS allowed origins: ['http://localhost:3000', 'https://intrepid-q1.vercel.app', 'https://intrepid-q1-nzmt.vercel.app']
+2025-10-05 22:28:08,056 INFO api.main Using Redis URL: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:28:08,068 INFO core.rate_limiter Rate limiter attempting Redis connection to: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:28:08,688 INFO core.rate_limiter Rate limiter connected to Redis: curious-shiner-19282.upstash.io:6379
+2025-10-05 22:28:08,689 INFO api.main Initializing AI services...
+2025-10-05 22:28:10,914 INFO sentence_transformers.SentenceTransformer Use pytorch device_name: cpu
+2025-10-05 22:28:10,915 INFO sentence_transformers.SentenceTransformer Load pretrained SentenceTransformer: sentence-transformers/all-MiniLM-L6-v2
+2025-10-05 22:28:14,938 INFO api.main Supabase vectorstore loaded successfully
+2025-10-05 22:28:14,939 INFO core.question_generator Initializing QuestionGenerator...
+2025-10-05 22:28:16,162 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/documents?select=metadata "HTTP/2 200 OK"
+2025-10-05 22:28:16,468 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/model_performance?select=%2A "HTTP/2 200 OK"
+2025-10-05 22:28:16,471 INFO core.question_generator Loaded model performance history: {'gemma2-9b': [0.655, 0.655], 'moonshot-k2': [2.37, 2.37], 'gemini-2.5-flash': [11.1133, 11.1133, 11.1133], 'openai-oss-20b': [0.686667, 0.686667, 0.686667], 'llama3-70b': [1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429, 1.46429]}
+2025-10-05 22:28:16,473 INFO core.question_generator QuestionGenerator initialized successfully.
+2025-10-05 22:28:16,473 INFO api.main Question generator initialized
+2025-10-05 22:28:16,473 INFO api.main AI services ready
+2025-10-05 22:28:49,186 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:29:41,359 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:29:56,001 INFO httpx HTTP Request: GET https://plxtjopchabugzbfpjls.supabase.co/rest/v1/guest_generations?select=generation_count%2Clast_generation_date&ip_address=eq.127.0.0.1 "HTTP/2 200 OK"
+2025-10-05 22:30:58,000 INFO api.main AI services shut down

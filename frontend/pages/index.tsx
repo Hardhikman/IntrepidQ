@@ -8,6 +8,47 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
+// Add this interface for our video popup
+interface VideoPopupProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+// Add this simple video popup component
+const VideoPopup = ({ open, onOpenChange }: VideoPopupProps) => {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
+      <div className="relative bg-white rounded-lg overflow-hidden w-full max-w-3xl">
+        <button 
+          onClick={() => onOpenChange(false)}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 z-10"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div className="aspect-video w-full">
+          <iframe
+            className="w-full h-full"
+            src="https://www.youtube.com/embed/L_sTf2JZlJc?autoplay=1" // Updated with your video URL
+            title="IntrepidQ AI Introduction"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+        <div className="p-4 text-center">
+          <h3 className="text-lg font-semibold">Welcome to IntrepidQ AI</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Learn how IntrepidQ AI can help you prepare for the UPSC CSE exam.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Components
 import { QuestionGenerator } from "@/components/QuestionGenerator";
 import { ChatWindow } from "@/components/Chatwindow";
@@ -49,6 +90,9 @@ export default function UPSCQuestionGenerator() {
   } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  // Add state for video popup
+  const [showVideoPopup, setShowVideoPopup] = useState(false);
 
   // State
   const [subjects, setSubjects] = useState<Record<string, Subject>>({});
@@ -148,6 +192,20 @@ export default function UPSCQuestionGenerator() {
     }, 3000);
     return () => window.clearInterval(id);
   }, [loading, generatingAllAnswers, answerLoadingIndex, refreshProfile]);
+
+  // Show video popup when page loads (for all users)
+  useEffect(() => {
+    // Only show popup once per session
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('videoPopupShown')) {
+      // Set a small delay to ensure page is loaded
+      const timer = setTimeout(() => {
+        setShowVideoPopup(true);
+        sessionStorage.setItem('videoPopupShown', 'true');
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true);
@@ -591,6 +649,8 @@ export default function UPSCQuestionGenerator() {
         <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
+      {/* Add the video popup component */}
+      <VideoPopup open={showVideoPopup} onOpenChange={setShowVideoPopup} />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         {/* Floating Header */}
         <FloatingHeader
@@ -654,7 +714,7 @@ export default function UPSCQuestionGenerator() {
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>

@@ -20,14 +20,15 @@ description: Master the effective tips and strategy to prepare for upsc ethics p
 		- **Political, Economical, Social, Environmental, Cultural**
 		- **Core, Moral, Personal, Professional, Relational**
 			
-		For every value:
+			For every value:
 			- Map synonyms (similar attributes).
 			- Note how the value is shown in everyday life.
 			- Describe its impact on society or administration.
 			- Give 1-2 case studies of reformers or administrators (e.g., E. Sreedharan for integrity).
 	- ### 3. Human Attitude
 		- Make a list of attitude types (eg positive, negative, neutral, assertive).
-		For every attitude:
+
+			For every attitude:
 			- Map important attributes.
 			- Describe how it is shown or expressed.
 			- Write about the impact on ethics and administration.
@@ -54,10 +55,9 @@ description: Master the effective tips and strategy to prepare for upsc ethics p
 		- Cover major areas: Environmental, Medical, AI, International affairs, Nationalism.
 		- Write down keywords, major values, and real case examples for each field.
 	- ### 8. Social Influence and Persuasion
-		- Types: Ethical, Rational, Emotional, Tech-based, Linguistic.
-		- List behavioral techniques for persuasion.
+		- Types: Ethical, Rational, Emotional, Tech-based, Linguistic and List behavioral techniques for persuasion.
 			- Explain how to use these techniques in daily life.
-			- Describe their impact in psychology, administration, and governance.
+			- Describe their impact across psychology, administration, and governance.
 - ## How to Tackle Case Study Questions?
 	- ### Steps for Solving Case Studies
 		

@@ -201,7 +201,7 @@ export default function UPSCQuestionGenerator() {
       const timer = setTimeout(() => {
         setShowVideoPopup(true);
         sessionStorage.setItem('videoPopupShown', 'true');
-      }, 1000);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }

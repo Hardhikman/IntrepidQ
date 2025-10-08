@@ -64,14 +64,6 @@ const Footer = () => {
               <Youtube className="w-4 h-4" />
             </a>
             <a 
-              href="https://medium.com/@intrepidqAI" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-xs sm:text-sm text-gray-700 hover:text-orange-600 transition-colors whitespace-nowrap text-center"
-            >
-              Medium
-            </a>
-            <a 
               href="https://x.com/IntrepidQai" 
               target="_blank" 
               rel="noopener noreferrer"

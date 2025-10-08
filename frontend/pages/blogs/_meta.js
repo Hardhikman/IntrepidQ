@@ -25,5 +25,8 @@ module.exports = {
   },
   "webapp-updates-and-new-features": {
     title: "Webapp Updates and New Features"
+  },
+  "thought-blog": {
+    title: " Thoughts Collection by consistently writing for 30 days"
   }
 };

@@ -651,7 +651,7 @@ export default function UPSCQuestionGenerator() {
       </Head>
       {/* Add the video popup component */}
       <VideoPopup open={showVideoPopup} onOpenChange={setShowVideoPopup} />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
         {/* Floating Header */}
         <FloatingHeader
           user={user}
@@ -663,14 +663,14 @@ export default function UPSCQuestionGenerator() {
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-16 p-4 space-y-6">
           {/* New Info Section - Increased width */}
-          <section className="max-w-4xl mx-auto bg-white rounded-xl shadow-md border border-gray-200 p-6 md:p-8">
+          <section className="max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-orange-50 rounded-2xl shadow-lg border-2 border-blue-200 p-6 md:p-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                The Modern solution for UPSC Aspirants in AI age
+              <h1 className="text-3xl font-extrabold text-blue-800 mb-4 tracking-wide">
+                The Modern Solution for UPSC Aspirants in the AI Age
               </h1>
-              <p className="text-gray-700 text-lg max-w-3xl mx-auto leading-relaxed">
-                IntrepidQ AI is a AI system for the aspirants who are fearless to change their preparation style to cut short their UPSC cycle. 
-                It is not another complex AI product, it is a comprehensive , minimalistic , and free platform to develop answer writing with brainstorming and creative thinking abilities.
+              <p className="text-blue-700 text-lg max-w-3xl mx-auto leading-relaxed font-medium">
+                IntrepidQ AI empowers fearless aspirants to transform their preparation and cut short their UPSC cycle. Unlike complex AI tools, 
+                we offer a comprehensive, minimalistic platform that sharpens your answer writing, brainstorming, and creative thinking—the skills that actually determine your rank.
               </p>
             </div>
 
@@ -682,44 +682,44 @@ export default function UPSCQuestionGenerator() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Customization</h3>
-                  <p className="text-gray-700">Search options for every type of aspirants</p>
+                  <h3 className="font-bold text-blue-900 text-lg">Customization</h3>
+                  <p className="text-blue-700">Search options for every type of aspirants</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Prediction</h3>
-                  <p className="text-gray-700">Question prediction on the base of PYQ made easy</p>
+                  <h3 className="font-bold text-blue-900 text-lg">Prediction</h3>
+                  <p className="text-blue-700">Question prediction on the base of PYQ made easy</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">No FOMO</h3>
-                  <p className="text-gray-700">Coverage of extensive context aware questions</p>
+                  <h3 className="font-bold text-blue-900 text-lg">No FOMO</h3>
+                  <p className="text-blue-700">Coverage of extensive context aware questions</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Time value of money</h3>
-                  <p className="text-gray-700">Balance the time between revision and practice</p>
+                  <h3 className="font-bold text-blue-900 text-lg">Time Value of Money</h3>
+                  <p className="text-blue-700">Balance the time between revision and practice</p>
                 </div>
               </div>
             </div>

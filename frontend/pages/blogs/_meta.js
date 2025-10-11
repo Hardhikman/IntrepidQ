@@ -23,6 +23,9 @@ module.exports = {
   "how-to-prepare-currentaffairs-for-upsc": {
     title: "How to use current affairs and newspaper for UPSC preparation"
   },
+  "how-to-crack-kpsc-kas-prelims": {
+    title: "How to Crack KSPSC/KAS Prelims"
+  },
   "webapp-updates-and-new-features": {
     title: "Webapp Updates and New Features"
   },

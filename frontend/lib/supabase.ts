@@ -28,13 +28,15 @@ export interface GeneratedQuestion {
   id: string
   subject: string
   topic?: string
-  mode: 'topic' | 'paper'
+  mode: 'topic' | 'paper' | 'keyword' | 'currentAffairs'
   question: string
   thinking?: string  
   use_current_affairs: boolean
   months?: number
   question_count: number
   created_at: string
+  context?: string[]  // Array of retrieved documents as context
+  meta?: Record<string, any>  // Additional metadata
 }
 
 export interface QuestionRequest {

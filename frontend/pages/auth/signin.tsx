@@ -48,11 +48,11 @@ export default function SignInPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="w-full max-w-md px-6 py-12 flex flex-col items-center">
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Welcome to <span className="text-orange-500 font-bold">IntrepidQ</span>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Welcome to <span className="text-orange-500">IntrepidQ AI</span>
             </h1>
-            <p className="mt-3 text-gray-700 dark:text-gray-300">
-              Sign in below (we'll increase your Q request limits if you do <span className="inline-block">😊</span>)
+            <p className="mt-3 text-gray-700 dark:text-gray-300 font-bold">
+              Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will increase your writing ability if you do) <span className="inline-block">😊</span>
             </p>
           </div>
           

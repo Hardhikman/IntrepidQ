@@ -44,7 +44,7 @@ class GenerateQuestionsRequest(BaseModel):
     
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "gemma2-9b", "openai-oss-20b", "gemini-2.5-flash", "moonshot-k2"]
+        allowed_models = ["llama3-70b", "moonshot-k2", "qwen3-32b"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v
@@ -66,7 +66,7 @@ class GenerateWholePaperRequest(BaseModel):
     
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "gemma2-9b", "openai-oss-20b", "gemini-2.5-flash", "moonshot-k2"]
+        allowed_models = ["llama3-70b", "moonshot-k2","qwen3-32b"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v

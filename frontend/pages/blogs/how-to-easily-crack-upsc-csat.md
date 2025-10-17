@@ -30,7 +30,7 @@ description: Master the strategy to solve UPSC CSAT Reading Comprehension questi
   
   This systematic marking prevents confusion and anchors attention on what matters. Quick mental notes while reading save time during question-solving and reduce re-reading.
 - ## How to mark the main topic?
-  Identify whether the topic is known or unknown; if known, leverage your General Studies preparation to solve questions faster.
+  Identify whether the topic is known or unknown - if known, leverage your General Studies preparation to solve questions faster.
   
   Known topics (polity, economy, environment, society): your GS prep gives context and helps spot incorrect options quickly. Unknown topics (niche technical, abstract philosophy): focus purely on passage content without external assumptions.
 - ## How to identify ideas discussed in the passage?
@@ -38,7 +38,7 @@ description: Master the strategy to solve UPSC CSAT Reading Comprehension questi
   
   Ideas are the author's claims, explanations, comparisons, or solutions. Marking them mentally or with light underlines helps locate relevant portions when answering questions without full re-reading.
 - ## What does author's tone reveal?
-  If the tone is negative or critical, expect the author to propose solutions, alternatives, or reforms; if neutral, expect explanations or descriptions.
+  If the tone is negative or critical, expect the author to propose solutions, alternatives, or reforms - if neutral, expect explanations or descriptions.
   
   Tone signals intent: critical tone → solutions/reforms likely in later paragraphs. Neutral/descriptive tone → focus on explaining phenomena or presenting multiple views. Positive tone → advocating a position or highlighting benefits.
 - ## How to distinguish facts from opinions?
@@ -46,7 +46,7 @@ description: Master the strategy to solve UPSC CSAT Reading Comprehension questi
   
   Facts: data, historical events, scientific consensus, definitions. Opinions: author's views, preferences, evaluations, predictions. Questions often ask about the author's opinion or test if you can separate the two. Trap options mix facts with opinions.
 - ## What to do when stuck between two answer options?
-  Trust your first intuition and move on quickly; overthinking wastes time and often leads to changing correct answers to wrong ones.
+  Trust your first intuition and move on quickly, because overthinking wastes time and often leads to changing correct answers to wrong ones.
   
   Your initial instinct is usually correct because it reflects subconscious pattern recognition from practice. Spending over 30 seconds on one question risks running out of time for easier questions. Mark doubtful questions and return only if time permits.
 - ## How to approach Quant and Reasoning after RC?
@@ -76,16 +76,16 @@ description: Master the strategy to solve UPSC CSAT Reading Comprehension questi
   PYQs reveal UPSC's recurring trap patterns, question styles, and passage structures that generic RC practice does not capture.
   
   **What if I don't know the topic?** 
-  Stick strictly to passage content; do not use external knowledge, as UPSC tests comprehension, not prior knowledge.
+  Stick strictly to passage content - do not use external knowledge, as UPSC tests comprehension, not prior knowledge.
   
   **How to avoid overthinking?** 
-  Set a 30-second decision rule per question; if stuck, trust your gut and move on to avoid time drain.
+  Set a 30-second decision rule per question - if stuck, trust your gut and move on to avoid time drain.
   
   **How many Quant/Reasoning questions to attempt?** 
-  Around 30 basic questions with high confidence; quality over quantity ensures you cross the cutoff safely.
+  Around 30 basic questions with high confidence - quality over quantity ensures you cross the cutoff safely.
   
   **What is the safe score to qualify CSAT?** 
-  Scoring 66-70 marks (33% of 200) is the qualifying threshold; aiming for 80-100 provides a comfortable buffer.
+  Scoring 66-70 marks (33% of 200) is the qualifying threshold - aiming for 80-100 provides a comfortable buffer.
 - ## One-sentence takeaway
   Solve RC first in 40 minutes using PYQ-built intuition to spot traps, mark topics and tone, distinguish facts from opinions, trust your gut on close calls, then pick 30 easy Quant/Reasoning questions to comfortably cross the CSAT cutoff and focus energy on Mains preparation.
 - ## UPSC CSAT RC Examples Using IntrepidQ AI Framework

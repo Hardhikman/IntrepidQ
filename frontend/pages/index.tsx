@@ -53,7 +53,6 @@ const VideoPopup = ({ open, onOpenChange }: VideoPopupProps) => {
 import { QuestionGenerator } from "@/components/QuestionGenerator";
 import { ChatWindow } from "@/components/Chatwindow";
 import FloatingHeader from "@/components/FloatingHeader";
-import { ScreenshotUploader } from "@/components/ScreenshotUploader";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -94,6 +93,9 @@ export default function UPSCQuestionGenerator() {
   // Add state for video popup
   const [showVideoPopup, setShowVideoPopup] = useState(false);
 
+  // Add state for tracking if video was shown
+  const [videoWasShown, setVideoWasShown] = useState(false);
+
   // State
   const [subjects, setSubjects] = useState<Record<string, Subject>>({});
   const [selectedSubject, setSelectedSubject] = useState("GS1");
@@ -112,8 +114,11 @@ export default function UPSCQuestionGenerator() {
   const [models, setModels] = useState<{ id: string; name: string }[]>([
     { id: "llama3-70b", name: "Llama3 (70B)" },
     { id: "moonshot-k2", name: "Moonshot (K2)" },
-    { id: "gemma2-9b", name: "Gemma2 (9B)" },
+    { id: "qwen3-32b", name: "Qwen3 (32B)" },
   ]);
+
+  // Add state for showing sign-in notification instead of automatic redirect
+  const [showSignInNotification, setShowSignInNotification] = useState(false);
 
   // NEW: Keyword query state for keyword mode
   const [keywordQuery, setKeywordQuery] = useState("");
@@ -127,34 +132,6 @@ export default function UPSCQuestionGenerator() {
 
   // Daily limit tracking
   const [dailyLimitReached, setDailyLimitReached] = useState(false);
-  const [guestGenerationsUsed, setGuestGenerationsUsed] = useState(0);
-
-  // Helper function to get remaining guest generations
-  const getRemainingGuestGenerations = () => {
-    return Math.max(2 - guestGenerationsUsed, 0);
-  };
-
-  // Check guest limit status from server
-  const checkGuestLimitFromServer = async () => {
-    if (user) return; // Only for guests
-    
-    try {
-      const response = await fetch('/api/check_guest_limit', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setGuestGenerationsUsed(data.generations_used || 0);
-        setDailyLimitReached(data.limit_reached || false);
-      }
-    } catch (error) {
-      // Silently handle errors - fallback to default state
-      setGuestGenerationsUsed(0);
-      setDailyLimitReached(false);
-    }
-  };
 
   // Load subjects and models
   useEffect(() => {
@@ -176,11 +153,10 @@ export default function UPSCQuestionGenerator() {
       const lastDate = profile?.last_generation_date;
       const count = lastDate === today ? (profile?.generation_count_today || 0) : 0;
       setDailyLimitReached(count >= 5);
-    } else if (!user) {
-      // Guest user - check from server
-      checkGuestLimitFromServer();
     } else {
-      setDailyLimitReached(false);
+      // For non-authenticated users, always set limit reached to true
+      // since we're removing the guest feature
+      setDailyLimitReached(true);
     }
   };
 
@@ -200,12 +176,37 @@ export default function UPSCQuestionGenerator() {
       // Set a small delay to ensure page is loaded
       const timer = setTimeout(() => {
         setShowVideoPopup(true);
+        setVideoWasShown(true);
         sessionStorage.setItem('videoPopupShown', 'true');
       }, 3000);
       
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Handle video popup close event
+  const handleVideoClose = () => {
+    setShowVideoPopup(false);
+    setVideoWasShown(true);
+  };
+
+  // Redirect to sign-in page 10 seconds after video is closed for non-authenticated users
+  useEffect(() => {
+    let redirectTimer: NodeJS.Timeout | null = null;
+    
+    // Only redirect for non-authenticated users, and only after video has been shown and closed
+    if (typeof window !== 'undefined' && !user && !authLoading && videoWasShown && !showVideoPopup) {
+      redirectTimer = setTimeout(() => {
+        router.push('/auth/signin');
+      }, 10000); // 10 seconds after video is closed
+    }
+    
+    return () => {
+      if (redirectTimer) {
+        clearTimeout(redirectTimer);
+      }
+    };
+  }, [user, authLoading, videoWasShown, showVideoPopup, router]);
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true);
@@ -372,14 +373,14 @@ export default function UPSCQuestionGenerator() {
         if (response.status === 429) {
           const errorData = await response.json();
           if (errorData.guest_limit_reached) {
-            // Update guest state from server response
+            // For non-authenticated users, always set limit reached to true
+            // since we're removing the guest feature
             setDailyLimitReached(true);
-            setGuestGenerationsUsed(2); // Reached limit
             
-            // Guest user hit limit - show special toast with sign-in option
+            // Show special toast with sign-in option
             toast({
               title: "Question Generation Limit Reached",
-              description: `You've reached your daily limit of ${errorData.guest_daily_limit} question generations. Sign in with Google to get ${errorData.user_daily_limit} question generations per day!`,
+              description: `Sign in with Google to get 5 question generations per day, save your history, and access premium features!`,
               variant: "destructive",
               action: (
                 <Button 
@@ -411,37 +412,36 @@ export default function UPSCQuestionGenerator() {
           ? {
               id: Math.random().toString(),
               subject: selectedSubject,
-              topic: selectedTopic,
-              mode,
+              topic: mode === "keyword" ? keywordQuery : selectedTopic,
+              mode: mode === "keyword" ? "keyword" : mode === "currentAffairs" ? "currentAffairs" : mode === "paper" ? "paper" : "topic",
               question: q,
               thinking: "",
               use_current_affairs: mode === "currentAffairs" ? true : useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
+              context: data.meta?.sampled_documents || [],
+              meta: data.meta || {}
             }
           : {
               id: Math.random().toString(),
               subject: selectedSubject,
-              topic: selectedTopic,
-              mode,
+              topic: mode === "keyword" ? keywordQuery : selectedTopic,
+              mode: mode === "keyword" ? "keyword" : mode === "currentAffairs" ? "currentAffairs" : mode === "paper" ? "paper" : "topic",
               question: q.question || q.questions,
               thinking: q.thinking || "",
               use_current_affairs: mode === "currentAffairs" ? true : useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
+              context: data.meta?.sampled_documents || [],
+              meta: data.meta || {}
             }
       );
       setQuestions(qs);
-      
-      // Update guest state after successful generation
+
+      // For non-authenticated users, always set limit reached to true
+      // since we're removing the guest feature
       if (!user) {
-        setGuestGenerationsUsed(prev => {
-          const newCount = prev + 1;
-          if (newCount >= 2) {
-            setDailyLimitReached(true);
-          }
-          return newCount;
-        });
+        setDailyLimitReached(true);
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -556,8 +556,7 @@ export default function UPSCQuestionGenerator() {
           if (errorData.guest_limit_reached) {
             // Update guest state from server response
             setDailyLimitReached(true);
-            setGuestGenerationsUsed(2); // Reached limit
-            
+
             // Guest user hit limit - show special toast with sign-in option
             toast({
               title: "Question Generation Limit Reached",
@@ -600,6 +599,8 @@ export default function UPSCQuestionGenerator() {
               use_current_affairs: useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
+              context: data.meta?.sampled_documents || [],
+              meta: data.meta || {}
             }
           : {
               id: Math.random().toString(),
@@ -611,19 +612,14 @@ export default function UPSCQuestionGenerator() {
               use_current_affairs: useCurrentAffairs,
               question_count: 1,
               created_at: new Date().toISOString(),
+              context: data.meta?.sampled_documents || [],
+              meta: data.meta || {}
             }
       );
       setQuestions(qs);
       
       // Update guest state after successful generation
       if (!user) {
-        setGuestGenerationsUsed(prev => {
-          const newCount = prev + 1;
-          if (newCount >= 2) {
-            setDailyLimitReached(true);
-          }
-          return newCount;
-        });
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -634,13 +630,6 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
-  // NEW: Handle text extracted from screenshots
-  const handleTextExtracted = (text: string) => {
-    // You can implement logic here to use the extracted text
-    // For example, you might want to generate questions based on the extracted text
-    console.log("Extracted text:", text);
-  };
-
   // Return the main interface for both authenticated and guest users
   return (
     <>
@@ -648,9 +637,10 @@ export default function UPSCQuestionGenerator() {
         <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation</title>
         <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </Head>
       {/* Add the video popup component */}
-      <VideoPopup open={showVideoPopup} onOpenChange={setShowVideoPopup} />
+      <VideoPopup open={showVideoPopup} onOpenChange={handleVideoClose} />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
         {/* Floating Header */}
         <FloatingHeader
@@ -804,28 +794,6 @@ export default function UPSCQuestionGenerator() {
             </CardContent>
           </Card>
           
-          {/* Guest user information - Made responsive */}
-          {!user && (
-            <Card className="max-w-5xl mx-auto shadow-sm border-blue-200 bg-blue-50">
-              <CardContent className="py-4">
-                <div className="text-center">
-                  <div className="text-blue-800 font-medium mb-2 text-sm sm:text-base">
-                    {dailyLimitReached 
-                      ? '🚫 Daily limit reached! You have 0 question generations remaining today.' 
-                      : `🎆 Welcome, Guest! You have ${getRemainingGuestGenerations()} question generation${getRemainingGuestGenerations() === 1 ? '' : 's'} remaining today.`
-                    }
-                  </div>
-                  <div className="text-blue-600 text-xs sm:text-sm">
-                    {dailyLimitReached 
-                      ? ' Sign in with Google to get 5 question generations per day, save your history, and access premium features!' 
-                      : 'Generate unlimited answers! Sign in with Google to get 5 question generations per day, save your history, and access premium features!'
-                    }
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Authenticated user daily limit notification - Made responsive */}
           {user && dailyLimitReached && (
             <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
@@ -844,105 +812,74 @@ export default function UPSCQuestionGenerator() {
 
           {/* CONFIG + RESULTS - Made responsive */}
           <section className="max-w-5xl mx-auto space-y-6">
-            {/* Tabs for Question Generation and Screenshot Processing */}
-            <Tabs defaultValue="questions" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger 
-                  value="questions" 
-                  disabled={dailyLimitReached}
-                >
-                  Question Generator
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="screenshot"
-                  disabled={dailyLimitReached}
-                >
-                  Answer Evaluator
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="questions">
-                {dailyLimitReached ? (
-                  <div className="text-center py-8">
-                    <Button 
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                      onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
-                    >
-                      {user ? "Go to Dashboard" : "Sign In with Google"}
-                    </Button>
-                  </div>
-                ) : (
-                  <QuestionGenerator
-                    subjects={subjects}
-                    selectedSubject={selectedSubject}
-                    selectedTopic={selectedTopic}
-                    setSelectedTopic={setSelectedTopic}
-                    handleSubjectChange={handleSubjectChange}
-                    subjectsLoading={subjectsLoading}
-                    numQuestions={numQuestions}
-                    setNumQuestions={setNumQuestions}
-                    useCurrentAffairs={useCurrentAffairs}
-                    setUseCurrentAffairs={setUseCurrentAffairs}
-                    selectedModel={selectedModel}
-                    setSelectedModel={setSelectedModel}
-                    isGenerateDisabled={loading || dailyLimitReached}
-                    loading={loading}
-                    onGenerate={handleGenerateQuestions}
-                    mode={mode}
-                    dailyLimitReached={dailyLimitReached}
-                    // NEW: Pass keyword-related props
-                    keywordQuery={keywordQuery}
-                    setKeywordQuery={setKeywordQuery}
-                    onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
-                    // Models prop
-                    models={models}
-                    // NEW: News source props
-                    newsSource={newsSource}
-                    setNewsSource={setNewsSource}
-                    // NEW: Keywords for current affairs mode
-                    fetchedKeywords={fetchedKeywords}
-                    selectedKeyword={selectedKeyword}
-                    setSelectedKeyword={setSelectedKeyword}
-                  />
-                )}
-
-                <div id="results-section">
-                  {questions.length > 0 && Object.keys(answers).length === 0 && (
-                    <div className="mb-4">
-                      <Button
-                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
-                        onClick={handleGenerateAllAnswers}
-                        disabled={generatingAllAnswers}
-                      >
-                        {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
-                      </Button>
-                    </div>
-                  )}
-
-                  <ChatWindow
-                    questions={questions}
-                    answers={answers}
-                    loading={loading}
-                    onGenerateAnswer={handleGenerateSingleAnswer}
-                    answerLoadingIndex={answerLoadingIndex}
-                  />
+            {/* Removed tabbed interface - only Question Generator remains */}
+            <div className="w-full">
+              {dailyLimitReached ? (
+                <div className="text-center py-8">
+                  <Button 
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
+                    onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                  >
+                    {user ? "Go to Dashboard" : "Sign In with Google"}
+                  </Button>
                 </div>
-              </TabsContent>
-              <TabsContent value="screenshot">
-                {dailyLimitReached ? (
-                  <div className="text-center py-8">
-                    <Button 
-                      className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                      onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+              ) : (
+                <QuestionGenerator
+                  subjects={subjects}
+                  selectedSubject={selectedSubject}
+                  selectedTopic={selectedTopic}
+                  setSelectedTopic={setSelectedTopic}
+                  handleSubjectChange={handleSubjectChange}
+                  subjectsLoading={subjectsLoading}
+                  numQuestions={numQuestions}
+                  setNumQuestions={setNumQuestions}
+                  useCurrentAffairs={useCurrentAffairs}
+                  setUseCurrentAffairs={setUseCurrentAffairs}
+                  selectedModel={selectedModel}
+                  setSelectedModel={setSelectedModel}
+                  isGenerateDisabled={loading || dailyLimitReached}
+                  loading={loading}
+                  onGenerate={handleGenerateQuestions}
+                  mode={mode}
+                  dailyLimitReached={dailyLimitReached}
+                  // NEW: Pass keyword-related props
+                  keywordQuery={keywordQuery}
+                  setKeywordQuery={setKeywordQuery}
+                  onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
+                  // Models prop
+                  models={models}
+                  // NEW: News source props
+                  newsSource={newsSource}
+                  setNewsSource={setNewsSource}
+                  // NEW: Keywords for current affairs mode
+                  fetchedKeywords={fetchedKeywords}
+                  selectedKeyword={selectedKeyword}
+                  setSelectedKeyword={setSelectedKeyword}
+                />
+              )}
+
+              <div id="results-section">
+                {questions.length > 0 && Object.keys(answers).length === 0 && (
+                  <div className="mb-4">
+                    <Button
+                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
+                      onClick={handleGenerateAllAnswers}
+                      disabled={generatingAllAnswers}
                     >
-                      {user ? "Go to Dashboard" : "Sign In with Google"}
+                      {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
                     </Button>
                   </div>
-                ) : (
-                  <ScreenshotUploader onTextExtracted={handleTextExtracted} />
                 )}
-              </TabsContent>
-            </Tabs>
 
+                <ChatWindow
+                  questions={questions}
+                  answers={answers}
+                  loading={loading}
+                  onGenerateAnswer={handleGenerateSingleAnswer}
+                  answerLoadingIndex={answerLoadingIndex}
+                />
+              </div>
+            </div>
           </section>
         </div>
       </div>

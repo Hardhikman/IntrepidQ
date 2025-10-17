@@ -63,12 +63,10 @@ class QuestionGenerator:
         self._setup_templates()
         self.available_models = {
             "llama3-70b": {"provider": "groq", "model_id": "llama-3.3-70b-versatile"},
-            "gemma2-9b": {"provider": "groq", "model_id": "llama-3.1-8b-instant"},
-            "openai-oss-20b": {"provider": "groq", "model_id": "openai/gpt-oss-20b"},
-            "gemini-2.5-flash": {"provider": "google", "model_id": "gemini-2.5-flash"},
             "moonshot-k2": {"provider": "groq", "model_id": "moonshotai/kimi-k2-instruct-0905"},
+            "qwen3-32b": {"provider": "groq", "model_id": "qwen/qwen3-32b"}
         }
-        self.priority_order = ["gemma2-9b","openai-oss-20b", "llama3-70b", "moonshot-k2", "gemini-2.5-flash"]
+        self.priority_order = [ "llama3-70b", "qwen3-32b", "moonshot-k2"]
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
         self._load_model_performance()
@@ -366,14 +364,37 @@ class QuestionGenerator:
             """You are a UPSC Mains question paper designer for {subject}.
 Generate {num} original UPSC-style Mains questions for the topic "{topic}".
 Examples from database and previous generations:\n{examples}\n
-IMPORTANT:\n- Output ONLY in English\n- Output MUST be a valid JSON array of objects\n- Each object must have "thinking" (short rationale) AND "question" (final UPSC-style question)\n- "thinking": max 2-3 sentences\n- "question": one exam-appropriate UPSC question\n- No commentary or text outside JSON\n- Exactly {num} items\n- Generate NEW questions, don't copy the examples\n
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of objects
+- Each object must have "thinking" (short rationale) AND "question" (final UPSC-style question)
+- "thinking": max 2-3 sentences
+- "question": one exam-appropriate UPSC question
+- No commentary or text outside JSON
+- Exactly {num} items
+- Generate NEW questions, don't copy the examples
+- Incorporate insights from ALL examples above when generating questions
+- If generating multiple questions, ensure each question is based on different examples or different aspects of the examples
+- Create diverse questions that cover various themes and concepts from the examples
+
 Now return ONLY the JSON array:"""
         )
         self.whole_paper_prompt = PromptTemplate.from_template(
             """You are a UPSC Mains paper designer for {subject}.
 Generate a full UPSC paper (10 questions) covering multiple topics.
 Examples from database and previous generations:\n{topic_examples}\n
-IMPORTANT:\n- Output ONLY in English\n- Output MUST be a valid JSON array of 10 objects\n- Each object must have "thinking" + "question"\n- "thinking": short reasoning (max 2-3 sentences)\n- "question": one exam-appropriate UPSC question\n- No commentary/reasoning outside JSON\n- Exactly 10 items\n- Generate NEW questions, don't copy the examples\n
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of 10 objects
+- Each object must have "thinking" + "question"
+- "thinking": short reasoning (max 2-3 sentences)
+- "question": one exam-appropriate UPSC question
+- No commentary/reasoning outside JSON
+- Exactly 10 items
+- Generate NEW questions, don't copy the examples
+- Incorporate insights from ALL examples above when generating questions
+- Ensure questions are diverse and cover different topics and aspects from the examples
+
 Now return ONLY the JSON array:"""
         )
 
@@ -384,7 +405,16 @@ Now return ONLY the JSON array:"""
 Generate 10 analytical UPSC questions incorporating current affairs.
 Topics and Example Questions:\n{topic_examples_text}\n
 Recent News Context:\n{news_text}\n
-IMPORTANT:\n- Output ONLY in English\n- Output MUST be a valid JSON array of 10 objects\n- Each object: "thinking" + "question"\n- "thinking": 1-3 sentences of reasoning\n- "question": final exam-style UPSC question\n- No commentary/reasoning outside JSON\n- Exactly 10 items\n- Generate NEW questions based on Recent News Context\n
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of 10 objects
+- Each object: "thinking" + "question"
+- "thinking": 1-3 sentences of reasoning
+- "question": final exam-style UPSC question
+- No commentary/reasoning outside JSON
+- Exactly 10 items
+- Generate NEW questions based on Recent News Context
+
 Now return ONLY the JSON array:"""
 
     def _build_topics_by_subject(self) -> Dict[str, List[str]]:
@@ -417,18 +447,27 @@ Now return ONLY the JSON array:"""
             end_date, start_date = datetime.utcnow().date(), (datetime.utcnow().date() - timedelta(days=30 * months))
             client = TavilyClient(os.getenv("TAVILY_API_KEY"))
             include_domains = ["https://indianexpress.com"] if news_source == "indianexpress" else ["https://thehindu.com"] if news_source == "thehindu" else []
-            search_params = {"query": search_topic, "search_depth": "advanced", "start_date": start_date.isoformat(), "end_date": end_date.isoformat(), "include_raw_content": False, "max_results": 3, "chunks_per_source": 1}
+            # Use markdown format for better structured content
+            search_params = {"query": search_topic, "search_depth": "advanced", "start_date": start_date.isoformat(), "end_date": end_date.isoformat(), "include_raw_content": "markdown", "max_results": 3, "chunks_per_source": 2}
             if include_domains: search_params["include_domains"] = include_domains
             logger.info(f"Fetching news from source: {news_source}")
             response = client.search(**search_params)
             articles = response.get("results", [])
-            # Process the content outside of the f-string to avoid backslash errors
+            # Process the content to extract more relevant main information while preserving markdown
             news_items = []
             for article in articles:
                 content = article.get('content', 'No content').strip()
-                content = content.replace('\n', ' ').replace('\r', ' ')
-                content = content[:300] + "..."
-                news_items.append(f"- {content}")
+                # Extract title and URL for better context
+                title = article.get('title', 'Untitled')
+                url = article.get('url', '#')
+                
+                # Preserve markdown formatting but clean excessive whitespace
+                content = '\n'.join(line.strip() for line in content.split('\n') if line.strip())
+                
+                # Extract first 800 characters instead of 300 to capture more main information
+                if len(content) > 500:
+                    content = content[:500] + "..."
+                news_items.append(f"### {title}\n{content}\n[Source: {url}]\n")
             news = "\n".join(news_items)
             logger.info(f"Tavily fetch successful. Found {len(articles)} articles from {news_source}.")
             return news if news else "No news articles found."
@@ -472,7 +511,11 @@ Now return ONLY the JSON array:"""
             questions = self.safe_parse_questions(result.get("output", ""), num)
             if questions and result.get("status") == "success": self._cache_questions(self._get_cache_key(subject, topic, num, False, 0), questions, subject, topic)
             meta = {k:v for k,v in result.items() if k != 'output'}
-            meta.update({"examples_used": len(all_examples), "cached_examples": len(cached_examples)})
+            meta.update({
+                "examples_used": len(all_examples), 
+                "cached_examples": len(cached_examples),
+                "sampled_documents": [doc.page_content for doc in sampled_docs]  # Send full documents
+            })
             return {"questions": questions, "meta": meta}
         except Exception as e:
             logger.error(f"FATAL Error in _generate_static_questions: {e}", exc_info=True)
@@ -481,20 +524,45 @@ Now return ONLY the JSON array:"""
     def _generate_current_affairs_questions(self, subject, topic, num, months, models_to_try: List[str], news_source: str = "all", keyword_context: Optional[str] = None):
         logger.info(f"Enhancing with Current Affairs. Keyword: '{keyword_context or topic}'")
         try:
-            initial_docs = self._get_relevant_documents_with_fallback(query=f"UPSC questions for {subject} on {topic}", k=20, topic=topic)
-            sampled_docs = self._apply_stratified_sampling(initial_docs, 5)
+            if keyword_context:
+                logger.info(f"Using BM25 based document selection with keyword: {keyword_context}")
+                initial_docs = self._get_relevant_documents_with_bm25(keyword_context, topic, k=3)
+            else:
+                logger.info(f"Using BM25 based document selection with topic: {topic}")
+                initial_docs = self._get_relevant_documents_with_bm25(topic, topic, k=3)
+            
+            # Use the top 3 documents directly without further sampling since BM25 already ranks them
+            sampled_docs = initial_docs
             db_examples = [doc.page_content for doc in sampled_docs]
             cached_examples = self._get_cached_questions_as_examples(subject, topic, max_examples=2)
             all_examples = db_examples + cached_examples
             news = self.fetch_recent_news(keyword_context or topic, months, news_source)
             logger.info(f"Total examples for prompt: {len(all_examples)}. News content length: {len(news)} chars.")
             examples_text = "\n".join(all_examples)
-            prompt = f"{self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)}\n\nRecent News:\n{news}"
+            
+            # Enhanced prompt that explicitly instructs the AI to consider all news items and examples
+            base_prompt = self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)
+            prompt = f"""{base_prompt}\n\nRecent News:\n{news}\n\nIMPORTANT FOR CURRENT AFFAIRS MODE:
+- Incorporate insights from ALL news items and examples above when generating questions
+- Do NOT focus only on the first news item
+- Create questions that require understanding connections between different news items
+- Reflect comprehensive understanding of the current affairs context
+- If generating multiple questions, ensure each question is based on different news items or different aspects of the news items
+- Questions should test analytical thinking about the relationships between events"""
+            
             result = self._try_models(models_to_try, prompt)
             questions = self.safe_parse_questions(result.get("output", ""), num)
             if questions and result.get("status") == "success": self._cache_questions(self._get_cache_key(subject, topic, num, True, months), questions, subject, topic)
             meta = {k:v for k,v in result.items() if k != 'output'}
-            meta.update({"examples_used": len(all_examples), "cached_examples": len(cached_examples), "news_included": True, "news_content_length": len(news)})
+            meta.update({
+                "examples_used": len(all_examples), 
+                "cached_examples": len(cached_examples), 
+                "news_included": True, 
+                "news_content_length": len(news),
+                "sampled_documents": [doc.page_content for doc in sampled_docs],
+                "news_content": news,
+                "keyword_context": keyword_context
+            })
             return {"questions": questions, "meta": meta}
         except Exception as e:
             logger.error(f"FATAL Error in _generate_current_affairs_questions: {e}", exc_info=True)
@@ -654,7 +722,9 @@ Now return ONLY the JSON array:"""
                 return {"questions": [], "meta": {"status": "error", "message": "No keywords provided."}}
 
             first_keyword = keywords[0]
-            db_examples = self._get_relevant_documents_without_filter(f"UPSC questions related to {first_keyword}", k=5)
+            # Get documents with full Document objects to access metadata
+            initial_docs = self._get_relevant_documents_without_filter_full(f"UPSC questions related to {first_keyword}", k=5)
+            db_examples = [doc.page_content for doc in initial_docs]
             logger.info(f"Retrieved {len(db_examples)} documents from the database for keyword '{first_keyword}' without filter.")
 
             cached_examples = self._get_cached_questions_as_examples(subject, first_keyword, max_examples=2)
@@ -664,7 +734,16 @@ Now return ONLY the JSON array:"""
                 """You are a UPSC Mains question paper designer.
 Generate {num} original UPSC-style Mains questions based on the following keywords: "{keywords}".
 Examples:\n{examples}\n
-IMPORTANT:\n- Output ONLY in English\n- Output MUST be a valid JSON array of objects\n- Each object must have "thinking" and "question"\n- No commentary outside JSON\n- Exactly {num} items\n
+IMPORTANT:
+- Output ONLY in English
+- Output MUST be a valid JSON array of objects
+- Each object must have "thinking" and "question"
+- No commentary outside JSON
+- Exactly {num} items
+- Incorporate insights from ALL examples above when generating questions
+- If generating multiple questions, ensure each question is based on different examples or different aspects of the examples
+- Create diverse questions that cover various themes and concepts from the examples
+
 Now return ONLY the JSON array:"""
             )
             prompt = prompt_template.format(num=num, keywords=", ".join(keywords), examples="\n".join(all_examples))
@@ -681,12 +760,120 @@ Now return ONLY the JSON array:"""
                 self._cache_questions(self._get_cache_key(subject, first_keyword, num, use_ca, months), questions, subject, first_keyword)
             
             meta = {k:v for k,v in result.items() if k != 'output'}
-            meta.update({"examples_used": len(all_examples), "cached_examples": len(cached_examples)})
+            meta.update({
+                "examples_used": len(all_examples), 
+                "cached_examples": len(cached_examples),
+                "sampled_documents": [doc.page_content for doc in initial_docs]  # Send full documents
+            })
             logger.info(f"--- COMPLETED KEYWORD-BASED GENERATION ---\n")
             return {"questions": questions, "meta": meta}
         except Exception as e:
             logger.error(f"FATAL Error in generate_questions_from_keywords: {e}", exc_info=True)
             return {"questions": [], "meta": {"status": "error", "message": str(e)}}
+
+    def _get_relevant_documents_without_filter_full(self, query: str, k: int = 5) -> List[Document]:
+        """Get full Document objects without filter for keyword-based generation"""
+        if not self.supabase_client or not self.vectorstore or not hasattr(self.vectorstore, 'embeddings'): 
+            return []
+        try:
+            query_embedding = self.vectorstore.embeddings.embed_query(query)
+            response = self.supabase_client.rpc("match_documents", {"filter": {}, "query_embedding": query_embedding, "match_count": k}).execute()
+            return [Document(page_content=item.get("content", ""), metadata=item.get("metadata", {})) for item in response.data] if response.data else []
+        except Exception as e:
+            logger.warning(f"Vector search without filter failed: {e}")
+            return []
+
+    def _get_relevant_documents_with_bm25(self, query: str, topic: str, k: int = 5) -> List[Document]:
+        logger.info(f"Performing BM25 based document selection for query: '{query}' and topic: '{topic}'")
+        
+        try:
+            topic_docs = self._get_relevant_documents_with_fallback(
+                query=f"UPSC questions for {topic}", 
+                k=30,
+                topic=topic
+            )
+            
+            if not topic_docs:
+                logger.warning("No documents found for topic. Returning empty list.")
+                return []
+            
+            doc_contents = [doc.page_content for doc in topic_docs]
+            
+            scored_docs = self._compute_bm25_scores(query, doc_contents, topic_docs)
+            
+            scored_docs.sort(key=lambda x: x[1], reverse=True)
+            top_docs = [doc for doc, score in scored_docs[:k]]
+            
+            logger.info(f"Selected top {len(top_docs)} documents based on BM25 scoring")
+            return top_docs
+            
+        except Exception as e:
+            logger.error(f"Error in BM25 document selection: {e}")
+            return []
+
+    def _compute_bm25_scores(self, query: str, doc_contents: List[str], documents: List[Document]) -> List[tuple]:
+        import math
+        from collections import Counter
+        import re
+        
+        k1 = 1.5
+        b = 0.75
+        
+        query_terms = self._preprocess_text(query)
+        
+        if not query_terms:
+            return [(doc, 1.0) for doc in documents]
+        
+        processed_docs = [self._preprocess_text(content) for content in doc_contents]
+        
+        doc_lengths = [len(doc_terms) for doc_terms in processed_docs]
+        avg_doc_length = sum(doc_lengths) / len(doc_lengths) if doc_lengths else 1
+        
+        doc_freq = Counter()
+        for doc_terms in processed_docs:
+            unique_terms = set(doc_terms)
+            for term in unique_terms:
+                doc_freq[term] += 1
+        
+        scored_docs = []
+        total_docs = len(documents)
+        
+        for i, doc_terms in enumerate(processed_docs):
+            if not doc_terms:
+                scored_docs.append((documents[i], 0.0))
+                continue
+                
+            score = 0.0
+            doc_length = doc_lengths[i]
+            
+            K = k1 * ((1 - b) + b * (doc_length / avg_doc_length)) if avg_doc_length > 0 else k1
+            
+            for term in query_terms:
+                tf = doc_terms.count(term)
+                
+                df = doc_freq.get(term, 0)
+                
+                idf = math.log((total_docs - df + 0.5) / (df + 0.5)) if df > 0 else 0
+                
+                term_score = idf * (tf * (k1 + 1)) / (tf + K) if K > 0 else 0
+                score += term_score
+            
+            scored_docs.append((documents[i], score))
+        
+        return scored_docs
+
+    def _preprocess_text(self, text: str) -> List[str]:
+        import re
+        
+        text = text.lower()
+        
+        text = re.sub(r'[^a-zA-Z\s]', '', text)
+        
+        terms = text.split()
+        
+        terms = [term for term in terms if len(term) > 2]
+        
+        return terms
 
 # Factory
 def create_question_generator(groq_api_key, google_api_key, vectorstore, supabase_client):

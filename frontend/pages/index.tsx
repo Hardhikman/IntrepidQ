@@ -71,6 +71,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Types
 import { GeneratedQuestion } from "@/lib/supabase";
+import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 
 interface Subject {
   name: string;
@@ -189,24 +190,6 @@ export default function UPSCQuestionGenerator() {
     setShowVideoPopup(false);
     setVideoWasShown(true);
   };
-
-  // Redirect to sign-in page 10 seconds after video is closed for non-authenticated users
-  useEffect(() => {
-    let redirectTimer: NodeJS.Timeout | null = null;
-    
-    // Only redirect for non-authenticated users, and only after video has been shown and closed
-    if (typeof window !== 'undefined' && !user && !authLoading && videoWasShown && !showVideoPopup) {
-      redirectTimer = setTimeout(() => {
-        router.push('/auth/signin');
-      }, 10000); // 10 seconds after video is closed
-    }
-    
-    return () => {
-      if (redirectTimer) {
-        clearTimeout(redirectTimer);
-      }
-    };
-  }, [user, authLoading, videoWasShown, showVideoPopup, router]);
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true);
@@ -372,35 +355,14 @@ export default function UPSCQuestionGenerator() {
       if (!response.ok) {
         if (response.status === 429) {
           const errorData = await response.json();
-          if (errorData.guest_limit_reached) {
-            // For non-authenticated users, always set limit reached to true
-            // since we're removing the guest feature
-            setDailyLimitReached(true);
-            
-            // Show special toast with sign-in option
-            toast({
-              title: "Question Generation Limit Reached",
-              description: `Sign in with Google to get 5 question generations per day, save your history, and access premium features!`,
-              variant: "destructive",
-              action: (
-                <Button 
-                  size="sm" 
-                  onClick={handleGoogleSignIn}
-                  className="ml-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  Sign In
-                </Button>
-              ),
-            });
-          } else {
-            // Authenticated user hit limit
-            setDailyLimitReached(true);
-            toast({
-              title: "Daily Limit Reached",
-              description: errorData.error || "Daily generation limit reached",
-              variant: "destructive",
-            });
-          }
+          // Since we've removed the guest feature, all users are authenticated
+          // Show the standard limit reached message for all users
+          setDailyLimitReached(true);
+          toast({
+            title: "Daily Limit Reached",
+            description: errorData.error || "Daily generation limit reached",
+            variant: "destructive",
+          });
           return;
         }
         throw new Error(`HTTP ${response.status}`);
@@ -553,34 +515,14 @@ export default function UPSCQuestionGenerator() {
       if (!response.ok) {
         if (response.status === 429) {
           const errorData = await response.json();
-          if (errorData.guest_limit_reached) {
-            // Update guest state from server response
-            setDailyLimitReached(true);
-
-            // Guest user hit limit - show special toast with sign-in option
-            toast({
-              title: "Question Generation Limit Reached",
-              description: `You've reached your daily limit of ${errorData.guest_daily_limit} question generations. Sign in with Google to get ${errorData.user_daily_limit} question generations per day! You can still generate unlimited answers.`,
-              variant: "destructive",
-              action: (
-                <Button 
-                  size="sm" 
-                  onClick={handleGoogleSignIn}
-                  className="ml-2 bg-blue-600 hover:bg-blue-700"
-                >
-                  Sign In
-                </Button>
-              ),
-            });
-          } else {
-            // Authenticated user hit limit
-            setDailyLimitReached(true);
-            toast({
-              title: "Daily Limit Reached",
-              description: errorData.error || "Daily generation limit reached",
-              variant: "destructive",
-            });
-          }
+          // Since we've removed the guest feature, all users are authenticated
+          // Show the standard limit reached message for all users
+          setDailyLimitReached(true);
+          toast({
+            title: "Daily Limit Reached",
+            description: errorData.error || "Daily generation limit reached",
+            variant: "destructive",
+          });
           return;
         }
         throw new Error(`HTTP ${response.status}`);
@@ -803,7 +745,7 @@ export default function UPSCQuestionGenerator() {
                     🚫 Daily Limit Reached! You've used all 5 question generations today.
                   </div>
                   <div className="text-orange-600 text-xs sm:text-sm">
-                    Your daily limit will reset tomorrow. You can still generate unlimited answers!
+                    Your daily limit will reset tomorrow. Keep brainstorming and keep learning !
                   </div>
                 </div>
               </CardContent>
@@ -814,13 +756,19 @@ export default function UPSCQuestionGenerator() {
           <section className="max-w-5xl mx-auto space-y-6">
             {/* Removed tabbed interface - only Question Generator remains */}
             <div className="w-full">
-              {dailyLimitReached ? (
+              {!user ? (
                 <div className="text-center py-8">
+                  <div className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">
+                    Welcome to <AIntrepidQLogo size="large" />
+                    <div className="mt-4">
+                      Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will raise your answer writing capability if you do) <span className="inline-block">😊</span>
+                    </div>
+                  </div>
                   <Button 
                     className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                    onClick={() => user ? router.push('/dashboard') : signInWithGoogle()}
+                    onClick={handleGoogleSignIn}
                   >
-                    {user ? "Go to Dashboard" : "Sign In with Google"}
+                    Sign In with Google
                   </Button>
                 </div>
               ) : (

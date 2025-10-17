@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import Image from "next/image";
 import Head from "next/head";
+import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 
 export default function SignInPage() {
   const { user, signInWithGoogle } = useAuth();
@@ -49,10 +50,10 @@ export default function SignInPage() {
         <div className="w-full max-w-md px-6 py-12 flex flex-col items-center">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Welcome to <span className="text-orange-500">IntrepidQ AI</span>
+              Welcome to <AIntrepidQLogo size="large" />
             </h1>
             <p className="mt-3 text-gray-700 dark:text-gray-300 font-bold">
-              Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will increase your writing ability if you do) <span className="inline-block">😊</span>
+              click below to evolve your UPSC preparation
             </p>
           </div>
           

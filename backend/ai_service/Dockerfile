@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
+# Create a non-root user
+RUN useradd --create-home --shell /bin/bash appuser
+
 # Copy requirements first (better layer caching)
 COPY requirements.txt .
 
@@ -23,6 +26,12 @@ RUN pip install --no-cache-dir --upgrade pip && \
 
 # Copy application code AFTER installing dependencies
 COPY . .
+
+# Change ownership of the app directory to the non-root user
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser
 
 # Expose a default port for local dev (Railway will override this with $PORT)
 EXPOSE 8000

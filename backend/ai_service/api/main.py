@@ -1,35 +1,34 @@
 """
 Main FastAPI application for multi-provider model selection
 """
-import os
 import logging
+import os
+import sys
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
+from starlette.middleware.base import BaseHTTPMiddleware
 
-import sys
 sys.path.append('.')
 
-from core.supabase_client import get_supabase_service
-from core.vector_indexer import load_index
+from api.models import HealthResponse
+from api.routes.answer import router as answer_router
+from api.routes.cleanup import router as cleanup_router
+from api.routes.feedback import router as feedback_router
+from api.routes.model_performance import router as performance_router
+from api.routes.questions import router as questions_router
+from api.routes.subjects import router as subjects_router
 from core.question_generator import create_question_generator
 from core.rate_limiter import RateLimitMiddleware
+from core.supabase_client import get_supabase_service
 
 # Add the Upstash search client import
 from core.upstash_search_client import UpstashSearchClient
-
-from api.models import HealthResponse
-from api.routes.questions import router as questions_router
-from api.routes.subjects import router as subjects_router
-from api.routes.answer import router as answer_router
-from api.routes.model_performance import router as performance_router
-from api.routes.cleanup import router as cleanup_router
-from api.routes.feedback import router as feedback_router
+from core.vector_indexer import load_index
 
 # Load environment variables
 load_dotenv()
@@ -45,14 +44,14 @@ logger = logging.getLogger(__name__)
 class SecurityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
+
         # Security headers as per infrastructure requirements
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        
+
         return response
 
 # Global state
@@ -85,7 +84,7 @@ async def lifespan(app: FastAPI):
         groq_api_key = os.getenv("GROQ_API_KEY")
         if not groq_api_key:
             raise RuntimeError("GROQ_API_KEY not set")
-        
+
         # MODIFIED: Get Google and Together keys for multi-provider support
         google_api_key = os.getenv("GOOGLE_API_KEY")
         #together_key = os.getenv("TOGETHER_API_KEY")
@@ -147,7 +146,7 @@ def _ensure_redis_protocol(url: str) -> str:
     """Ensure Redis URL has proper protocol prefix"""
     if not url:
         return url
-    
+
     # If URL doesn't start with redis:// or rediss://, add redis://
     if not url.startswith(('redis://', 'rediss://')):
         return f"redis://{url}"
@@ -157,8 +156,8 @@ def _ensure_redis_protocol(url: str) -> str:
 rate_limit_per_minute = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
 # upstash Redis URL detection with protocol prefix handling
 redis_url = (
-    os.getenv("REDISCLOUD_URL") or     
-    os.getenv("REDIS_PRIVATE_URL") or 
+    os.getenv("REDISCLOUD_URL") or
+    os.getenv("REDIS_PRIVATE_URL") or
     os.getenv("REDIS_URL") or          # Standard Redis URL
     "redis://localhost:6379"           # Local fallback
 )

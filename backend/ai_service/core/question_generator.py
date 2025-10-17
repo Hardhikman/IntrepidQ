@@ -11,23 +11,23 @@ Features:
 - Generated questions caching with random example selection to get reliable questions
 - Document retrieval via vector search with stratified sampling for example selection.
 """
+import hashlib
+import json
+import logging
 import os
-import time
 import random
 import re
-import json
-import requests
-import logging
-import hashlib
+import time
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
+
 from diskcache import Cache
-from supabase import Client
 from langchain.prompts import PromptTemplate
-from langchain_groq import ChatGroq
 from langchain_community.vectorstores import SupabaseVectorStore
-from langchain_core.utils import convert_to_secret_str
 from langchain_core.documents import Document
+from langchain_core.utils import convert_to_secret_str
+from langchain_groq import ChatGroq
+from supabase import Client
 
 # Optional providers
 try:
@@ -54,7 +54,7 @@ class QuestionGenerator:
         self.vectorstore = vectorstore
         self.supabase_client = supabase_client
         self.cache = Cache(cache_dir)
-        
+
         self.topics_by_subject = (
             self._build_topics_by_subject()
             if (vectorstore and supabase_client)
@@ -81,7 +81,7 @@ class QuestionGenerator:
         if not self.supabase_client:
             logger.warning("Supabase client not available. Skipping caching.")
             return
-        
+
         logger.info(f"Attempting to cache {len(questions)} questions for topic '{topic}' with key '{cache_key[:8]}...'")
         try:
             cache_data = {
@@ -91,28 +91,28 @@ class QuestionGenerator:
                 "expires_at": (datetime.now() + timedelta(days=7)).isoformat()
             }
             self.supabase_client.table('questions_cache').upsert(cache_data).execute()
-            
+
             topic_entries = [
                 {"subject": subject, "topic": topic, "question_text": q.get("question", str(q)),
                  "question_data": json.dumps(q), "expires_at": (datetime.now() + timedelta(days=7)).isoformat()}
                 for q in questions
             ]
-            
+
             if topic_entries:
                 self.supabase_client.table('topic_questions_index').insert(topic_entries).execute()
                 self._cleanup_topic_cache(subject, topic, max_entries=50)
-            
+
             logger.info(f"Successfully cached {len(questions)} questions in Supabase for {subject} - {topic}.")
         except Exception as e:
             logger.error(f"Failed to cache questions in Supabase: {e}")
 
     def _cleanup_topic_cache(self, subject: str, topic: str, max_entries: int = 50):
         if not self.supabase_client: return
-        
+
         try:
             response = (self.supabase_client.table('topic_questions_index')
                         .select('id', count='exact').eq('subject', subject).eq('topic', topic).execute()) # type: ignore
-            
+
             count = response.count or 0
             if count > max_entries:
                 logger.info(f"Topic cache for '{topic}' has {count} entries (limit {max_entries}). Cleaning up oldest {count - max_entries}...")
@@ -120,7 +120,7 @@ class QuestionGenerator:
                 old_entries_resp = (self.supabase_client.table('topic_questions_index')
                                    .select('id').eq('subject', subject).eq('topic', topic)
                                    .order('created_at').limit(excess_count).execute())
-                
+
                 if old_entries_resp.data:
                     ids_to_delete = [entry['id'] for entry in old_entries_resp.data]
                     for entry_id in ids_to_delete:
@@ -131,24 +131,24 @@ class QuestionGenerator:
 
     def _get_cached_questions_as_examples(self, subject: str, topic: str, max_examples: int = 3) -> List[str]:
         if not self.supabase_client: return []
-        
+
         logger.info(f"Searching for cached question examples for topic: '{topic}'")
         try:
             response = (self.supabase_client.table('topic_questions_index')
                         .select('question_text').eq('subject', subject).eq('topic', topic)
                         .gt('expires_at', datetime.now().isoformat())
                         .order('created_at', desc=True).limit(max_examples * 2).execute())
-            
+
             if not response.data:
                 logger.info(f"No valid cached examples found for '{topic}'.")
                 return []
-            
+
             questions = [item['question_text'] for item in response.data if item.get('question_text')]
             if not questions: return []
-            
+
             num_to_sample = min(len(questions), max_examples)
             selected_questions = random.sample(questions, num_to_sample)
-            
+
             examples = [f"{i}. {q}" for i, q in enumerate(selected_questions, 1)]
             logger.info(f"Found and sampled {len(examples)} cached examples for '{topic}'.")
             return examples
@@ -159,7 +159,7 @@ class QuestionGenerator:
     def _get_all_cached_questions_for_examples(self, subject: str, max_examples: int = 5) -> List[str]:
         if not self.supabase_client:
             return []
-        
+
         try:
             response = (self.supabase_client
                         .table('topic_questions_index')
@@ -169,23 +169,23 @@ class QuestionGenerator:
                         .order('created_at', desc=True)
                         .limit(max_examples * 3)
                         .execute())
-            
+
             if not response.data:
                 return []
-            
+
             questions = [item['question_text'] for item in response.data if item.get('question_text')]
-            
+
             if not questions:
                 return []
-            
+
             num_examples = min(len(questions), max_examples)
             selected_questions = random.sample(questions, num_examples)
-            
+
             examples = [f"{i}. {question}" for i, question in enumerate(selected_questions, 1)]
-            
+
             logger.info(f"Using {len(examples)} Supabase cached questions as examples for whole paper generation")
             return examples
-            
+
         except Exception as e:
             logger.warning(f"Failed to get all cached examples for {subject}: {e}")
             return []
@@ -197,17 +197,17 @@ class QuestionGenerator:
             "total_questions": 0,
             "total_cache_entries": 0
         }
-        
+
         if not self.supabase_client:
             return stats
-        
+
         try:
             cache_resp = self.supabase_client.table('questions_cache').select('id', count='exact').execute() # type: ignore
             stats["total_cache_entries"] = cache_resp.count or 0
-            
+
             topic_resp = self.supabase_client.table('topic_questions_index').select('id', count='exact').execute() # type: ignore
             stats["total_questions"] = topic_resp.count or 0
-            
+
             for subject in ["GS1", "GS2", "GS3", "GS4"]:
                 try:
                     cache_subject_resp = (self.supabase_client
@@ -215,41 +215,41 @@ class QuestionGenerator:
                                          .select('id', count='exact') # type: ignore
                                          .eq('subject', subject)
                                          .execute())
-                    
+
                     topic_subject_resp = (self.supabase_client
                                          .table('topic_questions_index')
                                          .select('id', count='exact') # type: ignore
                                          .eq('subject', subject)
                                          .execute())
-                    
+
                     topics_resp = (self.supabase_client
                                      .table('topic_questions_index')
                                      .select('topic')
                                      .eq('subject', subject)
                                      .execute())
-                    
+
                     unique_topics = len(set(item['topic'] for item in topics_resp.data)) if topics_resp.data else 0
-                    
+
                     stats["subjects"][subject] = {
                         "cache_entries": cache_subject_resp.count or 0,
                         "questions": topic_subject_resp.count or 0,
                         "topics_with_cache": unique_topics
                     }
-                    
+
                 except Exception as e:
                     logger.warning(f"Failed to get stats for {subject}: {e}")
                     stats["subjects"][subject] = {"cache_entries": 0, "questions": 0, "topics_with_cache": 0}
-        
+
         except Exception as e:
             logger.error(f"Failed to get cache stats: {e}")
-        
+
         return stats
 
     def clear_cache(self, subject: Optional[str] = None, topic: Optional[str] = None):
         if not self.supabase_client:
             logger.warning("Supabase client not available for cache clearing")
             return
-        
+
         try:
             if topic and subject:
                 self.supabase_client.table('questions_cache').delete().eq('subject', subject).eq('topic', topic).execute()
@@ -263,7 +263,7 @@ class QuestionGenerator:
                 self.supabase_client.table('questions_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
                 self.supabase_client.table('topic_questions_index').delete().neq('id', '00000000-0000-0000-0000-000000000000').execute()
                 logger.info("Cleared all Supabase cache")
-        
+
         except Exception as e:
             logger.error(f"Failed to clear cache: {e}")
 
@@ -304,7 +304,7 @@ class QuestionGenerator:
             logger.info(f"User requested model: '{requested_model}'. Placing it first.")
             fallback = [m for m in self.priority_order if m != requested_model]
             return [requested_model] + fallback
-        
+
         logger.info("No specific model requested. Using adaptive auto-selection based on performance.")
         if all(len(times) >= self.min_attempts_for_avg for times in self.model_speeds.values()):
             ordered = sorted(
@@ -313,7 +313,7 @@ class QuestionGenerator:
             )
             logger.info(f"Adaptive priority order determined: {ordered}")
             return ordered
-        
+
         logger.info("Not enough performance data for adaptive selection. Using default priority order.")
         return [m for m in self.priority_order if m in self.available_models]
 
@@ -337,7 +337,7 @@ class QuestionGenerator:
             logger.info(f"Attempting model: {model_name}")
             llm = self._get_llm_client(model_name)
             if not llm: continue
-            
+
             start = time.time()
             try:
                 result = self._use_llm(llm, prompt)
@@ -460,10 +460,10 @@ Now return ONLY the JSON array:"""
                 # Extract title and URL for better context
                 title = article.get('title', 'Untitled')
                 url = article.get('url', '#')
-                
+
                 # Preserve markdown formatting but clean excessive whitespace
                 content = '\n'.join(line.strip() for line in content.split('\n') if line.strip())
-                
+
                 # Extract first 800 characters instead of 300 to capture more main information
                 if len(content) > 500:
                     content = content[:500] + "..."
@@ -490,12 +490,12 @@ Now return ONLY the JSON array:"""
         return [{"thinking": "", "question": q} for q in (self.format_questions(cleaned)[:num] if num else self.format_questions(cleaned))]
 
     def generate_topic_questions(self, subject, topic, num, use_ca, months, requested_model, news_source, keyword_context=None):
-        logger.info(f"\n--- STARTING TOPIC-BASED QUESTION GENERATION ---")
+        logger.info("\n--- STARTING TOPIC-BASED QUESTION GENERATION ---")
         logger.info(f"Parameters: Subject='{subject}', Topic='{topic}', Num='{num}', Use CA='{use_ca}'")
         models_to_try = self.select_model(requested_model)
         if use_ca: result = self._generate_current_affairs_questions(subject, topic, num, months, models_to_try, news_source, keyword_context)
         else: result = self._generate_static_questions(subject, topic, num, models_to_try)
-        logger.info(f"--- COMPLETED TOPIC-BASED GENERATION ---\n")
+        logger.info("--- COMPLETED TOPIC-BASED GENERATION ---\n")
         return result
 
     def _generate_static_questions(self, subject, topic, num, models_to_try: List[str]):
@@ -512,7 +512,7 @@ Now return ONLY the JSON array:"""
             if questions and result.get("status") == "success": self._cache_questions(self._get_cache_key(subject, topic, num, False, 0), questions, subject, topic)
             meta = {k:v for k,v in result.items() if k != 'output'}
             meta.update({
-                "examples_used": len(all_examples), 
+                "examples_used": len(all_examples),
                 "cached_examples": len(cached_examples),
                 "sampled_documents": [doc.page_content for doc in sampled_docs]  # Send full documents
             })
@@ -530,7 +530,7 @@ Now return ONLY the JSON array:"""
             else:
                 logger.info(f"Using BM25 based document selection with topic: {topic}")
                 initial_docs = self._get_relevant_documents_with_bm25(topic, topic, k=3)
-            
+
             # Use the top 3 documents directly without further sampling since BM25 already ranks them
             sampled_docs = initial_docs
             db_examples = [doc.page_content for doc in sampled_docs]
@@ -539,7 +539,7 @@ Now return ONLY the JSON array:"""
             news = self.fetch_recent_news(keyword_context or topic, months, news_source)
             logger.info(f"Total examples for prompt: {len(all_examples)}. News content length: {len(news)} chars.")
             examples_text = "\n".join(all_examples)
-            
+
             # Enhanced prompt that explicitly instructs the AI to consider all news items and examples
             base_prompt = self.gs_prompt.format(subject=subject, topic=topic, examples=examples_text, num=num)
             prompt = f"""{base_prompt}\n\nRecent News:\n{news}\n\nIMPORTANT FOR CURRENT AFFAIRS MODE:
@@ -549,15 +549,15 @@ Now return ONLY the JSON array:"""
 - Reflect comprehensive understanding of the current affairs context
 - If generating multiple questions, ensure each question is based on different news items or different aspects of the news items
 - Questions should test analytical thinking about the relationships between events"""
-            
+
             result = self._try_models(models_to_try, prompt)
             questions = self.safe_parse_questions(result.get("output", ""), num)
             if questions and result.get("status") == "success": self._cache_questions(self._get_cache_key(subject, topic, num, True, months), questions, subject, topic)
             meta = {k:v for k,v in result.items() if k != 'output'}
             meta.update({
-                "examples_used": len(all_examples), 
-                "cached_examples": len(cached_examples), 
-                "news_included": True, 
+                "examples_used": len(all_examples),
+                "cached_examples": len(cached_examples),
+                "news_included": True,
                 "news_content_length": len(news),
                 "sampled_documents": [doc.page_content for doc in sampled_docs],
                 "news_content": news,
@@ -569,7 +569,7 @@ Now return ONLY the JSON array:"""
             return {"questions": [], "meta": {"status": "error", "message": str(e)}}
 
     def generate_whole_paper(self, subject: str, use_ca: bool, months: int, requested_model: str, news_source: str = "all"):
-        logger.info(f"\n--- STARTING WHOLE PAPER GENERATION (Old Method) ---")
+        logger.info("\n--- STARTING WHOLE PAPER GENERATION (Old Method) ---")
         logger.info(f"Parameters: Subject='{subject}', Use CA='{use_ca}'")
         try:
             models_to_try = self.select_model(requested_model)
@@ -581,11 +581,11 @@ Now return ONLY the JSON array:"""
             num_topics = min(len(subject_topics), 6)
             selected_topics = random.sample(subject_topics, num_topics)
             logger.info(f"Randomly selected {len(selected_topics)} topics: {selected_topics}")
-            
+
             topic_examples_list = self._gather_topic_examples(selected_topics, subject)
             cached_examples = self._get_all_cached_questions_for_examples(subject, max_examples=5)
             all_examples = topic_examples_list + cached_examples
-            
+
             examples_text = "\n".join(all_examples)
             prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=examples_text)
             if use_ca:
@@ -594,12 +594,12 @@ Now return ONLY the JSON array:"""
 
             result = self._try_models(models_to_try, prompt)
             questions = self.safe_parse_questions(result.get("output", ""), 10)
-            
+
             if questions and result.get("status") == "success": logger.info("Distributing generated paper questions into topic cache.")
 
             meta = {k:v for k,v in result.items() if k != 'output'}
             meta.update({"examples_used": len(all_examples), "cached_examples": len(cached_examples), "topics_covered": selected_topics})
-            logger.info(f"--- COMPLETED WHOLE PAPER GENERATION ---\n")
+            logger.info("--- COMPLETED WHOLE PAPER GENERATION ---\n")
             return {"questions": questions, "meta": meta}
         except Exception as e:
             logger.error(f"FATAL Error in generate_whole_paper: {e}", exc_info=True)
@@ -616,16 +616,16 @@ Now return ONLY the JSON array:"""
     def _apply_stratified_sampling(self, documents: List[Document], n_samples: int) -> List[Document]:
         logger.info(f"--- Applying Stratified Sampling on {len(documents)} docs to get {n_samples} ---")
         if not documents or len(documents) <= n_samples:
-            logger.warning(f"Not enough documents to sample. Returning all.")
+            logger.warning("Not enough documents to sample. Returning all.")
             return documents
 
         strata: Dict[str, List[Document]] = {}
         for doc in documents: strata.setdefault(doc.metadata.get("topic", "unknown"), []).append(doc)
         logger.info(f"Identified {len(strata)} strata.")
-        
+
         total_docs = len(documents)
         allocation = {topic: len(docs) / total_docs * n_samples for topic, docs in strata.items()}
-        
+
         sampled_docs = []
         for topic, docs in strata.items():
             num_to_take = min(round(allocation[topic]), len(docs))
@@ -646,12 +646,12 @@ Now return ONLY the JSON array:"""
         if not self.vectorstore or not self.supabase_client or not hasattr(self.vectorstore, 'embeddings'):
             logger.warning("Vectorstore/Supabase not available. Using fallback method.")
             return self._get_documents_current_method(query, k, topic, subject_filter)
-            
+
         try:
             logger.info(f"Executing vector search: K={k}, Topic='{topic}'")
             query_embedding = self.vectorstore.embeddings.embed_query(query)
             doc_filter = {'topic': topic} if topic and topic.strip() else {}
-            
+
             response = self.supabase_client.rpc("match_documents", {"filter": doc_filter, "match_count": k, "query_embedding": query_embedding}).execute()
 
             docs = [Document(page_content=item.get("content", ""), metadata=item.get("metadata", {})) for item in response.data] if response.data else []
@@ -714,7 +714,7 @@ Now return ONLY the JSON array:"""
         return out
 
     def generate_questions_from_keywords(self, keywords: List[str], num: int, use_ca: bool, months: int, requested_model: str, subject: str = "GS1"):
-        logger.info(f"\n--- STARTING KEYWORD-BASED QUESTION GENERATION ---")
+        logger.info("\n--- STARTING KEYWORD-BASED QUESTION GENERATION ---")
         logger.info(f"Parameters: Keywords='{keywords}', Num='{num}', Use CA='{use_ca}'")
         try:
             models_to_try = self.select_model(requested_model)
@@ -729,7 +729,7 @@ Now return ONLY the JSON array:"""
 
             cached_examples = self._get_cached_questions_as_examples(subject, first_keyword, max_examples=2)
             all_examples = db_examples + cached_examples
-            
+
             prompt_template = PromptTemplate.from_template(
                 """You are a UPSC Mains question paper designer.
 Generate {num} original UPSC-style Mains questions based on the following keywords: "{keywords}".
@@ -747,7 +747,7 @@ IMPORTANT:
 Now return ONLY the JSON array:"""
             )
             prompt = prompt_template.format(num=num, keywords=", ".join(keywords), examples="\n".join(all_examples))
-            
+
             if use_ca:
                 news = self.fetch_recent_news(first_keyword, months)
                 if news and "Error" not in news:
@@ -755,17 +755,17 @@ Now return ONLY the JSON array:"""
 
             result = self._try_models(models_to_try, prompt)
             questions = self.safe_parse_questions(result.get("output", ""), num)
-            
+
             if questions and result.get("status") == "success":
                 self._cache_questions(self._get_cache_key(subject, first_keyword, num, use_ca, months), questions, subject, first_keyword)
-            
+
             meta = {k:v for k,v in result.items() if k != 'output'}
             meta.update({
-                "examples_used": len(all_examples), 
+                "examples_used": len(all_examples),
                 "cached_examples": len(cached_examples),
                 "sampled_documents": [doc.page_content for doc in initial_docs]  # Send full documents
             })
-            logger.info(f"--- COMPLETED KEYWORD-BASED GENERATION ---\n")
+            logger.info("--- COMPLETED KEYWORD-BASED GENERATION ---\n")
             return {"questions": questions, "meta": meta}
         except Exception as e:
             logger.error(f"FATAL Error in generate_questions_from_keywords: {e}", exc_info=True)
@@ -773,7 +773,7 @@ Now return ONLY the JSON array:"""
 
     def _get_relevant_documents_without_filter_full(self, query: str, k: int = 5) -> List[Document]:
         """Get full Document objects without filter for keyword-based generation"""
-        if not self.supabase_client or not self.vectorstore or not hasattr(self.vectorstore, 'embeddings'): 
+        if not self.supabase_client or not self.vectorstore or not hasattr(self.vectorstore, 'embeddings'):
             return []
         try:
             query_embedding = self.vectorstore.embeddings.embed_query(query)
@@ -785,28 +785,28 @@ Now return ONLY the JSON array:"""
 
     def _get_relevant_documents_with_bm25(self, query: str, topic: str, k: int = 5) -> List[Document]:
         logger.info(f"Performing BM25 based document selection for query: '{query}' and topic: '{topic}'")
-        
+
         try:
             topic_docs = self._get_relevant_documents_with_fallback(
-                query=f"UPSC questions for {topic}", 
+                query=f"UPSC questions for {topic}",
                 k=30,
                 topic=topic
             )
-            
+
             if not topic_docs:
                 logger.warning("No documents found for topic. Returning empty list.")
                 return []
-            
+
             doc_contents = [doc.page_content for doc in topic_docs]
-            
+
             scored_docs = self._compute_bm25_scores(query, doc_contents, topic_docs)
-            
+
             scored_docs.sort(key=lambda x: x[1], reverse=True)
             top_docs = [doc for doc, score in scored_docs[:k]]
-            
+
             logger.info(f"Selected top {len(top_docs)} documents based on BM25 scoring")
             return top_docs
-            
+
         except Exception as e:
             logger.error(f"Error in BM25 document selection: {e}")
             return []
@@ -814,65 +814,64 @@ Now return ONLY the JSON array:"""
     def _compute_bm25_scores(self, query: str, doc_contents: List[str], documents: List[Document]) -> List[tuple]:
         import math
         from collections import Counter
-        import re
-        
+
         k1 = 1.5
         b = 0.75
-        
+
         query_terms = self._preprocess_text(query)
-        
+
         if not query_terms:
             return [(doc, 1.0) for doc in documents]
-        
+
         processed_docs = [self._preprocess_text(content) for content in doc_contents]
-        
+
         doc_lengths = [len(doc_terms) for doc_terms in processed_docs]
         avg_doc_length = sum(doc_lengths) / len(doc_lengths) if doc_lengths else 1
-        
+
         doc_freq = Counter()
         for doc_terms in processed_docs:
             unique_terms = set(doc_terms)
             for term in unique_terms:
                 doc_freq[term] += 1
-        
+
         scored_docs = []
         total_docs = len(documents)
-        
+
         for i, doc_terms in enumerate(processed_docs):
             if not doc_terms:
                 scored_docs.append((documents[i], 0.0))
                 continue
-                
+
             score = 0.0
             doc_length = doc_lengths[i]
-            
+
             K = k1 * ((1 - b) + b * (doc_length / avg_doc_length)) if avg_doc_length > 0 else k1
-            
+
             for term in query_terms:
                 tf = doc_terms.count(term)
-                
+
                 df = doc_freq.get(term, 0)
-                
+
                 idf = math.log((total_docs - df + 0.5) / (df + 0.5)) if df > 0 else 0
-                
+
                 term_score = idf * (tf * (k1 + 1)) / (tf + K) if K > 0 else 0
                 score += term_score
-            
+
             scored_docs.append((documents[i], score))
-        
+
         return scored_docs
 
     def _preprocess_text(self, text: str) -> List[str]:
         import re
-        
+
         text = text.lower()
-        
+
         text = re.sub(r'[^a-zA-Z\s]', '', text)
-        
+
         terms = text.split()
-        
+
         terms = [term for term in terms if len(term) > 2]
-        
+
         return terms
 
 # Factory

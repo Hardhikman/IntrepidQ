@@ -1,8 +1,7 @@
-import os
 import logging
+import os
 import re
-import json
-from typing import List, Dict, Optional, Any
+from typing import List
 
 try:
     from upstash_search import Search
@@ -18,29 +17,29 @@ class UpstashSearchClient:
         self.client = None
         self.index = None
         self.index_name = os.getenv("UPSTASH_SEARCH_INDEX", "keywords_index")
-        
+
         if UPSTASH_AVAILABLE:
             self._initialize_client()
-    
+
     def _initialize_client(self):
         """Initialize the Upstash Search client"""
         try:
             upstash_url = os.getenv("UPSTASH_SEARCH_REST_URL")
             upstash_token = os.getenv("UPSTASH_SEARCH_REST_TOKEN")
-            
+
             if not upstash_url or not upstash_token:
                 logger.warning("Upstash credentials not found in environment variables")
                 return
-            
+
             if Search is not None:
                 self.client = Search(
                     url=upstash_url,
                     token=upstash_token
                 )
-            
+
                 self.index = self.client.index(self.index_name)
                 logger.info(f"Upstash Search client initialized with index: {self.index_name}")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize Upstash Search client: {e}")
             self.client = None
@@ -67,15 +66,15 @@ class UpstashSearchClient:
         if not self.index:
             logger.warning("Upstash Search client not initialized")
             return []
-        
+
         try:
             # A more robust way to create a valid ID from the topic string
             topic_id = self._sanitize_topic_for_id(topic)
-            
+
             try:
                 # Try to fetch the exact document first for efficiency
                 documents_response = self.index.fetch(ids=[topic_id])
-                
+
                 if documents_response and documents_response[0]:
                     doc = documents_response[0]
                     if doc and hasattr(doc, 'content') and isinstance(doc.content, dict):
@@ -88,17 +87,17 @@ class UpstashSearchClient:
                                 unique_keywords = [k for k in keywords if not (k in seen or seen.add(k))]
                                 logger.info(f"Found {len(unique_keywords)} keywords for topic '{topic}' (exact fetch)")
                                 return unique_keywords
-                
+
             except Exception as e:
                 logger.warning(f"Error fetching exact document by ID '{topic_id}': {e}. Falling back to search.")
-            
+
             # If exact fetch didn't work, fall back to a more resilient search
             logger.info(f"Falling back to search for topic '{topic}'")
             search_results = self.index.search(
                 query=topic,
-                limit=5 
+                limit=5
             )
-            
+
             all_keywords = []
             # Lower the score threshold to be more lenient with long, complex topics
             for result in search_results:
@@ -115,7 +114,7 @@ class UpstashSearchClient:
                             if isinstance(keywords, list):
                                 all_keywords.extend(keywords)
                             # Since we found a match based on the ID, we can be confident and stop searching.
-                            break 
+                            break
 
             if all_keywords:
                 # Remove duplicates while preserving order
@@ -123,10 +122,10 @@ class UpstashSearchClient:
                 unique_keywords = [k for k in all_keywords if not (k in seen or seen.add(k))]
                 logger.info(f"Found {len(unique_keywords)} keywords for topic '{topic}' (search fallback)")
                 return unique_keywords
-            
+
             logger.info(f"No documents found for topic '{topic}' after fetch and search.")
             return []
-            
+
         except Exception as e:
             logger.error(f"An unexpected error occurred while searching for topic '{topic}': {e}")
             return []
@@ -139,6 +138,6 @@ class UpstashSearchClient:
         if not self.index:
             logger.warning("Upstash Search client not initialized")
             return []
-        
+
         logger.info("Fetching all topics is not directly supported and is not implemented.")
         return []

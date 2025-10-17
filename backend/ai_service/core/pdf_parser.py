@@ -2,10 +2,10 @@
 PDF parsing functionality (from old parsing_pdfs file)
 """
 import os
-import json
 import re
 from collections import defaultdict
 from typing import Dict, List, Tuple
+
 import pdfplumber
 
 
@@ -44,33 +44,33 @@ class PDFParser:
         """Process a GS block to extract topics and questions"""
         block_text = self.normalize_text(block_text)
         topic_map = defaultdict(list)
-        
+
         # Split by topics within this GS block
         topic_combined = re.compile("|".join(f"(?:{r})" for r in self.topic_split_regexes), re.IGNORECASE)
         topic_blocks = topic_combined.split(block_text)
-        
+
         if topic_blocks and not topic_blocks[0].strip():
             topic_blocks = topic_blocks[1:]
-        
+
         for topic_block in topic_blocks:
             if not topic_block.strip():
                 continue
-                
+
             topic_title, questions_text = self._extract_topic_and_questions(topic_block)
-            
+
             if topic_title and questions_text:
                 questions = self._split_and_clean_questions(questions_text)
                 if questions:
                     full_topic_name = f"{gs_number} - {topic_title}"
                     topic_map[full_topic_name].extend(questions)
-        
+
         return topic_map
 
     def _extract_topic_and_questions(self, topic_block: str) -> Tuple[str, str]:
         """Extract topic title and questions text from a topic block"""
         topic_title = ""
         questions_text = ""
-        
+
         # Primary: split by 'questions' label variants
         m = re.search(r"\bquestions?\s*[:\-–—]\s*", topic_block, re.IGNORECASE)
         if m:
@@ -82,20 +82,20 @@ class PDFParser:
             if len(parts) >= 2:
                 topic_title = parts[0].strip(" -:—").strip()
                 questions_text = topic_block[len(parts[0]):].strip()
-        
+
         return topic_title, questions_text
 
     def _split_and_clean_questions(self, questions_text: str) -> List[str]:
         """Split questions text into individual cleaned questions"""
         q_parts = re.split(self.question_split_regex, questions_text)
         q_items = [p for p in q_parts if p and not p.strip().lower().startswith(("questions", "question"))]
-        
+
         cleaned = []
         for q in q_items:
             c = self.clean_question(q)
             if c:
                 cleaned.append(c)
-        
+
         return cleaned
 
     def extract_from_text(self, text: str) -> Dict[str, List[str]]:
@@ -105,11 +105,11 @@ class PDFParser:
         current_gs = "GS1"
         current_block = ""
         gs_blocks = []
-        
+
         i = 0
         while i < len(lines):
             line = lines[i].strip()
-            
+
             # Check if this line is a GS header
             is_gs_header = False
             detected_gs = None
@@ -118,7 +118,7 @@ class PDFParser:
                     is_gs_header = True
                     detected_gs = self.extract_gs_number(line)
                     break
-            
+
             if is_gs_header:
                 if current_block.strip():
                     gs_blocks.append((current_gs, current_block))
@@ -126,20 +126,20 @@ class PDFParser:
                 current_block = ""
                 i += 1
                 continue
-            
+
             current_block += line + "\n"
             i += 1
-        
+
         # Process the last block
         if current_block.strip():
             gs_blocks.append((current_gs, current_block))
-        
+
         # Process all GS blocks
         for gs_number, block_text in gs_blocks:
             topics = self.process_gs_block(block_text, gs_number)
             for topic, questions in topics.items():
                 final_topic_map[topic].extend(questions)
-        
+
         return final_topic_map
 
     def extract_from_pdf(self, pdf_path: str) -> Dict[str, List[str]]:
@@ -154,11 +154,11 @@ class PDFParser:
         except Exception as e:
             print(f"Error reading {pdf_path}: {e}")
             return {}
-        
+
         if not text.strip():
             print(f"No text extracted from {pdf_path}")
             return {}
-        
+
         return self.extract_from_text(text)
 
     def process_directory(self, input_dir: str = "pyq_data") -> Tuple[Dict[str, List[str]], List[Dict]]:
@@ -168,8 +168,8 @@ class PDFParser:
             return {}, []
 
         input_files = [
-            os.path.join(input_dir, f) 
-            for f in os.listdir(input_dir) 
+            os.path.join(input_dir, f)
+            for f in os.listdir(input_dir)
             if f.lower().endswith(".pdf")
         ]
 
@@ -184,7 +184,7 @@ class PDFParser:
         # Organize by GS papers
         organized_output = []
         gs_topics = defaultdict(list)
-        
+
         for topic, questions in final_topic_map.items():
             for gs_num in ["GS1", "GS2", "GS3", "GS4"]:
                 if topic.startswith(gs_num):
@@ -192,7 +192,7 @@ class PDFParser:
                     break
             else:
                 gs_topics["GS1"].append({"topic": topic, "questions": questions})
-        
+
         # Create organized structure
         for gs_paper in ["GS1", "GS2", "GS3", "GS4"]:
             if gs_topics[gs_paper]:

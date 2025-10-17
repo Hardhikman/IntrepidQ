@@ -3,10 +3,12 @@ Authentication middleware for FastAPI with Supabase
 Includes role support for admin checks
 """
 import logging
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional, Dict, Any
 import sys
+from typing import Any, Dict, Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 sys.path.append('.')
 
 from core.supabase_client import supabase_service

@@ -2,19 +2,26 @@
 API routes for Subject management - with multi-provider model selection
 """
 import logging
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, Any, Optional
 import sys
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException
+
 sys.path.append('.')
 
 # Add datetime import
 from datetime import datetime
+
 # Add CountMethod import
 from postgrest import CountMethod
 
 from api.auth import get_current_user, get_optional_user
 from api.models import (
-    SubjectsResponse, UserProfileResponse, UserStatsResponse, ModeBreakdown, UserProfile
+    ModeBreakdown,
+    SubjectsResponse,
+    UserProfile,
+    UserProfileResponse,
+    UserStatsResponse,
 )
 from core.supabase_client import supabase_service
 
@@ -70,7 +77,7 @@ async def get_user_profile(user: Dict[str, Any] = Depends(get_current_user)):
         service = supabase_service()
         if service is None:
             raise HTTPException(status_code=500, detail="Database service not available")
-            
+
         profile = service.get_user_profile(user['id'])
         if not profile:
             raise HTTPException(status_code=404, detail="User profile not found")
@@ -98,17 +105,17 @@ async def get_available_models():
                 "moonshot-k2": "Moonshot (K2)",
                 "qwen3-32b": "Qwen3 (32B)"
             }
-            
+
             model_list.append({
                 "id": model_name,
                 "name": display_names.get(model_name, model_name),
                 "provider": model_info["provider"]
             })
-        
+
         # Sort models by priority order
         priority_order = question_generator.priority_order
         sorted_models = sorted(model_list, key=lambda x: priority_order.index(x["id"]) if x["id"] in priority_order else len(priority_order))
-        
+
         return {"models": sorted_models}
     except Exception as e:
         logger.error(f"Error fetching available models: {e}", exc_info=True)
@@ -128,7 +135,7 @@ async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = 
             service = supabase_service()
             if service is None or not hasattr(service, 'client') or service.client is None:
                 raise HTTPException(status_code=500, detail="Database service not available")
-            
+
             feedback_record = {
                 "user_id": user['id'],
                 "question_id": None,
@@ -136,7 +143,7 @@ async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = 
                 "comment": feedback_data.get('comment'),
                 "feedback_type": "website" if gen_id == 'website_feedback' else "generation"
             }
-            
+
             response = service.client.table("question_feedback").insert(feedback_record).execute()
             success = bool(response.data)
         else:
@@ -149,7 +156,7 @@ async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = 
             service = supabase_service()
             if service is None or not hasattr(service, 'client') or service.client is None:
                 raise HTTPException(status_code=500, detail="Database service not available")
-            
+
             feedback_record = {
                 "user_id": user['id'],
                 "question_id": feedback_data['question_id'],
@@ -157,7 +164,7 @@ async def submit_feedback(feedback_data: Dict[str, Any], user: Dict[str, Any] = 
                 "comment": feedback_data.get('comment'),
                 "feedback_type": "question"
             }
-            
+
             response = service.client.table("question_feedback").insert(feedback_record).execute()
             success = bool(response.data)
 
@@ -193,7 +200,7 @@ async def delete_question(question_id: str, user: Dict[str, Any] = Depends(get_c
         service = supabase_service()
         if service is None or not hasattr(service, 'client') or service.client is None:
             raise HTTPException(status_code=500, detail="Database service not available")
-            
+
         deleted = service.delete_question(user['id'], question_id)
         if deleted:
             return {"success": True, "message": "Question deleted successfully"}
@@ -270,7 +277,7 @@ async def admin_get_user_stats(target_user_id: str, user: Dict[str, Any] = Depen
     except Exception as e:
         logger.error(f"Error fetching admin stats for target user {target_user_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to fetch target user statistics")
-    
+
 
 @router.get("/dashboard_data")
 async def get_dashboard_data(user: Dict[str, Any] = Depends(get_current_user)):
@@ -288,7 +295,7 @@ async def get_cache_stats(user: Optional[Dict[str, Any]] = Depends(get_optional_
     try:
         question_generator = get_question_generator()
         cache_stats = question_generator.get_cache_stats()
-        
+
         return {
             "success": True,
             "cache_stats": cache_stats,
@@ -311,9 +318,9 @@ async def clear_cache(
     try:
         question_generator = get_question_generator()
         question_generator.clear_cache(subject=subject, topic=topic)
-        
+
         cache_scope = "all cache" if not subject else f"{subject}" if not topic else f"{subject}-{topic}"
-        
+
         return {
             "success": True,
             "message": f"Successfully cleared {cache_scope}",
@@ -332,14 +339,14 @@ async def manual_cache_cleanup(user: Dict[str, Any] = Depends(get_current_user))
     try:
         # Call the Supabase cleanup function
         from core.supabase_client import supabase_service
-        
+
         # Check if supabase_service is properly initialized
         service = supabase_service()
         if service is None or not hasattr(service, 'client') or service.client is None:
             raise HTTPException(status_code=500, detail="Database service not available")
-        
+
         result = service.client.rpc('cleanup_expired_cache').execute()
-        
+
         return {
             "success": True,
             "message": result.data if result.data else "Cache cleanup completed",
@@ -359,87 +366,87 @@ async def get_cleanup_status(user: Optional[Dict[str, Any]] = Depends(get_option
     """
     try:
         from core.supabase_client import supabase_service
-        
+
         # Check if pg_cron extension is available
         try:
             # Check if supabase_service is properly initialized
             service = supabase_service()
             if service is None or not hasattr(service, 'client') or service.client is None:
                 raise Exception("Supabase service not properly initialized")
-            
+
             cron_check = service.client.rpc('pg_extension_exists', {'ext_name': 'pg_cron'}).execute()
             pg_cron_available = bool(cron_check.data)
         except:
             pg_cron_available = False
-        
+
         cleanup_status = {
             "pg_cron_available": pg_cron_available,
             "scheduled_jobs": [],
             "recent_executions": [],
             "cleanup_functions_available": True
         }
-        
+
         if pg_cron_available:
             try:
                 # Get scheduled jobs
                 service = supabase_service()
                 if service is None or not hasattr(service, 'client') or service.client is None:
                     raise Exception("Supabase service not properly initialized")
-                
+
                 jobs_resp = service.client.table('cron.job').select('jobname, schedule, active, created_at').execute()
                 cleanup_status["scheduled_jobs"] = jobs_resp.data or []
-                
+
                 # Get recent executions
                 executions_resp = service.client.table('cron.job_run_details').select(
                     'start_time, end_time, return_message, status'
                 ).order('start_time', desc=True).limit(5).execute()
                 cleanup_status["recent_executions"] = executions_resp.data or []
-                
+
             except Exception as e:
                 logger.warning(f"Could not fetch cron job details: {e}")
-        
+
         # Check what would be cleaned up
         try:
             # Check if supabase_service is properly initialized
             svc = supabase_service()
             if svc is None or not hasattr(svc, 'client') or svc.client is None:
                 raise Exception("Supabase service not properly initialized")
-            
+
             # Count old guest records
             guest_count_resp = svc.client.rpc(
-                'count_old_guest_records', 
+                'count_old_guest_records',
                 {'days_old': 7}
             ).execute()
-            
+
             # Count expired cache entries
             cache_count_resp = svc.client.table('questions_cache').select(
                 'id', count=CountMethod.exact
             ).lt('expires_at', datetime.now().isoformat()).execute()
-            
+
             topic_count_resp = svc.client.table('topic_questions_index').select(
                 'id', count=CountMethod.exact
             ).lt('expires_at', datetime.now().isoformat()).execute()
-            
+
             cleanup_status["pending_cleanup"] = {
                 "old_guest_records": guest_count_resp.data if guest_count_resp.data else 0,
                 "expired_cache_entries": cache_count_resp.count or 0,
                 "expired_topic_entries": topic_count_resp.count or 0
             }
-            
+
         except Exception as e:
             logger.warning(f"Could not get cleanup counts: {e}")
             cleanup_status["pending_cleanup"] = {
                 "old_guest_records": "unknown",
-                "expired_cache_entries": "unknown", 
+                "expired_cache_entries": "unknown",
                 "expired_topic_entries": "unknown"
             }
-        
+
         return {
             "success": True,
             "cleanup_status": cleanup_status,
             "timestamp": datetime.now().isoformat()
         }
-        
+
     except Exception as e:
         logger.error(f"Error getting cleanup status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to get cleanup status")

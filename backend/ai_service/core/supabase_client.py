@@ -1,12 +1,13 @@
 """
 Supabase client for database operations
 """
-import os
 import logging
-from typing import Optional, Dict, Any, List
-from supabase import create_client, Client
+import os
 from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 from fastapi.encoders import jsonable_encoder
+from supabase import Client, create_client
 
 logging.basicConfig(
     level=logging.INFO,
@@ -172,7 +173,7 @@ class SupabaseService:
         try:
             client = self._ensure_client()
             today = datetime.utcnow().date()
-            
+
             # Get guest generation record for this IP
             response = client.table("guest_generations").select(
                 "generation_count, last_generation_date"
@@ -185,7 +186,7 @@ class SupabaseService:
             record = response.data[0]
             generation_count = record.get("generation_count", 0)
             last_date_str = record.get("last_generation_date")
-            
+
             last_date = None
             if last_date_str:
                 try:
@@ -207,7 +208,7 @@ class SupabaseService:
         try:
             client = self._ensure_client()
             today = datetime.utcnow().date()
-            
+
             # Check if record exists
             response = client.table("guest_generations").select(
                 "id, generation_count, last_generation_date"
@@ -226,7 +227,7 @@ class SupabaseService:
             record = response.data[0]
             generation_count = record.get("generation_count", 0)
             last_date_str = record.get("last_generation_date")
-            
+
             last_date = None
             if last_date_str:
                 try:
@@ -243,11 +244,11 @@ class SupabaseService:
                 "last_generation_date": str(today),
                 "updated_at": datetime.utcnow().isoformat()
             }).eq("id", record["id"]).execute()
-            
+
         except Exception as e:
             logger.error(f"[Supabase] Increment guest generation count failed for IP {ip_address}: {e}")
 
-    #User Stats 
+    #User Stats
     def get_user_stats(self, user_id: str, admin_mode: bool = False,
                        target_user_id: Optional[str] = None) -> Dict[str, Any]:
         target_id = target_user_id if (admin_mode and target_user_id) else user_id
@@ -302,7 +303,7 @@ class SupabaseService:
             logger.error(f"Failed to save questions: {e}")
             return False
 
-    #Question History 
+    #Question History
     def get_user_question_history(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Fetch the latest generated questions for the given user."""
         try:

@@ -222,14 +222,15 @@ Thumbs.db
 *.sqlite
 *.sqlite3
 
+# Specific cache database files
+cache.db
+cache.db-shm
+cache.db-wal
+news_cache/
+
 # Backup files
 *.bak
 *.backup
 
 # Temporary files
 *.tmp
-
-
-
-
-

@@ -1,10 +1,12 @@
 """
 Pydantic models for API requests and responses
 """
-from pydantic import BaseModel, Field, validator
-from typing import Dict, List, Any, Optional
-from datetime import datetime
 import re
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, validator
+
 
 # Health check models
 class HealthResponse(BaseModel):
@@ -31,7 +33,7 @@ class GenerateQuestionsRequest(BaseModel):
     use_ca: bool = Field(default=False, description="Include current affairs")
     months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
     model: str = Field(default="llama3-70b", description="AI model to use")
-    
+
     @validator('topic')
     def validate_topic(cls, v):
         # Sanitize input - remove potentially harmful characters
@@ -41,7 +43,7 @@ class GenerateQuestionsRequest(BaseModel):
         if len(sanitized) > 200:
             raise ValueError('Topic too long')
         return sanitized
-    
+
     @validator('model')
     def validate_model(cls, v):
         allowed_models = ["llama3-70b", "moonshot-k2", "qwen3-32b"]
@@ -55,7 +57,7 @@ class GenerateWholePaperRequest(BaseModel):
     use_ca: bool = Field(default=False, description="Include current affairs")
     months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
     model: str = Field(default="llama3-70b", description="AI model to use")
-    
+
     @validator('subject')
     def validate_subject(cls, v):
         allowed_subjects = ["GS1", "GS2", "GS3", "GS4"]
@@ -63,7 +65,7 @@ class GenerateWholePaperRequest(BaseModel):
         if v_upper not in allowed_subjects:
             raise ValueError(f'Subject must be one of {allowed_subjects}')
         return v_upper
-    
+
     @validator('model')
     def validate_model(cls, v):
         allowed_models = ["llama3-70b", "moonshot-k2","qwen3-32b"]

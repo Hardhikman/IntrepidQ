@@ -4,10 +4,12 @@ and QuestionGenerator stats passthrough.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Request
-from typing import Dict, Any, Optional
-from datetime import date
 import sys
+from datetime import date
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+
 sys.path.append('.')
 
 from api.auth import get_optional_user
@@ -27,11 +29,11 @@ def get_client_ip(request: Request) -> str:
     if forwarded_for:
         # Take the first IP in the chain
         return forwarded_for.split(",")[0].strip()
-    
+
     real_ip = request.headers.get("x-real-ip")
     if real_ip:
         return real_ip.strip()
-    
+
     # Fallback to direct client IP
     return request.client.host if request.client else "unknown"
 
@@ -86,7 +88,7 @@ def get_user_stats(user_id: str):
                 "streak": 0,
                 "last_generation_date": None
             }
-            
+
         rpc_resp = supabase_svc.client.rpc("get_user_dashboard_data", {"uid": user_id}).execute()
         if rpc_resp.data:
             profile = rpc_resp.data.get("profile", {})
@@ -112,15 +114,15 @@ async def check_guest_limit(request: Request):
     """Check current guest generation limit status"""
     try:
         client_ip = get_client_ip(request)
-        
+
         # Check current guest generation count
         used_count = 0
         limit_reached = False
-        
+
         try:
             from datetime import datetime
             today = datetime.utcnow().date()
-            
+
             # Fix: Add proper null check for supabase client
             supabase_svc = supabase_service()
             if not supabase_svc or not hasattr(supabase_svc, 'client') or not supabase_svc.client:
@@ -131,7 +133,7 @@ async def check_guest_limit(request: Request):
                     "remaining": GUEST_DAILY_LIMIT,
                     "limit_reached": False
                 }
-            
+
             response = supabase_svc.client.table("guest_generations").select(
                 "generation_count, last_generation_date"
             ).eq("ip_address", client_ip).execute()
@@ -140,7 +142,7 @@ async def check_guest_limit(request: Request):
                 record = response.data[0]
                 generation_count = record.get("generation_count", 0)
                 last_date_str = record.get("last_generation_date")
-                
+
                 if last_date_str:
                     try:
                         last_date = datetime.fromisoformat(last_date_str).date()
@@ -151,14 +153,14 @@ async def check_guest_limit(request: Request):
                         pass
         except Exception as e:
             logger.error(f"Error checking guest limit: {e}")
-            
+
         return {
             "generations_used": used_count,
             "daily_limit": GUEST_DAILY_LIMIT,
             "remaining": max(GUEST_DAILY_LIMIT - used_count, 0),
             "limit_reached": limit_reached
         }
-        
+
     except Exception as e:
         logger.error(f"Error in check_guest_limit: {e}", exc_info=True)
         return {
@@ -239,7 +241,7 @@ async def generate_questions(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    
+
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
                         try:
@@ -340,7 +342,7 @@ async def generate_whole_paper(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    
+
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
                         try:
@@ -444,7 +446,7 @@ async def generate_questions_from_keywords(
                 supabase_svc = supabase_service()
                 if supabase_svc and hasattr(supabase_svc, 'client') and supabase_svc.client:
                     supabase_svc.increment_generation_count(user['id'])
-                    
+
                     # Database operations (separate from streak tracking)
                     if records_to_insert:
                         try:
@@ -489,22 +491,22 @@ async def get_keywords_for_topic(
     try:
         # Get Upstash client
         upstash_client = get_upstash_client()
-        
+
         # Get topic from request
         topic = request.get('topic', '')
-        
+
         if not topic:
             raise HTTPException(status_code=400, detail="Topic is required")
-        
+
         # Search for keywords
         keywords = upstash_client.search_keywords_by_topic(topic)
-        
+
         return {
             "topic": topic,
             "keywords": keywords,
             "count": len(keywords)
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

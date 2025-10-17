@@ -1,6 +1,6 @@
 # backend/ai_service/run_indexing.py
-import os
 from dotenv import load_dotenv
+
 from core.vector_indexer import create_index
 
 # Load environment variables from .env file

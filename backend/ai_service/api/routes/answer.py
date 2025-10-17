@@ -1,15 +1,16 @@
 import json
-import os
 import logging
+import os
+from typing import Any, Dict, List, Optional
+
 # Fixed import approach for Google Generative AI
-import google.generativeai as genai
-from google.generativeai.generative_models import GenerativeModel
-# Import required types for safety settings
-from google.generativeai.types import HarmCategory, HarmBlockThreshold
-from fastapi import APIRouter, HTTPException, Depends, Request
-from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, Request
+from google.generativeai.generative_models import GenerativeModel
+
+# Import required types for safety settings
+from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from pydantic import BaseModel
 
 # Load environment variables
 load_dotenv()
@@ -40,11 +41,11 @@ def get_client_ip(request: Request) -> str:
     if forwarded_for:
         # Take the first IP in the chain
         return forwarded_for.split(",")[0].strip()
-    
+
     real_ip = request.headers.get("x-real-ip")
     if real_ip:
         return real_ip.strip()
-    
+
     # Fallback to direct client IP
     return request.client.host if request.client else "unknown"
 
@@ -70,7 +71,7 @@ class BatchAnswerResponse(BaseModel):
 
 # For demonstration, we'll use placeholder functions for dependencies
 async def get_optional_user() -> Optional[Dict[str, Any]]:
-    return None 
+    return None
 
 #Helpers
 
@@ -114,13 +115,13 @@ Question: {question}
 #Single Answer
 @router.post("/generate_answer", response_model=AnswerResponse)
 async def generate_answer(
-    request: AnswerRequest, 
+    request: AnswerRequest,
     http_request: Request,
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     try:
         # No rate limiting for answer generation - unlimited for all users
-        
+
         logger.info(f"Generating answer for question: {request.question}")
 
         # The library implicitly uses the GOOGLE_API_KEY from the environment.
@@ -160,13 +161,13 @@ async def generate_answer(
 
 @router.post("/generate_answers", response_model=BatchAnswerResponse)
 async def generate_answers(
-    request: BatchAnswerRequest, 
+    request: BatchAnswerRequest,
     http_request: Request,
     user: Optional[Dict[str, Any]] = Depends(get_optional_user)
 ):
     try:
         # No rate limiting for answer generation - unlimited for all users
-        
+
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")
 

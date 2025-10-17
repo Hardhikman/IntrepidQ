@@ -4,10 +4,12 @@ Provides endpoints for manual cleanup and status checking
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, Depends
-from typing import Dict, Any, Optional
-from datetime import datetime, date, timedelta
 import sys
+from datetime import date, datetime, timedelta
+from typing import Any, Dict
+
+from fastapi import APIRouter, Depends, HTTPException
+
 sys.path.append('.')
 
 from api.auth import get_current_user
@@ -25,11 +27,11 @@ async def manual_guest_cleanup(
         # Check if user is admin
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
-        
+
         # Call the cleanup function
         client = supabase_service()._ensure_client()
         response = client.rpc('manual_guest_cleanup').execute()
-        
+
         if response.data:
             result = response.data if isinstance(response.data, dict) else response.data[0]
             return {
@@ -40,7 +42,7 @@ async def manual_guest_cleanup(
             }
         else:
             raise HTTPException(status_code=500, detail="Cleanup function returned no data")
-            
+
     except HTTPException:
         raise
     except Exception as e:
@@ -56,40 +58,40 @@ async def get_guest_cleanup_status(
         # Check if user is admin
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
-        
+
         client = supabase_service()._ensure_client()
-        
+
         # Get guest generations statistics
         guest_stats_response = client.table("guest_generations").select(
             "count(*), min(last_generation_date), max(last_generation_date)"
         ).execute()
-        
+
         # Get recent cleanup logs
         cleanup_logs_response = client.table("usage_analytics").select(
             "action, success, error_message, created_at"
         ).eq("action", "guest_cleanup").order("created_at", desc=True).limit(10).execute()
-        
+
         # Calculate statistics
         total_records = 0
         oldest_record = None
         newest_record = None
-        
+
         if guest_stats_response.data and len(guest_stats_response.data) > 0:
             stats = guest_stats_response.data[0]
             total_records = stats.get("count", 0)
             oldest_record = stats.get("min")
             newest_record = stats.get("max")
-        
+
         # Get records older than 7 days (eligible for cleanup)
         cleanup_date = (date.today() - timedelta(days=7)).isoformat()
         old_records_response = client.table("guest_generations").select(
             "count(*)"
         ).lt("last_generation_date", cleanup_date).execute()
-        
+
         eligible_for_cleanup = 0
         if old_records_response.data and len(old_records_response.data) > 0:
             eligible_for_cleanup = old_records_response.data[0].get("count", 0)
-        
+
         return {
             "guest_generations": {
                 "total_records": total_records,
@@ -102,7 +104,7 @@ async def get_guest_cleanup_status(
             "status": "healthy" if eligible_for_cleanup < 1000 else "needs_cleanup",
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -119,36 +121,36 @@ async def get_guest_analytics(
         # Check if user is admin
         if user.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Admin access required")
-        
+
         client = supabase_service()._ensure_client()
-        
+
         # Get guest generation trends over specified days
         start_date = (date.today() - timedelta(days=days)).isoformat()
-        
+
         response = client.table("guest_generations").select(
             "last_generation_date, generation_count"
         ).gte("last_generation_date", start_date).execute()
-        
+
         # Aggregate data by date
         daily_stats = {}
         total_guests = 0
         total_generations = 0
-        
+
         for record in response.data or []:
             gen_date = record.get("last_generation_date")
             gen_count = record.get("generation_count", 0)
-            
+
             if gen_date not in daily_stats:
                 daily_stats[gen_date] = {
                     "unique_guests": 0,
                     "total_generations": 0
                 }
-            
+
             daily_stats[gen_date]["unique_guests"] += 1
             daily_stats[gen_date]["total_generations"] += gen_count
             total_guests += 1
             total_generations += gen_count
-        
+
         return {
             "period_days": days,
             "summary": {
@@ -159,7 +161,7 @@ async def get_guest_analytics(
             "daily_breakdown": daily_stats,
             "timestamp": datetime.utcnow().isoformat()
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+
 from core.supabase_client import supabase_service
 
 router = APIRouter()
@@ -12,10 +13,10 @@ def get_model_performance():
         supabase_service_instance = supabase_service()
         # Ensure the client is properly initialized
         client = supabase_service_instance._ensure_client()
-        
+
         if client is None:
             raise HTTPException(status_code=500, detail="Failed to initialize Supabase client")
-            
+
         resp = client.table("model_performance").select("*").execute()
         return {"status": "success", "data": resp.data}
     except ValueError as e:

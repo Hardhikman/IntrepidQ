@@ -34,11 +34,7 @@ const config = {
       </div>
     </Link>
   ),
-  project: {
-    link: 'https://github.com/Hardhikman/IntrepidQ',
-  },
-  docsRepositoryBase:
-    'https://github.com/Hardhikman/IntrepidQ/blob/main/frontend',
+  // Removed project property to eliminate GitHub link
   useNextSeoProps() {
     return {
       titleTemplate: '%s – IntrepidQ',
@@ -61,9 +57,7 @@ const config = {
   toc: {
     backToTop: true,
   },
-  editLink: {
-    text: 'Edit this page on GitHub',
-  },
+  // Removed editLink property to eliminate GitHub edit links
   navigation: {
     prev: true,
     next: true,

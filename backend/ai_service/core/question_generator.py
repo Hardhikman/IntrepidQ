@@ -586,6 +586,15 @@ Now return ONLY the JSON array:"""
             cached_examples = self._get_all_cached_questions_for_examples(subject, max_examples=5)
             all_examples = topic_examples_list + cached_examples
 
+            # Collect documents for context display
+            all_documents = []
+            for topic in selected_topics:
+                try:
+                    docs = self._get_relevant_documents_with_fallback(query=f"UPSC questions for {subject} on {topic}", k=2, topic=topic)
+                    all_documents.extend([doc.page_content for doc in docs])
+                except Exception as e:
+                    logger.warning(f"Error gathering documents for topic {topic}: {e}")
+
             examples_text = "\n".join(all_examples)
             prompt = self.whole_paper_prompt.format(subject=subject, topic_examples=examples_text)
             if use_ca:
@@ -598,7 +607,12 @@ Now return ONLY the JSON array:"""
             if questions and result.get("status") == "success": logger.info("Distributing generated paper questions into topic cache.")
 
             meta = {k:v for k,v in result.items() if k != 'output'}
-            meta.update({"examples_used": len(all_examples), "cached_examples": len(cached_examples), "topics_covered": selected_topics})
+            meta.update({
+                "examples_used": len(all_examples), 
+                "cached_examples": len(cached_examples), 
+                "topics_covered": selected_topics,
+                "sampled_documents": all_documents  # Add sampled documents for context display
+            })
             logger.info("--- COMPLETED WHOLE PAPER GENERATION ---\n")
             return {"questions": questions, "meta": meta}
         except Exception as e:

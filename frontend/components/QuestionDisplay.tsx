@@ -171,7 +171,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               onClick={() => onGenerateAnswer(index, question.question)}
               disabled={isAnyLoading} // ✅ disables all if one is generating
             >
-              {isThisLoading ? "Generating..." : "Generate Answer"}
+              {isThisLoading ? "Generating..." : "Generate brainstorming ideas"}
             </Button>
           )}
         </div>

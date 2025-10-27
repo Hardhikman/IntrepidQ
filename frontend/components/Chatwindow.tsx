@@ -40,7 +40,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div className="flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg p-4 sm:p-6 max-h-[70vh] overflow-y-auto">
-      <h3 className="mb-4 sm:mb-6 text-lg sm:text-xl font-bold text-gray-900 border-b pb-2">📄 Context-Aware questions with sample answers</h3>
+      <h3 className="mb-4 sm:mb-6 text-lg sm:text-xl font-bold text-gray-900 border-b pb-2">📄 Context-Aware questions</h3>
       <div className="space-y-6">
         {questions.map((q, i) => (
           <QuestionDisplay

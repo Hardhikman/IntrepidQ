@@ -819,18 +819,6 @@ export default function UPSCQuestionGenerator() {
                 )}
 
                 <div id="results-section">
-                  {questions.length > 0 && Object.keys(answers).length === 0 && (
-                    <div className="mb-4">
-                      <Button
-                        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md"
-                        onClick={handleGenerateAllAnswers}
-                        disabled={generatingAllAnswers}
-                      >
-                        {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
-                      </Button>
-                    </div>
-                  )}
-
                   <ChatWindow
                     questions={questions}
                     answers={answers}

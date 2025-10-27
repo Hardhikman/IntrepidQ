@@ -101,7 +101,6 @@ async def get_available_models():
         for model_name, model_info in models.items():
             # Create user-friendly names for display
             display_names = {
-                "llama3-70b": "Llama3 (70B)",
                 "moonshot-k2": "Moonshot (K2)",
                 "qwen3-32b": "Qwen3 (32B)"
             }

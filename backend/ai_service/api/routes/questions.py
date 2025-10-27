@@ -184,7 +184,7 @@ async def generate_questions(
         num_questions = request.get('num', 3)
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
-        model = request.get('model', 'llama3-70b')
+        model = request.get('model', 'moonshot-k2')
         news_source = request.get('news_source', 'all')  # Add news_source parameter
         keyword_context = request.get('keyword_context', None)  # Get keyword context if provided
 
@@ -291,7 +291,7 @@ async def generate_whole_paper(
         subject = request.get('subject', 'GS1')
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
-        model = request.get('model', 'llama3-70b')
+        model = request.get('model', 'moonshot-k2')
         news_source = request.get('news_source', 'all')  # Add news_source parameter
 
         # Rate limiting logic
@@ -390,7 +390,7 @@ async def generate_questions_from_keywords(
         num_questions = request.get('num', 3)
         use_ca = request.get('use_ca', False)
         months = request.get('months', 6)
-        model = request.get('model', 'llama3-70b')
+        model = request.get('model', 'moonshot-k2')
         subject = request.get('subject', 'GS1')  # Get subject from request, default to GS1
         #news_source = request.get('news_source', 'all')  # Add news_source parameter
 

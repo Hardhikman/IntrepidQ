@@ -109,11 +109,10 @@ export default function UPSCQuestionGenerator() {
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [generatingAllAnswers, setGeneratingAllAnswers] = useState(false);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState("llama3-70b");
+  const [selectedModel, setSelectedModel] = useState("moonshot-k2");
   const [answerLoadingIndex, setAnswerLoadingIndex] = useState<number | null>(null);
   // Add models state
   const [models, setModels] = useState<{ id: string; name: string }[]>([
-    { id: "llama3-70b", name: "Llama3 (70B)" },
     { id: "moonshot-k2", name: "Moonshot (K2)" },
     { id: "qwen3-32b", name: "Qwen3 (32B)" },
   ]);
@@ -574,16 +573,29 @@ export default function UPSCQuestionGenerator() {
 
   // Return the main interface for both authenticated and guest users
   return (
-    <>
-      <Head>
-        <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation</title>
-        <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </Head>
-      {/* Add the video popup component */}
-      <VideoPopup open={showVideoPopup} onOpenChange={handleVideoClose} />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-orange-50">
+    <div className="min-h-screen w-full bg-[#0f0f0f] relative text-white">
+      {/* Diagonal Grid with Green Glow */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, rgba(0, 255, 128, 0.1) 0, rgba(0, 255, 128, 0.1) 1px, transparent 1px, transparent 20px),
+            repeating-linear-gradient(-45deg, rgba(0, 255, 128, 0.1) 0, rgba(0, 255, 128, 0.1) 1px, transparent 1px, transparent 20px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+      
+      {/* Main Content with relative positioning to appear above the background */}
+      <div className="relative z-0">
+        <Head>
+          <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation</title>
+          <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        </Head>
+        {/* Add the video popup component */}
+        <VideoPopup open={showVideoPopup} onOpenChange={handleVideoClose} />
         {/* Floating Header */}
         <FloatingHeader
           user={user}
@@ -594,243 +606,243 @@ export default function UPSCQuestionGenerator() {
 
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-16 p-4 space-y-6">
-          {/* New Info Section - Increased width */}
-          <section className="max-w-4xl mx-auto bg-gradient-to-r from-blue-50 to-orange-50 rounded-2xl shadow-lg border-2 border-blue-200 p-6 md:p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-extrabold text-blue-800 mb-4 tracking-wide">
-                The Modern Solution for UPSC Aspirants in the AI Age
-              </h1>
-              <p className="text-blue-700 text-lg max-w-3xl mx-auto leading-relaxed font-medium">
-                IntrepidQ AI empowers fearless aspirants to transform their preparation and cut short their UPSC cycle. Unlike complex AI tools, 
-                we offer a comprehensive, minimalistic platform that sharpens your answer writing, brainstorming, and creative thinking—the skills that actually determine your rank.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-900 text-lg">Customization</h3>
-                  <p className="text-blue-700">Search options for every type of aspirants</p>
-                </div>
+            {/* New Info Section - Increased width */}
+            <section className="max-w-4xl mx-auto bg-[#1a1a1a] rounded-2xl shadow-lg border-2 border-gray-700 p-6 md:p-8">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-extrabold text-green-400 mb-4 tracking-wide">
+                  The Modern Solution for UPSC Aspirants in the AI Age
+                </h1>
+                <p className="text-gray-300 text-lg max-w-3xl mx-auto leading-relaxed font-medium">
+                  IntrepidQ AI empowers fearless aspirants to transform their preparation and cut short their UPSC cycle. Unlike complex AI tools, 
+                  we offer a comprehensive, minimalistic platform that sharpens your answer writing, brainstorming, and creative thinking—the skills that actually determine your rank.
+                </p>
               </div>
 
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-900 text-lg">Prediction</h3>
-                  <p className="text-blue-700">Question prediction on the base of PYQ made easy</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-900 text-lg">No FOMO</h3>
-                  <p className="text-blue-700">Coverage of extensive context aware questions</p>
-                </div>
-              </div>
-
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="font-bold text-blue-900 text-lg">Time Value of Money</h3>
-                  <p className="text-blue-700">Balance the time between revision and practice</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* Mode selection card */}
-          <Card className="max-w-4xl mx-auto shadow-lg bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl">
-            <CardContent className="py-5">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <span className="font-extrabold text-indigo-800 text-center text-xl sm:text-2xl tracking-wide">
-                   Select Question Generation Mode
-                </span>
-              </div>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                <button
-                  className={cn(
-                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
-                    mode === "topic"
-                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white transform scale-105"
-                      : "bg-white border-2 border-orange-300 text-orange-700 hover:bg-orange-50 hover:border-orange-400"
-                  )}
-                  onClick={() => setMode("topic")}
-                >
-                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
-                  <div className="relative z-10">
-                    📚 Topic-wise
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
                   </div>
-                </button>
+                  <div>
+                    <h3 className="font-bold text-green-400 text-lg">Customization</h3>
+                    <p className="text-gray-300">Search options for every type of aspirants</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-green-400 text-lg">Prediction</h3>
+                    <p className="text-gray-300">Question prediction on the base of PYQ made easy</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-green-400 text-lg">No FOMO</h3>
+                    <p className="text-gray-300">Coverage of extensive context aware questions</p>
+                  </div>
+                </div>
+
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-green-400 text-lg">Time Value of Money</h3>
+                    <p className="text-gray-300">Balance the time between revision and practice</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Mode selection card */}
+            <Card className="max-w-4xl mx-auto shadow-lg bg-[#1a1a1a] border-2 border-gray-700 rounded-2xl">
+              <CardContent className="py-5">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <span className="font-extrabold text-green-400 text-center text-xl sm:text-2xl tracking-wide">
+                     Select Question Generation Mode
+                  </span>
+                </div>
                 
-                <button
-                  className={cn(
-                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
-                    mode === "keyword"
-                      ? "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white transform scale-105"
-                      : "bg-white border-2 border-purple-300 text-purple-700 hover:bg-purple-50 hover:border-purple-400"
-                  )}
-                  onClick={() => setMode("keyword")}
-                >
-                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
-                  <div className="relative z-10">
-                    🔍 Keyword-based
-                  </div>
-                </button>
-                
-                <button
-                  className={cn(
-                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
-                    mode === "currentAffairs"
-                      ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white transform scale-105"
-                      : "bg-white border-2 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
-                  )}
-                  onClick={() => setMode("currentAffairs")}
-                >
-                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
-                  <div className="relative z-10">
-                    📰 Current Affairs
-                  </div>
-                </button>
-                
-                <button
-                  className={cn(
-                    "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
-                    mode === "paper"
-                      ? "bg-gradient-to-r from-blue-600 to-cyan-500 text-white transform scale-105"
-                      : "bg-white border-2 border-blue-300 text-blue-700 hover:bg-blue-50 hover:border-blue-400"
-                  )}
-                  onClick={() => setMode("paper")}
-                >
-                  <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
-                  <div className="relative z-10">
-                    📄 Whole Paper
-                  </div>
-                </button>
-              </div>
-              
-              {mode === "paper" && (
-                <div className="text-blue-800 bg-blue-100 border-2 border-blue-300 rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
-                  10 questions · 10 marks each · 1 hour · 100 marks
-                </div>
-              )}
-            </CardContent>
-          </Card>
-          
-          {/* Authenticated user daily limit notification - Made responsive */}
-          {user && dailyLimitReached && (
-            <Card className="max-w-5xl mx-auto shadow-sm border-orange-200 bg-orange-50">
-              <CardContent className="py-4">
-                <div className="text-center">
-                  <div className="text-orange-800 font-medium mb-2 text-sm sm:text-base">
-                    🚫 Daily Limit Reached! You've used all 5 question generations today.
-                  </div>
-                  <div className="text-orange-600 text-xs sm:text-sm">
-                    Your daily limit will reset tomorrow. Keep brainstorming and keep learning !
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* CONFIG + RESULTS - Made responsive */}
-          <section className="max-w-5xl mx-auto space-y-6">
-            {/* Removed tabbed interface - only Question Generator remains */}
-            <div className="w-full">
-              {!user ? (
-                <div className="text-center py-8">
-                  <div className="text-lg font-semibold text-blue-700 dark:text-blue-300 mb-4">
-                    Welcome to <AIntrepidQLogo size="large" />
-                    <div className="mt-4">
-                      Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will raise your answer writing capability if you do) <span className="inline-block">😊</span>
-                    </div>
-                  </div>
-                  <Button 
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
-                    onClick={handleGoogleSignIn}
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                  <button
+                    className={cn(
+                      "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
+                      mode === "topic"
+                        ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
+                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                    )}
+                    onClick={() => setMode("topic")}
                   >
-                    Sign In with Google
-                  </Button>
+                    <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                    <div className="relative z-10">
+                      📚 Topic-wise
+                    </div>
+                  </button>
+                  
+                  <button
+                    className={cn(
+                      "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
+                      mode === "keyword"
+                        ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
+                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                    )}
+                    onClick={() => setMode("keyword")}
+                  >
+                    <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                    <div className="relative z-10">
+                      🔍 Keyword-based
+                    </div>
+                  </button>
+                  
+                  <button
+                    className={cn(
+                      "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
+                      mode === "currentAffairs"
+                        ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
+                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                    )}
+                    onClick={() => setMode("currentAffairs")}
+                  >
+                    <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                    <div className="relative z-10">
+                      📰 Current Affairs
+                    </div>
+                  </button>
+                  
+                  <button
+                    className={cn(
+                      "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
+                      mode === "paper"
+                        ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
+                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                    )}
+                    onClick={() => setMode("paper")}
+                  >
+                    <div className="absolute inset-0 bg-black opacity-0 hover:opacity-10 transition-opacity duration-200 rounded-2xl"></div>
+                    <div className="relative z-10">
+                      📄 Whole Paper
+                    </div>
+                  </button>
                 </div>
-              ) : (
-                <QuestionGenerator
-                  subjects={subjects}
-                  selectedSubject={selectedSubject}
-                  selectedTopic={selectedTopic}
-                  setSelectedTopic={setSelectedTopic}
-                  handleSubjectChange={handleSubjectChange}
-                  subjectsLoading={subjectsLoading}
-                  numQuestions={numQuestions}
-                  setNumQuestions={setNumQuestions}
-                  useCurrentAffairs={useCurrentAffairs}
-                  setUseCurrentAffairs={setUseCurrentAffairs}
-                  selectedModel={selectedModel}
-                  setSelectedModel={setSelectedModel}
-                  isGenerateDisabled={loading || dailyLimitReached}
-                  loading={loading}
-                  onGenerate={handleGenerateQuestions}
-                  mode={mode}
-                  dailyLimitReached={dailyLimitReached}
-                  // NEW: Pass keyword-related props
-                  keywordQuery={keywordQuery}
-                  setKeywordQuery={setKeywordQuery}
-                  onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
-                  // Models prop
-                  models={models}
-                  // NEW: News source props
-                  newsSource={newsSource}
-                  setNewsSource={setNewsSource}
-                  // NEW: Keywords for current affairs mode
-                  fetchedKeywords={fetchedKeywords}
-                  selectedKeyword={selectedKeyword}
-                  setSelectedKeyword={setSelectedKeyword}
-                />
-              )}
-
-              <div id="results-section">
-                {questions.length > 0 && Object.keys(answers).length === 0 && (
-                  <div className="mb-4">
-                    <Button
-                      className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-md"
-                      onClick={handleGenerateAllAnswers}
-                      disabled={generatingAllAnswers}
-                    >
-                      {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
-                    </Button>
+                
+                {mode === "paper" && (
+                  <div className="text-green-400 bg-gray-800 border-2 border-gray-600 rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
+                    10 questions · 10 marks each · 1 hour · 100 marks
                   </div>
                 )}
+              </CardContent>
+            </Card>
+            
+            {/* Authenticated user daily limit notification - Made responsive */}
+            {user && dailyLimitReached && (
+              <Card className="max-w-5xl mx-auto shadow-sm border-gray-700 bg-gray-800">
+                <CardContent className="py-4">
+                  <div className="text-center">
+                    <div className="text-green-400 font-medium mb-2 text-sm sm:text-base">
+                      🚫 Daily Limit Reached! You've used all 5 question generations today.
+                    </div>
+                    <div className="text-gray-300 text-xs sm:text-sm">
+                      Your daily limit will reset tomorrow. Keep brainstorming and keep learning !
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
-                <ChatWindow
-                  questions={questions}
-                  answers={answers}
-                  loading={loading}
-                  onGenerateAnswer={handleGenerateSingleAnswer}
-                  answerLoadingIndex={answerLoadingIndex}
-                />
+            {/* CONFIG + RESULTS - Made responsive */}
+            <section className="max-w-5xl mx-auto space-y-6">
+              {/* Removed tabbed interface - only Question Generator remains */}
+              <div className="w-full">
+                {!user ? (
+                  <div className="text-center py-8">
+                    <div className="text-lg font-semibold text-green-400 mb-4">
+                      Welcome to <AIntrepidQLogo size="large" />
+                      <div className="mt-4">
+                        Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will raise your answer writing capability if you do) <span className="inline-block">😊</span>
+                      </div>
+                    </div>
+                    <Button 
+                      className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white"
+                      onClick={handleGoogleSignIn}
+                    >
+                      Sign In with Google
+                    </Button>
+                  </div>
+                ) : (
+                  <QuestionGenerator
+                    subjects={subjects}
+                    selectedSubject={selectedSubject}
+                    selectedTopic={selectedTopic}
+                    setSelectedTopic={setSelectedTopic}
+                    handleSubjectChange={handleSubjectChange}
+                    subjectsLoading={subjectsLoading}
+                    numQuestions={numQuestions}
+                    setNumQuestions={setNumQuestions}
+                    useCurrentAffairs={useCurrentAffairs}
+                    setUseCurrentAffairs={setUseCurrentAffairs}
+                    selectedModel={selectedModel}
+                    setSelectedModel={setSelectedModel}
+                    isGenerateDisabled={loading || dailyLimitReached}
+                    loading={loading}
+                    onGenerate={handleGenerateQuestions}
+                    mode={mode}
+                    dailyLimitReached={dailyLimitReached}
+                    // NEW: Pass keyword-related props
+                    keywordQuery={keywordQuery}
+                    setKeywordQuery={setKeywordQuery}
+                    onGenerateFromKeywords={handleGenerateQuestionsFromKeywords}
+                    // Models prop
+                    models={models}
+                    // NEW: News source props
+                    newsSource={newsSource}
+                    setNewsSource={setNewsSource}
+                    // NEW: Keywords for current affairs mode
+                    fetchedKeywords={fetchedKeywords}
+                    selectedKeyword={selectedKeyword}
+                    setSelectedKeyword={setSelectedKeyword}
+                  />
+                )}
+
+                <div id="results-section">
+                  {questions.length > 0 && Object.keys(answers).length === 0 && (
+                    <div className="mb-4">
+                      <Button
+                        className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md"
+                        onClick={handleGenerateAllAnswers}
+                        disabled={generatingAllAnswers}
+                      >
+                        {generatingAllAnswers ? "Generating Answers..." : "Generate Answers for All"}
+                      </Button>
+                    </div>
+                  )}
+
+                  <ChatWindow
+                    questions={questions}
+                    answers={answers}
+                    loading={loading}
+                    onGenerateAnswer={handleGenerateSingleAnswer}
+                    answerLoadingIndex={answerLoadingIndex}
+                  />
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
-    </>
   );
 }

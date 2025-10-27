@@ -114,7 +114,7 @@ class CacheService:
         except Exception as e:
             logger.error(f"Cache set error: {e}")
 
-    async def get_cached_answers(self, question_id: str, model: str = "llama3-70b") -> Optional[Dict[str, Any]]:
+    async def get_cached_answers(self, question_id: str, model: str = "moonshot-k2") -> Optional[Dict[str, Any]]:
         """Get cached answers for a specific question"""
         if not self.async_redis_client:
             return None
@@ -134,7 +134,7 @@ class CacheService:
             logger.error(f"Answer cache get error: {e}")
             return None
 
-    async def cache_answers(self, answers: Dict[str, Any], question_id: str, model: str = "llama3-70b", ttl: int = 7200):
+    async def cache_answers(self, answers: Dict[str, Any], question_id: str, model: str = "moonshot-k2", ttl: int = 7200):
         """Cache answers with longer TTL"""
         if not self.async_redis_client:
             return

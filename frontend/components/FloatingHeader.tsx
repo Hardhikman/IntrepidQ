@@ -36,8 +36,23 @@ export default function FloatingHeader({
   };
 
   return (
-    <header className="fixed top-2 z-50 bg-gradient-to-r from-blue-50 to-orange-50 backdrop-blur-sm border border-blue-200 shadow-lg rounded-full max-w-3xl left-1/2 -translate-x-1/2 w-full">
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2">
+    <header className="fixed top-2 z-50 w-full bg-[#0f0f0f] text-white rounded-full max-w-3xl left-1/2 -translate-x-1/2">
+      {/* Circuit Board - Dark Pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none rounded-full"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            radial-gradient(circle at 20px 20px, rgba(16, 185, 129, 0.18) 2px, transparent 2px),
+            radial-gradient(circle at 40px 40px, rgba(16, 185, 129, 0.18) 2px, transparent 2px)
+          `,
+          backgroundSize: '40px 40px, 40px 40px, 40px 40px, 40px 40px',
+        }}
+      />
+      
+      {/* Header content with relative positioning to appear above the background */}
+      <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2">
         {/* Logo */}
         <div 
           onClick={() => router.push("/")}
@@ -52,7 +67,7 @@ export default function FloatingHeader({
           <Button
             size="sm"
             onClick={() => router.push("/blogs/about-intrepidq")}
-            className="bg-white hover:bg-orange-100 text-orange-600 border border-orange-300 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
+            className="bg-gray-800 hover:bg-gray-700 text-green-400 border border-green-500 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
           >
             About
           </Button>
@@ -61,13 +76,13 @@ export default function FloatingHeader({
           <Button
             size="sm"
             onClick={() => router.push("/blogs/how-intrepidq-enhances-upsc-preparation")}
-            className="bg-white hover:bg-blue-100 text-blue-600 border border-blue-300 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
+            className="bg-gray-800 hover:bg-gray-700 text-green-400 border border-green-500 font-medium px-3 py-2 text-sm rounded-lg shadow-sm transition-all duration-200"
           >
             Why ?
           </Button>
 
           {/* Separator */}
-          <Separator orientation="vertical" className="h-6 bg-gray-300" />
+          <Separator orientation="vertical" className="h-6 bg-gray-600" />
 
           {/* User Menu or Sign In */}
           {user ? (
@@ -75,7 +90,7 @@ export default function FloatingHeader({
               <DropdownMenuTrigger asChild>
                 <Button
                   size="sm"
-                  className="bg-transparent hover:bg-blue-100 text-blue-600 border border-blue-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-blue-300"
+                  className="bg-gray-800 hover:bg-gray-700 text-green-400 border border-green-500 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200"
                 >
                   <MenuIcon className="mr-1 h-4 w-4" />
                   Menu
@@ -102,7 +117,7 @@ export default function FloatingHeader({
             <Button
               size="sm"
               onClick={handleGoogleSignIn}
-              className="bg-transparent hover:bg-gradient-to-r hover:from-orange-100 hover:to-blue-100 text-orange-600 border border-orange-200 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 hover:border-orange-300 whitespace-nowrap"
+              className="bg-gray-800 hover:bg-gray-700 text-green-400 border border-green-500 font-medium px-2 py-1 text-xs sm:px-3 sm:py-2 sm:text-sm rounded-full transition-all duration-200 whitespace-nowrap"
               disabled={authLoading}
             >
               {authLoading ? "Loading..." : "Sign in"}

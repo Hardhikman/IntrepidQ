@@ -23,11 +23,11 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase() ? (
-          <span key={i} className="font-semibold text-orange-600">
+          <span key={i} className="font-semibold text-blue-600">
             {part}
           </span>
         ) : (
-          <span key={i}>{part}</span>
+          <span key={i} className="text-gray-800">{part}</span>
         )
       )}
     </>
@@ -60,8 +60,8 @@ export function TopicCombobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between truncate",
-            value ? "border-green-500" : "",
+            "w-full justify-between truncate bg-gray-800 border border-gray-600 rounded-lg text-green-400 hover:bg-gray-700",
+            value ? "border-gray-500" : "",
             className
           )}
           disabled={disabled}
@@ -73,16 +73,16 @@ export function TopicCombobox({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-72 p-0">
+      <PopoverContent className="w-72 p-0 bg-white border-gray-300">
         <Command>
           <CommandInput
             placeholder="Search topics..."
-            className="h-9"
+            className="h-9 bg-white text-gray-800 placeholder-gray-500 border-0 focus:ring-1 focus:ring-blue-500"
             onValueChange={(val) => setSearchQuery(val)}
           />
-          <CommandList className="max-h-[250px] overflow-y-auto">
-            <CommandEmpty>No topics found.</CommandEmpty>
-            <CommandGroup>
+          <CommandList className="max-h-[250px] overflow-y-auto bg-white">
+            <CommandEmpty className="text-gray-500 py-2 text-center">No topics found.</CommandEmpty>
+            <CommandGroup className="bg-white">
               {items.map((item, idx) => (
                 <CommandItem
                   key={`${item}-${idx}`}
@@ -91,13 +91,13 @@ export function TopicCombobox({
                     onChange(currentValue)
                     setOpen(false)
                   }}
-                  className="flex items-start gap-2 px-2 py-2 text-sm"
+                  className="flex items-start gap-2 px-2 py-2 text-sm text-gray-800 hover:bg-gray-100"
                 >
                   {/* 🔹 Left column: checkmark (fixed width) */}
                   <span className="w-4 flex justify-center">
                     <Check
                       className={cn(
-                        "h-4 w-4",
+                        "h-4 w-4 text-blue-600",
                         value === item ? "opacity-100" : "opacity-0"
                       )}
                     />

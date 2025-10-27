@@ -5,54 +5,64 @@ import { Youtube, Twitter, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-gradient-to-r from-blue-50 to-orange-50 border border-blue-200 rounded-xl shadow-sm mt-6 mb-2">
-      <div className="max-w-4xl mx-auto px-4 py-4">
+    <footer className="w-full bg-[#0f0f0f] relative text-white shadow-sm mb-2">
+      {/* Circuit Board - Dark Pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            radial-gradient(circle at 20px 20px, rgba(16, 185, 129, 0.18) 2px, transparent 2px),
+            radial-gradient(circle at 40px 40px, rgba(16, 185, 129, 0.18) 2px, transparent 2px)
+          `,
+          backgroundSize: '40px 40px, 40px 40px, 40px 40px, 40px 40px',
+        }}
+      />
+      
+      {/* Footer content with relative positioning to appear above the background */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-6 rounded-xl border border-gray-800">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left flex flex-col items-center md:items-start">
-            <div className="mb-2 hover:opacity-80 transition-opacity duration-200 cursor-pointer">
+            <div className="mb-2 hover:opacity-80 transition-opacity duration-200 cursor-pointer flex justify-center md:justify-start">
               <Link href="/">
                 <AIntrepidQLogo size="small" />
               </Link>
             </div>
-            <p className="text-sm text-blue-800 font-medium text-center md:text-left">
+            <p className="text-sm text-green-400 font-medium text-center md:text-left">
               born for the aspirants who are fearless to change
             </p>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-gray-400 mt-1 text-center md:text-left">
               © {new Date().getFullYear()} IntrepidQ AI. All rights reserved.
             </p>
-            <p className="text-xs text-gray-600 mt-1">
-              Contact: <a href="mailto:hardhikmgowda@intrepidq.xyz" className="text-blue-600 hover:text-blue-800" title="Email"><Mail className="w-3 h-3 inline" /></a>
+            <p className="text-xs text-gray-400 mt-1 text-center md:text-left">
+              Contact: <a href="mailto:hardhikmgowda@intrepidq.xyz" className="text-green-400 hover:text-green-300" title="Email"><Mail className="w-3 h-3 inline" /></a>
             </p>
           </div>
           
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            <Link 
-              href="/about" 
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap text-center"
-            >
-              About
-            </Link>
+          <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2">
+            
             <Link 
               href="/docs" 
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap text-center"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors whitespace-nowrap text-center"
             >
               Docs
             </Link>
             <Link 
               href="/privacy-policy" 
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap text-center"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors whitespace-nowrap text-center"
             >
               Privacy
             </Link>
             <Link 
               href="/terms-of-service" 
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap text-center"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors whitespace-nowrap text-center"
             >
               Terms
             </Link>
             <Link 
               href="/blogs" 
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors whitespace-nowrap text-center"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors whitespace-nowrap text-center"
             >
               Blogs
             </Link>
@@ -60,7 +70,7 @@ const Footer = () => {
               href="https://www.youtube.com/@intrepidqai" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors flex items-center justify-center gap-1"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors flex items-center justify-center gap-1"
               title="YouTube"
             >
               <Youtube className="w-4 h-4" />
@@ -69,7 +79,7 @@ const Footer = () => {
               href="https://x.com/IntrepidQai" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-xs sm:text-sm text-gray-700 hover:text-blue-600 transition-colors flex items-center justify-center gap-1"
+              className="text-xs sm:text-sm text-gray-300 hover:text-green-400 transition-colors flex items-center justify-center gap-1"
               title="X (Twitter)"
             >
               <Twitter className="w-4 h-4" />

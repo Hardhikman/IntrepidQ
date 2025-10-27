@@ -32,7 +32,7 @@ class GenerateQuestionsRequest(BaseModel):
     num: int = Field(default=3, ge=1, le=3, description="Number of questions to generate")
     use_ca: bool = Field(default=False, description="Include current affairs")
     months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
-    model: str = Field(default="llama3-70b", description="AI model to use")
+    model: str = Field(default="moonshot-k2", description="AI model to use")
 
     @validator('topic')
     def validate_topic(cls, v):
@@ -46,7 +46,7 @@ class GenerateQuestionsRequest(BaseModel):
 
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "moonshot-k2", "qwen3-32b"]
+        allowed_models = ["moonshot-k2", "qwen3-32b"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v
@@ -56,7 +56,7 @@ class GenerateWholePaperRequest(BaseModel):
     subject: str = Field(..., description="Subject for paper generation (GS1, GS2, GS3, GS4)")
     use_ca: bool = Field(default=False, description="Include current affairs")
     months: int = Field(default=6, ge=1, le=24, description="Current affairs time period in months")
-    model: str = Field(default="llama3-70b", description="AI model to use")
+    model: str = Field(default="moonshot-k2", description="AI model to use")
 
     @validator('subject')
     def validate_subject(cls, v):
@@ -68,7 +68,7 @@ class GenerateWholePaperRequest(BaseModel):
 
     @validator('model')
     def validate_model(cls, v):
-        allowed_models = ["llama3-70b", "moonshot-k2","qwen3-32b"]
+        allowed_models = [ "moonshot-k2","qwen3-32b"]
         if v not in allowed_models:
             raise ValueError(f'Model must be one of {allowed_models}')
         return v

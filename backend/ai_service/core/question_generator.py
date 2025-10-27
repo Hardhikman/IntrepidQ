@@ -62,11 +62,10 @@ class QuestionGenerator:
         )
         self._setup_templates()
         self.available_models = {
-            "llama3-70b": {"provider": "groq", "model_id": "llama-3.3-70b-versatile"},
             "moonshot-k2": {"provider": "groq", "model_id": "moonshotai/kimi-k2-instruct-0905"},
             "qwen3-32b": {"provider": "groq", "model_id": "qwen/qwen3-32b"}
         }
-        self.priority_order = [ "llama3-70b", "qwen3-32b", "moonshot-k2"]
+        self.priority_order = ["qwen3-32b", "moonshot-k2"]
         self.model_speeds: Dict[str, List[float]] = {}
         self.min_attempts_for_avg = 3
         self._load_model_performance()

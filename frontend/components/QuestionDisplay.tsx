@@ -4,6 +4,16 @@ import { GeneratedQuestion } from "@/lib/supabase";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { useState, useEffect, useRef } from "react";
+
+// Dynamically import mermaid only on client side
+let mermaid: any;
+if (typeof window !== "undefined") {
+  import("mermaid").then((module) => {
+    mermaid = module.default;
+    mermaid.initialize({ startOnLoad: false });
+  });
+}
 
 interface QuestionDisplayProps {
   question: GeneratedQuestion;
@@ -20,8 +30,70 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onGenerateAnswer,
   loadingAnswer,
 }) => {
+  const [viewMode, setViewMode] = useState<"text" | "diagram">("text");
+  const diagramRef = useRef<HTMLDivElement>(null);
+  
   const isAnyLoading = loadingAnswer !== null;         // true if some answer is generating
   const isThisLoading = loadingAnswer === index;       // true if THIS question is generating
+
+  // Convert answer to mermaid diagram format
+  const convertToMermaid = (answer: any): string => {
+    if (!answer) return "";
+    
+    const intro = answer.introduction || "";
+    const bodyItems = answer.body || [];
+    const conclusion = answer.conclusion || "";
+    
+    // Create a mindmap structure
+    let diagram = `mindmap\n`;
+    diagram += `  root["${question.question}"]\n`;
+    
+    if (intro) {
+      diagram += `    intro["Introduction:\\n${intro}"]\n`;
+    }
+    
+    if (bodyItems.length > 0) {
+      diagram += `    body["Key Points"]\n`;
+      bodyItems.forEach((item: string, i: number) => {
+        diagram += `      point${i}["${item}"]\n`;
+      });
+    }
+    
+    if (conclusion) {
+      diagram += `    conclusion["Conclusion:\\n${conclusion}"]\n`;
+    }
+    
+    return diagram;
+  };
+
+  // Render mermaid diagram
+  const renderDiagram = async () => {
+    if (viewMode === "diagram" && diagramRef.current && mermaid && answer) {
+      try {
+        const diagramDefinition = convertToMermaid(answer);
+        const { svg, bindFunctions } = await mermaid.render(
+          `mermaid-diagram-${index}`,
+          diagramDefinition
+        );
+        if (diagramRef.current) {
+          diagramRef.current.innerHTML = svg;
+          if (bindFunctions) bindFunctions(diagramRef.current);
+        }
+      } catch (error) {
+        console.error("Error rendering Mermaid diagram:", error);
+        if (diagramRef.current) {
+          diagramRef.current.innerHTML = `<p>Error rendering diagram</p>`;
+        }
+      }
+    }
+  };
+
+  // Re-render diagram when view mode or answer changes
+  useEffect(() => {
+    if (viewMode === "diagram" && answer) {
+      renderDiagram();
+    }
+  }, [viewMode, answer, index]);
 
   return (
     <div className="space-y-4 mb-6">
@@ -49,21 +121,46 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             IQ.ai
           </div>
           <div className="bg-blue-50 border border-blue-200 p-2 sm:p-3 rounded-lg max-w-[85%] sm:max-w-[80%]">
-            <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer:</h4>
-            <p className="mb-1 sm:mb-2 text-sm">
-              <strong>Introduction:</strong> {answer.introduction}
-            </p>
-            <div className="mb-1 sm:mb-2">
-              <strong>Body:</strong>
-              <ul className="list-disc pl-4 sm:pl-5 text-sm">
-                {answer.body?.map((pt: string, i: number) => (
-                  <li key={i}>{pt}</li>
-                ))}
-              </ul>
+            {/* View mode toggle buttons */}
+            <div className="flex gap-2 mb-2">
+              <button
+                className={`px-3 py-1 text-xs rounded ${viewMode === "text" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+                onClick={() => setViewMode("text")}
+              >
+                Text View
+              </button>
+              <button
+                className={`px-3 py-1 text-xs rounded ${viewMode === "diagram" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+                onClick={() => setViewMode("diagram")}
+              >
+                Diagram View
+              </button>
             </div>
-            <p className="text-sm">
-              <strong>Conclusion:</strong> {answer.conclusion}
-            </p>
+
+            {viewMode === "text" ? (
+              <>
+                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer:</h4>
+                <p className="mb-1 sm:mb-2 text-sm">
+                  <strong>Introduction:</strong> {answer.introduction}
+                </p>
+                <div className="mb-1 sm:mb-2">
+                  <strong>Body:</strong>
+                  <ul className="list-disc pl-4 sm:pl-5 text-sm">
+                    {answer.body?.map((pt: string, i: number) => (
+                      <li key={i}>{pt}</li>
+                    ))}
+                  </ul>
+                </div>
+                <p className="text-sm">
+                  <strong>Conclusion:</strong> {answer.conclusion}
+                </p>
+              </>
+            ) : (
+              <div>
+                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer Diagram:</h4>
+                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96" />
+              </div>
+            )}
           </div>
         </div>
       ) : (

@@ -104,10 +104,10 @@ The answer **must strictly follow this JSON schema only**:
 
 Notes:
 - Introduction should be informative and directly related to the question.
-- Body should contain exactly 5 **unique** single or two-word keywords (no sentences).
+- Body should contain **unique** single or two-word broad based keywords (no sentences).
 - Conclusion should indicate positive or policy-oriented direction.
 - Do NOT include anything outside this JSON structure.
-- Ensure exactly 5 items in the body array.
+- Ensure items in the body array covers all dimensions in the question.
 
 Question: {question}
 """

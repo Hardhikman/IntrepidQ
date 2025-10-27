@@ -529,54 +529,57 @@ export default function UPSCQuestionGenerator() {
         return;
       }
 
-      // Write HTML content to the new window
+      // Write responsive HTML content to the new window
       printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
           <title>UPSC ${selectedSubject} Practice Questions</title>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
           <style>
             body {
               font-family: Arial, sans-serif;
-              max-width: 800px;
+              max-width: 100%;
+              width: 100%;
               margin: 0 auto;
-              padding: 20px;
+              padding: 2vw;
               background-color: white;
               color: #333;
             }
             h1 {
               color: #4f46e5;
               text-align: center;
-              margin-bottom: 20px;
+              margin-bottom: 2vh;
+              font-size: 1.8rem;
             }
             .info {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 20px;
-              font-size: 14px;
+              margin-bottom: 2vh;
+              font-size: 0.9rem;
               color: #666;
             }
             .question {
-              margin-bottom: 20px;
-              padding: 15px;
+              margin-bottom: 3vh;
+              padding: 2vh;
               border: 1px solid #e5e7eb;
               border-radius: 8px;
               background-color: #f9fafb;
             }
             .question-title {
               color: #4f46e5;
-              margin-bottom: 10px;
-              font-size: 18px;
+              margin-bottom: 1.5vh;
+              font-size: 1.2rem;
               font-weight: bold;
             }
             .question-text {
-              font-size: 16px;
-              line-height: 1.5;
+              font-size: 1rem;
+              line-height: 1.6;
               color: #374151;
             }
             .thinking {
-              margin-top: 10px;
-              padding: 10px;
+              margin-top: 1.5vh;
+              padding: 1.2vh;
               background-color: #eff6ff;
               border-radius: 4px;
               border-left: 3px solid #3b82f6;
@@ -587,12 +590,32 @@ export default function UPSCQuestionGenerator() {
               font-weight: bold;
             }
             .footer {
-              margin-top: 30px;
-              padding-top: 15px;
+              margin-top: 4vh;
+              padding-top: 2vh;
               border-top: 1px solid #e5e7eb;
               text-align: center;
-              font-size: 12px;
+              font-size: 0.8rem;
               color: #9ca3af;
+            }
+            @media print {
+              body {
+                padding: 1vw;
+              }
+              .question {
+                page-break-inside: avoid;
+              }
+            }
+            @media (max-width: 768px) {
+              h1 {
+                font-size: 1.5rem;
+              }
+              .info {
+                flex-direction: column;
+                gap: 1vh;
+              }
+              .question {
+                padding: 1.5vh;
+              }
             }
           </style>
         </head>

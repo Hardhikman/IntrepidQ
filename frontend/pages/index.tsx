@@ -8,47 +8,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
-// Add this interface for our video popup
-interface VideoPopupProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
-
-// Add this simple video popup component
-const VideoPopup = ({ open, onOpenChange }: VideoPopupProps) => {
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75">
-      <div className="relative bg-white rounded-lg overflow-hidden w-full max-w-3xl">
-        <button 
-          onClick={() => onOpenChange(false)}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 z-10"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <div className="aspect-video w-full">
-          <iframe
-            className="w-full h-full"
-            src="https://www.youtube.com/embed/L_sTf2JZlJc?autoplay=1" // Updated with your video URL
-            title="IntrepidQ AI Introduction"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          ></iframe>
-        </div>
-        <div className="p-4 text-center">
-          <h3 className="text-lg font-semibold">Welcome to IntrepidQ AI</h3>
-          <p className="text-sm text-gray-600 mt-1">
-            Learn how IntrepidQ AI can help you prepare for the UPSC CSE exam.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Components
 import { QuestionGenerator } from "@/components/QuestionGenerator";
 import { ChatWindow } from "@/components/Chatwindow";
@@ -68,6 +27,12 @@ import {
 import { Menu } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 // Types
 import { GeneratedQuestion } from "@/lib/supabase";
@@ -91,12 +56,6 @@ export default function UPSCQuestionGenerator() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Add state for video popup
-  const [showVideoPopup, setShowVideoPopup] = useState(false);
-
-  // Add state for tracking if video was shown
-  const [videoWasShown, setVideoWasShown] = useState(false);
-
   // State
   const [subjects, setSubjects] = useState<Record<string, Subject>>({});
   const [selectedSubject, setSelectedSubject] = useState("GS1");
@@ -116,6 +75,9 @@ export default function UPSCQuestionGenerator() {
     { id: "moonshot-k2", name: "Moonshot (K2)" },
     { id: "qwen3-32b", name: "Qwen3 (32B)" },
   ]);
+
+  // Add state for PDF generation
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   // Add state for showing sign-in notification instead of automatic redirect
   const [showSignInNotification, setShowSignInNotification] = useState(false);
@@ -168,27 +130,6 @@ export default function UPSCQuestionGenerator() {
     }, 3000);
     return () => window.clearInterval(id);
   }, [loading, generatingAllAnswers, answerLoadingIndex, refreshProfile]);
-
-  // Show video popup when page loads (for all users)
-  useEffect(() => {
-    // Only show popup once per session
-    if (typeof window !== 'undefined' && !sessionStorage.getItem('videoPopupShown')) {
-      // Set a small delay to ensure page is loaded
-      const timer = setTimeout(() => {
-        setShowVideoPopup(true);
-        setVideoWasShown(true);
-        sessionStorage.setItem('videoPopupShown', 'true');
-      }, 3000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  // Handle video popup close event
-  const handleVideoClose = () => {
-    setShowVideoPopup(false);
-    setVideoWasShown(true);
-  };
 
   const fetchSubjects = async () => {
     setSubjectsLoading(true);
@@ -571,9 +512,139 @@ export default function UPSCQuestionGenerator() {
     }
   };
 
+  // PDF Download Function
+  const handleDownloadPDF = async () => {
+    if (questions.length === 0) {
+      toast({ title: "Warning", description: "No questions to download", variant: "destructive" });
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      // Create a new window for printing
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        toast({ title: "Error", description: "Unable to open print window. Please check your browser settings.", variant: "destructive" });
+        setIsGeneratingPDF(false);
+        return;
+      }
+
+      // Write HTML content to the new window
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>UPSC ${selectedSubject} Practice Questions</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              max-width: 800px;
+              margin: 0 auto;
+              padding: 20px;
+              background-color: white;
+              color: #333;
+            }
+            h1 {
+              color: #4f46e5;
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .info {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 20px;
+              font-size: 14px;
+              color: #666;
+            }
+            .question {
+              margin-bottom: 20px;
+              padding: 15px;
+              border: 1px solid #e5e7eb;
+              border-radius: 8px;
+              background-color: #f9fafb;
+            }
+            .question-title {
+              color: #4f46e5;
+              margin-bottom: 10px;
+              font-size: 18px;
+              font-weight: bold;
+            }
+            .question-text {
+              font-size: 16px;
+              line-height: 1.5;
+              color: #374151;
+            }
+            .thinking {
+              margin-top: 10px;
+              padding: 10px;
+              background-color: #eff6ff;
+              border-radius: 4px;
+              border-left: 3px solid #3b82f6;
+              color: #374151;
+            }
+            .thinking-title {
+              color: #3b82f6;
+              font-weight: bold;
+            }
+            .footer {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 1px solid #e5e7eb;
+              text-align: center;
+              font-size: 12px;
+              color: #9ca3af;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>UPSC ${selectedSubject} Practice Questions</h1>
+          <div class="info">
+            <span>Mode: ${mode.charAt(0).toUpperCase() + mode.slice(1)}</span>
+            <span>Date: ${new Date().toLocaleDateString()}</span>
+          </div>
+      `);
+
+      // Add questions to the print window
+      questions.forEach((q, index) => {
+        printWindow.document.write(`
+          <div class="question">
+            <div class="question-title">Question ${index + 1}</div>
+            <div class="question-text">${q.question}</div>
+            ${q.thinking ? `<div class="thinking"><span class="thinking-title">Thinking Process: </span>${q.thinking}</div>` : ''}
+          </div>
+        `);
+      });
+
+      // Add footer
+      printWindow.document.write(`
+          <div class="footer">
+            Generated by IntrepidQ AI - UPSC Preparation Assistant
+          </div>
+        </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+
+      // Wait a bit for content to load, then trigger print
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+        toast({ title: "Success", description: "Print dialog opened. Save as PDF to download.", variant: "default" });
+      }, 500);
+
+    } catch (err: any) {
+      console.error("Error generating PDF:", err);
+      toast({ title: "Error", description: "Failed to generate PDF: " + err.message, variant: "destructive" });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   // Return the main interface for both authenticated and guest users
   return (
-    <div className="min-h-screen w-full bg-[#0f0f0f] relative text-white">
+    <div className="min-h-screen w-full bg-[#0f0f0f] text-white relative">
       {/* Diagonal Grid with Green Glow */}
       <div
         className="absolute inset-0 z-0 pointer-events-none"
@@ -594,8 +665,7 @@ export default function UPSCQuestionGenerator() {
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
         </Head>
-        {/* Add the video popup component */}
-        <VideoPopup open={showVideoPopup} onOpenChange={handleVideoClose} />
+        
         {/* Floating Header */}
         <FloatingHeader
           user={user}
@@ -604,8 +674,30 @@ export default function UPSCQuestionGenerator() {
           signInWithGoogle={signInWithGoogle}
         />
 
+        {/* Embedded YouTube Video Section - Moved below header and reduced size */}
+        <section className="max-w-3xl mx-auto bg-[#1a1a1a] rounded-xl shadow-lg border border-gray-700 p-4 mt-20">
+          <div className="text-center mb-3">
+            <h2 className="text-xl font-bold text-green-400 mb-1">
+              Welcome to IntrepidQ AI
+            </h2>
+            <p className="text-gray-300 text-sm max-w-lg mx-auto">
+              Learn how to use IntrepidQ to ace the UPSC CSE mains exam
+            </p>
+          </div>
+          
+          <div className="aspect-video w-full rounded-lg overflow-hidden max-w-2xl mx-auto">
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/L_sTf2JZlJc?autoplay=0"
+              title="IntrepidQ AI Introduction"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+        </section>
+
         {/* Main Content with padding adjusted for taller floating header */}
-        <div className="pt-16 p-4 space-y-6">
+        <div className="pt-4 p-4 space-y-6">
             {/* New Info Section - Increased width */}
             <section className="max-w-4xl mx-auto bg-[#1a1a1a] rounded-2xl shadow-lg border-2 border-gray-700 p-6 md:p-8">
               <div className="text-center mb-8">
@@ -743,6 +835,36 @@ export default function UPSCQuestionGenerator() {
                 {mode === "paper" && (
                   <div className="text-green-400 bg-gray-800 border-2 border-gray-600 rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
                     10 questions · 10 marks each · 1 hour · 100 marks
+                    {questions.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <button
+                          onClick={handleDownloadPDF}
+                          disabled={isGeneratingPDF}
+                          className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
+                            isGeneratingPDF
+                              ? 'bg-gray-600 cursor-not-allowed'
+                              : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                          } text-white shadow-sm`}
+                        >
+                          {isGeneratingPDF ? (
+                            <>
+                              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                              </svg>
+                              Generating PDF...
+                            </>
+                          ) : (
+                            <>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                              </svg>
+                              Download Questions as PDF
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
@@ -827,6 +949,71 @@ export default function UPSCQuestionGenerator() {
                     answerLoadingIndex={answerLoadingIndex}
                   />
                 </div>
+
+                {/* FAQ Section */}
+                <section className="max-w-5xl mx-auto mt-12">
+                  <h2 className="text-2xl font-bold text-green-400 mb-6 text-center">Frequently Asked Questions</h2>
+                  <Accordion type="single" collapsible className="w-full space-y-4">
+                    <AccordionItem value="item-1" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
+                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                        What is IntrepidQ AI and how does it help UPSC aspirants?
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-300 pb-4">
+                        IntrepidQ AI is India's first NLP and RAG-based AI assistant specifically designed for UPSC CSE mains preparation. 
+                        It generates context-aware mains questions across all GS papers, helping aspirants practice answer writing with 
+                        relevant current affairs and PYQ-based insights.
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="item-2" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
+                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                        How is IntrepidQ different from other AI tools for UPSC preparation?
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-300 pb-4">
+                        Unlike generic AI tools, IntrepidQ is purpose-built for UPSC with features like:
+                        <ul className="list-disc pl-5 mt-2 space-y-1">
+                          <li>Topic-wise question generation aligned with UPSC syllabus</li>
+                          <li>Current affairs integration with keyword-based search</li>
+                          <li>PYQ pattern analysis for accurate question prediction</li>
+                          <li>Comprehensive coverage across all GS papers</li>
+                          <li>Brainstorming ideas to enhance creative thinking</li>
+                          <li>Transparency in making by displaying contextual information(PYQ and News items)</li>
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="item-3" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
+                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                        How many questions can I generate per day?
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-300 pb-4">
+                        Authenticated(signed up) users can generate up to 5 sets of questions per day. Each set can contain 1-3 questions 
+                        depending on your selection. This limit ensures optimal resource usage while providing ample practice 
+                        opportunities. The daily limit resets every 24 hours.
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="item-4" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
+                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                        Can I practice answer writing along with IntrepidQ?
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-300 pb-4">
+                        Yes! After generating questions, you can use our brainstorming feature to develop ideas and structure 
+                        your thoughts.
+                      </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="item-5" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
+                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                        How current affairs mode differs from keyword mode ?
+                      </AccordionTrigger>
+                      <AccordionContent className="text-gray-300 pb-4">
+                        The two modes uses different NLP techniques(TF-IDF and Cosine similarity)to perform their operations.Also, Users could choose between 
+                        the hindu and the indian express to get relevant news articles according to keyword for effective preparation
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                </section>
               </div>
             </section>
           </div>

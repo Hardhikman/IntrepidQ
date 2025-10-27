@@ -9,26 +9,26 @@ const config = {
         alignItems: 'center', 
         justifyContent: 'center',
         gap: '0.5rem',
-        backgroundColor: '#f9fafb',
-        color: '#4f46e5',
+        backgroundColor: '#0f0f0f',
+        color: '#22c55e',
         padding: '0.5rem 0.75rem',
         borderRadius: '0.375rem',
         fontWeight: '600',
         fontSize: '0.75rem',
         cursor: 'pointer',
-        border: '1px solid #e5e7eb',
+        border: '1px solid #3f3f3f',
         transition: 'all 0.2s ease-in-out',
         whiteSpace: 'nowrap',
         width: '100%',
         boxSizing: 'border-box'
       }}
       onMouseOver={(e) => {
-        e.currentTarget.style.backgroundColor = '#f3f4f6';
-        e.currentTarget.style.borderColor = '#d1d5db';
+        e.currentTarget.style.backgroundColor = '#1a1a1a';
+        e.currentTarget.style.borderColor = '#525252';
       }}
       onMouseOut={(e) => {
-        e.currentTarget.style.backgroundColor = '#f9fafb';
-        e.currentTarget.style.borderColor = '#e5e7eb';
+        e.currentTarget.style.backgroundColor = '#0f0f0f';
+        e.currentTarget.style.borderColor = '#3f3f3f';
       }}>
         <span>Back to IntrepidQ AI</span>
       </div>

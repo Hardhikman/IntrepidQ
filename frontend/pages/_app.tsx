@@ -105,8 +105,8 @@ export default function App({ Component, pageProps }: AppProps) {
         <link rel="manifest" href="/manifest.json" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
       </Head>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <div className="min-h-screen flex flex-col bg-[#0f0f0f] text-white">
           <main className="flex-grow">
             <Component {...pageProps} session={session} />
           </main>

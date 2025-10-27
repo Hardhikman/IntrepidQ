@@ -2,8 +2,11 @@ import React from 'react';
 import Link from 'next/link';
 import { AIntrepidQLogo } from '@/components/aintrepidq-logo';
 import { Youtube, Twitter, Mail } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 const Footer = () => {
+  const { theme } = useTheme();
+
   return (
     <footer className="w-full bg-[#0f0f0f] relative text-white shadow-sm mb-2">
       {/* Circuit Board - Dark Pattern */}

@@ -13,6 +13,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useTheme } from "next-themes"
 
 // 🔹 Highlight matched text
 function HighlightedText({ text, query }: { text: string; query: string }) {
@@ -23,11 +24,11 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
     <>
       {parts.map((part, i) =>
         part.toLowerCase() === query.toLowerCase() ? (
-          <span key={i} className="font-semibold text-blue-600">
+          <span key={i} className="font-semibold text-yellow-300">
             {part}
           </span>
         ) : (
-          <span key={i} className="text-gray-800">{part}</span>
+          <span key={i} className="text-white">{part}</span>
         )
       )}
     </>
@@ -51,17 +52,17 @@ export function TopicCombobox({
 }) {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
+  const { theme } = useTheme()
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between truncate bg-gray-800 border border-gray-600 rounded-lg text-green-400 hover:bg-gray-700",
-            value ? "border-gray-500" : "",
+            "h-10 w-full justify-between truncate bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800",
+            value ? "" : "",
             className
           )}
           disabled={disabled}
@@ -69,20 +70,19 @@ export function TopicCombobox({
           <span className="truncate block max-w-[85%]">
             {value || placeholder || "Select Topic..."}
           </span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50 text-white" />
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-72 p-0 bg-white border-gray-300">
-        <Command>
+      <PopoverContent className="w-72 p-0 bg-gradient-to-r from-green-600 to-green-700 border-0 rounded-lg shadow-lg">
+        <Command className="bg-transparent text-white">
           <CommandInput
             placeholder="Search topics..."
-            className="h-9 bg-white text-gray-800 placeholder-gray-500 border-0 focus:ring-1 focus:ring-blue-500"
-            onValueChange={(val) => setSearchQuery(val)}
+            className="h-9 bg-white/10 text-white placeholder-white/70 border-0 focus:ring-1 focus:ring-white/50 rounded-lg my-2 mx-2 [&_input]:text-white [&_input]:placeholder-white/70"
           />
-          <CommandList className="max-h-[250px] overflow-y-auto bg-white">
-            <CommandEmpty className="text-gray-500 py-2 text-center">No topics found.</CommandEmpty>
-            <CommandGroup className="bg-white">
+          <CommandList className="max-h-[250px] overflow-y-auto bg-transparent">
+            <CommandEmpty className="text-white/80 py-2 text-center">No topics found.</CommandEmpty>
+            <CommandGroup className="bg-transparent text-white">
               {items.map((item, idx) => (
                 <CommandItem
                   key={`${item}-${idx}`}
@@ -91,20 +91,20 @@ export function TopicCombobox({
                     onChange(currentValue)
                     setOpen(false)
                   }}
-                  className="flex items-start gap-2 px-2 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                  className="flex items-start gap-2 px-2 py-2 text-sm text-white hover:bg-white/10 rounded-md mx-1 aria-selected:bg-white/10 aria-selected:text-white"
                 >
                   {/* 🔹 Left column: checkmark (fixed width) */}
                   <span className="w-4 flex justify-center">
                     <Check
                       className={cn(
-                        "h-4 w-4 text-blue-600",
+                        "h-4 w-4 text-white",
                         value === item ? "opacity-100" : "opacity-0"
                       )}
                     />
                   </span>
 
                   {/* 🔹 Right column: text (aligned and wraps) */}
-                  <span className="flex-1 whitespace-normal leading-snug text-gray-800">
+                  <span className="flex-1 whitespace-normal leading-snug">
                     <HighlightedText text={item} query={searchQuery} />
                   </span>
                 </CommandItem>

@@ -3,6 +3,7 @@
 import { QuestionDisplay } from "./QuestionDisplay";
 import { GeneratedQuestion } from "@/lib/supabase";
 import { Card, CardContent } from "./ui/card";
+import { useTheme } from "next-themes";
 
 interface ChatWindowProps {
   questions: GeneratedQuestion[];
@@ -19,6 +20,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   onGenerateAnswer,
   answerLoadingIndex,
 }) => {
+  const { theme } = useTheme();
+  
   // Collect context and news from all questions (use the first one that has them)
   let context: string[] = [];
   let newsContent = "";
@@ -39,8 +42,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   }
 
   return (
-    <div className="flex flex-col bg-white rounded-2xl border border-gray-200 shadow-lg p-4 sm:p-6 max-h-[70vh] overflow-y-auto">
-      <h3 className="mb-4 sm:mb-6 text-lg sm:text-xl font-bold text-gray-900 border-b pb-2">📄 Context-Aware questions</h3>
+    <div className="flex flex-col bg-card rounded-2xl border border-border shadow-lg p-4 sm:p-6 max-h-[70vh] overflow-y-auto">
+      <h3 className="mb-4 sm:mb-6 text-lg sm:text-xl font-bold text-foreground border-b border-border pb-2">📄 Context-Aware questions</h3>
       <div className="space-y-6">
         {questions.map((q, i) => (
           <QuestionDisplay
@@ -67,20 +70,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         {/* Context Information - Show retrieved documents at the end of all questions */}
         {context && context.length > 0 && (
           <div className="mt-6">
-            <Card className="bg-blue-50 border border-blue-200">
+            <Card className="bg-muted">
               <CardContent className="p-3">
-                <h4 className="font-bold text-blue-800 mb-2 text-sm sm:text-base flex items-center">
+                <h4 className="font-bold text-foreground mb-2 text-sm sm:text-base flex items-center">
                   <span className="mr-2">📚</span> Context Documents(PYQ)
                 </h4>
                 <div className="space-y-2">
                   {context.map((doc: string, idx: number) => (
-                    <div key={idx} className="text-xs sm:text-sm bg-white p-2 rounded border border-blue-100">
-                      <p className="text-gray-700">{doc}</p>
+                    <div key={idx} className="text-xs sm:text-sm bg-background p-2 rounded border border-border">
+                      <p className="text-foreground">{doc}</p>
                     </div>
                   ))}
                 </div>
                 {meta && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-xs text-muted-foreground">
                     <span>Cached examples: {meta.cached_examples || 0}</span>
                     {meta.news_included && (
                       <span className="ml-2">📰 News included ({meta.news_content_length || 0} chars)</span>
@@ -95,13 +98,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         {/* News Content - Show news used for current affairs questions at the end of all questions */}
         {newsContent && (
           <div className="mt-4">
-            <Card className="bg-green-50 border border-green-200">
+            <Card className="bg-muted">
               <CardContent className="p-3">
-                <h4 className="font-bold text-green-800 mb-2 text-sm sm:text-base flex items-center">
+                <h4 className="font-bold text-foreground mb-2 text-sm sm:text-base flex items-center">
                   <span className="mr-2">📰</span> News Contents
                 </h4>
-                <div className="text-xs sm:text-sm bg-white p-2 rounded border border-green-100">
-                  <p className="text-gray-700 whitespace-pre-wrap">{newsContent}</p>
+                <div className="text-xs sm:text-sm bg-background p-2 rounded border border-border">
+                  <p className="text-foreground whitespace-pre-wrap">{newsContent}</p>
                 </div>
               </CardContent>
             </Card>

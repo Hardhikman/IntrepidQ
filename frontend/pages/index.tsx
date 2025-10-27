@@ -667,10 +667,10 @@ export default function UPSCQuestionGenerator() {
 
   // Return the main interface for both authenticated and guest users
   return (
-    <div className="min-h-screen w-full bg-[#0f0f0f] text-white relative">
-      {/* Diagonal Grid with Green Glow */}
+    <div className="min-h-screen w-full bg-background text-foreground relative">
+      {/* Diagonal Grid with Green Glow - only show in dark mode */}
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none hidden dark:block"
         style={{
           backgroundImage: `
             repeating-linear-gradient(45deg, rgba(0, 255, 128, 0.1) 0, rgba(0, 255, 128, 0.1) 1px, transparent 1px, transparent 20px),
@@ -698,12 +698,12 @@ export default function UPSCQuestionGenerator() {
         />
 
         {/* Embedded YouTube Video Section - Moved below header and reduced size */}
-        <section className="max-w-3xl mx-auto bg-[#1a1a1a] rounded-xl shadow-lg border border-gray-700 p-4 mt-20">
+        <section className="max-w-3xl mx-auto bg-card rounded-xl shadow-lg border border-border p-4 mt-20">
           <div className="text-center mb-3">
-            <h2 className="text-xl font-bold text-green-400 mb-1">
+            <h2 className="text-xl font-bold text-foreground mb-1">
               Welcome to IntrepidQ AI
             </h2>
-            <p className="text-gray-300 text-sm max-w-lg mx-auto">
+            <p className="text-muted-foreground text-sm max-w-lg mx-auto">
               Learn how to use IntrepidQ to ace the UPSC CSE mains exam
             </p>
           </div>
@@ -722,12 +722,12 @@ export default function UPSCQuestionGenerator() {
         {/* Main Content with padding adjusted for taller floating header */}
         <div className="pt-4 p-4 space-y-6">
             {/* New Info Section - Increased width */}
-            <section className="max-w-4xl mx-auto bg-[#1a1a1a] rounded-2xl shadow-lg border-2 border-gray-700 p-6 md:p-8">
+            <section className="max-w-4xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6 md:p-8">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-extrabold text-green-400 mb-4 tracking-wide">
+                <h1 className="text-3xl font-extrabold text-foreground mb-4 tracking-wide">
                   The Modern Solution for UPSC Aspirants in the AI Age
                 </h1>
-                <p className="text-gray-300 text-lg max-w-3xl mx-auto leading-relaxed font-medium">
+                <p className="text-muted-foreground text-lg max-w-3xl mx-auto leading-relaxed font-medium">
                   IntrepidQ AI empowers fearless aspirants to transform their preparation and cut short their UPSC cycle. Unlike complex AI tools, 
                   we offer a comprehensive, minimalistic platform that sharpens your answer writing, brainstorming, and creative thinking—the skills that actually determine your rank.
                 </p>
@@ -741,8 +741,8 @@ export default function UPSCQuestionGenerator() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-green-400 text-lg">Customization</h3>
-                    <p className="text-gray-300">Search options for every type of aspirants</p>
+                    <h3 className="font-bold text-foreground text-lg">Customization</h3>
+                    <p className="text-muted-foreground">Search options for every type of aspirants</p>
                   </div>
                 </div>
 
@@ -753,8 +753,8 @@ export default function UPSCQuestionGenerator() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-green-400 text-lg">Prediction</h3>
-                    <p className="text-gray-300">Question prediction on the base of PYQ made easy</p>
+                    <h3 className="font-bold text-foreground text-lg">Prediction</h3>
+                    <p className="text-muted-foreground">Question prediction on the base of PYQ made easy</p>
                   </div>
                 </div>
 
@@ -765,8 +765,8 @@ export default function UPSCQuestionGenerator() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-green-400 text-lg">No FOMO</h3>
-                    <p className="text-gray-300">Coverage of extensive context aware questions</p>
+                    <h3 className="font-bold text-foreground text-lg">No FOMO</h3>
+                    <p className="text-muted-foreground">Coverage of extensive context aware questions</p>
                   </div>
                 </div>
 
@@ -777,18 +777,18 @@ export default function UPSCQuestionGenerator() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-green-400 text-lg">Time Value of Money</h3>
-                    <p className="text-gray-300">Balance the time between revision and practice</p>
+                    <h3 className="font-bold text-foreground text-lg">Time Value of Money</h3>
+                    <p className="text-muted-foreground">Balance the time between revision and practice</p>
                   </div>
                 </div>
               </div>
             </section>
 
             {/* Mode selection card */}
-            <Card className="max-w-4xl mx-auto shadow-lg bg-[#1a1a1a] border-2 border-gray-700 rounded-2xl">
+            <Card className="max-w-4xl mx-auto shadow-lg bg-card border border-border rounded-2xl">
               <CardContent className="py-5">
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <span className="font-extrabold text-green-400 text-center text-xl sm:text-2xl tracking-wide">
+                  <span className="font-extrabold text-foreground text-center text-xl sm:text-2xl tracking-wide">
                      Select Question Generation Mode
                   </span>
                 </div>
@@ -799,7 +799,7 @@ export default function UPSCQuestionGenerator() {
                       "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                       mode === "topic"
                         ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
-                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                        : "bg-muted border border-border text-foreground hover:bg-accent"
                     )}
                     onClick={() => setMode("topic")}
                   >
@@ -814,7 +814,7 @@ export default function UPSCQuestionGenerator() {
                       "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                       mode === "keyword"
                         ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
-                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                        : "bg-muted border border-border text-foreground hover:bg-accent"
                     )}
                     onClick={() => setMode("keyword")}
                   >
@@ -829,7 +829,7 @@ export default function UPSCQuestionGenerator() {
                       "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                       mode === "currentAffairs"
                         ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
-                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                        : "bg-muted border border-border text-foreground hover:bg-accent"
                     )}
                     onClick={() => setMode("currentAffairs")}
                   >
@@ -844,7 +844,7 @@ export default function UPSCQuestionGenerator() {
                       "rounded-2xl font-bold transition-all shadow-md w-full sm:w-auto px-6 py-3 text-lg relative",
                       mode === "paper"
                         ? "bg-gradient-to-r from-green-600 to-green-700 text-white transform scale-105"
-                        : "bg-gray-800 border-2 border-gray-600 text-green-400 hover:bg-gray-700 hover:border-green-500"
+                        : "bg-muted border border-border text-foreground hover:bg-accent"
                     )}
                     onClick={() => setMode("paper")}
                   >
@@ -856,16 +856,16 @@ export default function UPSCQuestionGenerator() {
                 </div>
                 
                 {mode === "paper" && (
-                  <div className="text-green-400 bg-gray-800 border-2 border-gray-600 rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
+                  <div className="text-foreground bg-muted border border-border rounded-lg text-center w-full text-sm md:text-base px-4 py-3 mt-4 font-medium">
                     10 questions · 10 marks each · 1 hour · 100 marks
                     {questions.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="mt-3 pt-3 border-t border-border">
                         <button
                           onClick={handleDownloadPDF}
                           disabled={isGeneratingPDF}
                           className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md ${
                             isGeneratingPDF
-                              ? 'bg-gray-600 cursor-not-allowed'
+                              ? 'bg-muted cursor-not-allowed'
                               : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
                           } text-white shadow-sm`}
                         >
@@ -880,7 +880,7 @@ export default function UPSCQuestionGenerator() {
                           ) : (
                             <>
                               <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 0115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
                               </svg>
                               Download Questions as PDF
                             </>
@@ -895,13 +895,13 @@ export default function UPSCQuestionGenerator() {
             
             {/* Authenticated user daily limit notification - Made responsive */}
             {user && dailyLimitReached && (
-              <Card className="max-w-5xl mx-auto shadow-sm border-gray-700 bg-gray-800">
+              <Card className="max-w-5xl mx-auto shadow-sm border border-border bg-muted">
                 <CardContent className="py-4">
                   <div className="text-center">
-                    <div className="text-green-400 font-medium mb-2 text-sm sm:text-base">
+                    <div className="text-foreground font-medium mb-2 text-sm sm:text-base">
                       🚫 Daily Limit Reached! You've used all 5 question generations today.
                     </div>
-                    <div className="text-gray-300 text-xs sm:text-sm">
+                    <div className="text-muted-foreground text-xs sm:text-sm">
                       Your daily limit will reset tomorrow. Keep brainstorming and keep learning !
                     </div>
                   </div>
@@ -915,7 +915,7 @@ export default function UPSCQuestionGenerator() {
               <div className="w-full">
                 {!user ? (
                   <div className="text-center py-8">
-                    <div className="text-lg font-semibold text-green-400 mb-4">
+                    <div className="text-lg font-semibold text-foreground mb-4">
                       Welcome to <AIntrepidQLogo size="large" />
                       <div className="mt-4">
                         Join 500+ UPSC aspirants who are already using IntrepidQ AI to get ahead in competition (IntrepidQ will raise your answer writing capability if you do) <span className="inline-block">😊</span>
@@ -975,24 +975,24 @@ export default function UPSCQuestionGenerator() {
 
                 {/* FAQ Section */}
                 <section className="max-w-5xl mx-auto mt-12">
-                  <h2 className="text-2xl font-bold text-green-400 mb-6 text-center">Frequently Asked Questions</h2>
+                  <h2 className="text-2xl font-bold text-foreground mb-6 text-center">Frequently Asked Questions</h2>
                   <Accordion type="single" collapsible className="w-full space-y-4">
-                    <AccordionItem value="item-1" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
-                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                    <AccordionItem value="item-1" className="bg-card border border-border rounded-lg px-4">
+                      <AccordionTrigger className="text-foreground hover:text-accent-foreground text-left">
                         What is IntrepidQ AI and how does it help UPSC aspirants?
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-300 pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4">
                         IntrepidQ AI is India's first NLP and RAG-based AI assistant specifically designed for UPSC CSE mains preparation. 
                         It generates context-aware mains questions across all GS papers, helping aspirants practice answer writing with 
                         relevant current affairs and PYQ-based insights.
                       </AccordionContent>
                     </AccordionItem>
                     
-                    <AccordionItem value="item-2" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
-                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                    <AccordionItem value="item-2" className="bg-card border border-border rounded-lg px-4">
+                      <AccordionTrigger className="text-foreground hover:text-accent-foreground text-left">
                         How is IntrepidQ different from other AI tools for UPSC preparation?
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-300 pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4">
                         Unlike generic AI tools, IntrepidQ is purpose-built for UPSC with features like:
                         <ul className="list-disc pl-5 mt-2 space-y-1">
                           <li>Topic-wise question generation aligned with UPSC syllabus</li>
@@ -1005,32 +1005,32 @@ export default function UPSCQuestionGenerator() {
                       </AccordionContent>
                     </AccordionItem>
                     
-                    <AccordionItem value="item-3" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
-                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                    <AccordionItem value="item-3" className="bg-card border border-border rounded-lg px-4">
+                      <AccordionTrigger className="text-foreground hover:text-accent-foreground text-left">
                         How many questions can I generate per day?
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-300 pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4">
                         Authenticated(signed up) users can generate up to 5 sets of questions per day. Each set can contain 1-3 questions 
                         depending on your selection. This limit ensures optimal resource usage while providing ample practice 
                         opportunities. The daily limit resets every 24 hours.
                       </AccordionContent>
                     </AccordionItem>
                     
-                    <AccordionItem value="item-4" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
-                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                    <AccordionItem value="item-4" className="bg-card border border-border rounded-lg px-4">
+                      <AccordionTrigger className="text-foreground hover:text-accent-foreground text-left">
                         Can I practice answer writing along with IntrepidQ?
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-300 pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4">
                         Yes! After generating questions, you can use our brainstorming feature to develop ideas and structure 
                         your thoughts.
                       </AccordionContent>
                     </AccordionItem>
                     
-                    <AccordionItem value="item-5" className="bg-[#1a1a1a] border border-gray-700 rounded-lg px-4">
-                      <AccordionTrigger className="text-green-400 hover:text-green-300 text-left">
+                    <AccordionItem value="item-5" className="bg-card border border-border rounded-lg px-4">
+                      <AccordionTrigger className="text-foreground hover:text-accent-foreground text-left">
                         How current affairs mode differs from keyword mode ?
                       </AccordionTrigger>
-                      <AccordionContent className="text-gray-300 pb-4">
+                      <AccordionContent className="text-muted-foreground pb-4">
                         The two modes uses different NLP techniques(TF-IDF and Cosine similarity)to perform their operations.Also, Users could choose between 
                         the hindu and the indian express to get relevant news articles according to keyword for effective preparation
                       </AccordionContent>

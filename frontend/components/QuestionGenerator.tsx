@@ -100,7 +100,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
 }) => {
   return (
     <TooltipProvider delayDuration={0}>
-      <section className="bg-[#1a1a1a] rounded-xl shadow-md border border-gray-700">
+      <section className="bg-card rounded-xl shadow-md border border-border">
         <div className={cn(
           "flex flex-wrap gap-2 sm:gap-3 p-3 items-center",
           mode === "paper" 
@@ -116,7 +116,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           >
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-32 sm:w-36 bg-gray-800 border border-gray-600 rounded-lg text-sm text-green-400">
+                <SelectTrigger className="h-10 w-32 sm:w-36 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
                   <SelectValue placeholder="Select GS" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -134,7 +134,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-36 sm:w-44 bg-gray-800 border border-gray-600 rounded-lg text-sm text-green-400">
+                <SelectTrigger className="h-10 w-36 sm:w-44 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
                   <SelectValue placeholder="Model" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -153,7 +153,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           {(mode === "topic" || mode === "currentAffairs") && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="w-56 sm:w-72 bg-gray-800 border border-gray-600 rounded-lg">
+                <div className="w-56 sm:w-72">
                   <TopicCombobox
                     items={subjects[selectedSubject]?.topics || []}
                     value={selectedTopic}
@@ -165,7 +165,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
                       subjectsLoading ||
                       !subjects[selectedSubject]?.topics?.length
                     }
-                    className="w-full text-sm text-green-400"
+                    className="w-full text-sm"
                   />
                 </div>
               </TooltipTrigger>
@@ -177,13 +177,13 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           {mode === "currentAffairs" && fetchedKeywords.length > 0 && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="w-56 sm:w-72 bg-gray-800 border border-gray-600 rounded-lg">
+                <div className="w-56 sm:w-72">
                   <TopicCombobox
                     items={fetchedKeywords}
                     value={selectedKeyword}
                     onChange={setSelectedKeyword}
                     placeholder="Select or search keywords..."
-                    className="w-full text-sm text-green-400"
+                    className="w-full text-sm"
                   />
                 </div>
               </TooltipTrigger>
@@ -193,13 +193,13 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
 
           {/* Keyword input field - only shown when in keyword mode */}
           {mode === "keyword" && (
-            <div className="w-56 sm:w-72 bg-gray-800 border border-gray-600 rounded-lg">
+            <div className="w-56 sm:w-72 bg-background border border-input rounded-lg">
               <input
                 type="text"
                 placeholder="Enter a keyword"
                 value={keywordQuery}
                 onChange={(e) => setKeywordQuery(e.target.value)}
-                className="w-full px-3 py-2 text-sm border-0 bg-transparent focus:ring-0 text-green-400"
+                className="w-full px-3 py-2 text-sm border-0 bg-transparent focus:ring-0 text-foreground"
                 disabled={loading || dailyLimitReached}
               />
             </div>
@@ -213,7 +213,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             <Select value={newsSource} onValueChange={setNewsSource}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SelectTrigger className="h-10 w-36 bg-gray-800 border border-gray-600 rounded-lg text-sm text-green-400">
+                  <SelectTrigger className="h-10 w-36 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
                     <SelectValue placeholder="News Source" />
                   </SelectTrigger>
                 </TooltipTrigger>
@@ -232,8 +232,8 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-green-400 font-semibold text-sm">How many?</span>
-                  <span className="text-green-400 font-semibold text-sm">
+                  <span className="text-foreground font-semibold text-sm">How many?</span>
+                  <span className="text-foreground font-semibold text-sm">
                     {numQuestions}
                   </span>
                   <div className="w-20 sm:w-24">

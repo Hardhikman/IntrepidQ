@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { useState, useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 
 // Dynamically import mermaid only on client side
 let mermaid: any;
@@ -30,6 +31,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onGenerateAnswer,
   loadingAnswer,
 }) => {
+  const { theme } = useTheme();
   const [viewMode, setViewMode] = useState<"text" | "diagram">("text");
   const diagramRef = useRef<HTMLDivElement>(null);
   
@@ -102,13 +104,13 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <div className="rounded-full bg-gradient-to-r from-blue-500 to-orange-500 text-white w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-base sm:text-lg">
           IQ.ai
         </div>
-        <div className="bg-blue-50 border border-blue-200 p-2 sm:p-3 rounded-lg max-w-[85%] sm:max-w-[80%]">
+        <div className="bg-muted border border-border p-2 sm:p-3 rounded-lg max-w-[85%] sm:max-w-[80%]">
           {question.thinking && (
-            <p className="text-xs text-blue-500 italic mb-1 sm:mb-2 select-none">
+            <p className="text-xs text-muted-foreground italic mb-1 sm:mb-2 select-none">
               💭 {question.thinking}
             </p>
           )}
-          <p className="whitespace-pre-wrap font-medium text-gray-900 select-none text-sm sm:text-base" style={{ fontFamily: "'Inter', sans-serif" }}>
+          <p className="whitespace-pre-wrap font-medium text-foreground select-none text-sm sm:text-base" style={{ fontFamily: "'Inter', sans-serif" }}>
             Q{index + 1}: {question.question}
           </p>
         </div>
@@ -120,17 +122,17 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
           <div className="rounded-full bg-gradient-to-r from-blue-500 to-orange-500 text-white w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center font-bold text-base sm:text-lg">
             IQ.ai
           </div>
-          <div className="bg-blue-50 border border-blue-200 p-2 sm:p-3 rounded-lg max-w-[85%] sm:max-w-[80%]">
+          <div className="bg-muted border border-border p-2 sm:p-3 rounded-lg max-w-[85%] sm:max-w-[80%]">
             {/* View mode toggle buttons */}
             <div className="flex gap-2 mb-2">
               <button
-                className={`px-3 py-1 text-xs rounded ${viewMode === "text" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+                className={`px-3 py-1 text-xs rounded ${viewMode === "text" ? "bg-primary text-primary-foreground" : "bg-muted-foreground text-muted"}`}
                 onClick={() => setViewMode("text")}
               >
                 Text View
               </button>
               <button
-                className={`px-3 py-1 text-xs rounded ${viewMode === "diagram" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"}`}
+                className={`px-3 py-1 text-xs rounded ${viewMode === "diagram" ? "bg-primary text-primary-foreground" : "bg-muted-foreground text-muted"}`}
                 onClick={() => setViewMode("diagram")}
               >
                 Diagram View
@@ -139,26 +141,26 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
             {viewMode === "text" ? (
               <>
-                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer:</h4>
-                <p className="mb-1 sm:mb-2 text-sm text-gray-800">
+                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-foreground">Answer:</h4>
+                <p className="mb-1 sm:mb-2 text-sm text-foreground">
                   <strong>Introduction:</strong> {answer.introduction}
                 </p>
                 <div className="mb-1 sm:mb-2">
-                  <strong className="text-gray-800">Body:</strong>
-                  <ul className="list-disc pl-4 sm:pl-5 text-sm text-gray-800">
+                  <strong className="text-foreground">Body:</strong>
+                  <ul className="list-disc pl-4 sm:pl-5 text-sm text-foreground">
                     {answer.body?.map((pt: string, i: number) => (
                       <li key={i}>{pt}</li>
                     ))}
                   </ul>
                 </div>
-                <p className="text-sm text-gray-800">
+                <p className="text-sm text-foreground">
                   <strong>Conclusion:</strong> {answer.conclusion}
                 </p>
               </>
             ) : (
               <div>
-                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer Diagram:</h4>
-                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-gray-200 rounded-lg p-4 bg-white" />
+                <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-foreground">Answer Diagram:</h4>
+                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-border rounded-lg p-4 bg-background" />
               </div>
             )}
           </div>
@@ -167,7 +169,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <div className="ml-7 sm:ml-10">
           {onGenerateAnswer && (
             <Button
-              className="bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs sm:text-sm h-8 sm:h-10"
+              className="bg-primary text-primary-foreground text-xs sm:text-sm h-8 sm:h-10"
               onClick={() => onGenerateAnswer(index, question.question)}
               disabled={isAnyLoading} // ✅ disables all if one is generating
             >

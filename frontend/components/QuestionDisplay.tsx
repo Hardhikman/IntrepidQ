@@ -140,25 +140,25 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             {viewMode === "text" ? (
               <>
                 <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer:</h4>
-                <p className="mb-1 sm:mb-2 text-sm">
+                <p className="mb-1 sm:mb-2 text-sm text-gray-800">
                   <strong>Introduction:</strong> {answer.introduction}
                 </p>
                 <div className="mb-1 sm:mb-2">
-                  <strong>Body:</strong>
-                  <ul className="list-disc pl-4 sm:pl-5 text-sm">
+                  <strong className="text-gray-800">Body:</strong>
+                  <ul className="list-disc pl-4 sm:pl-5 text-sm text-gray-800">
                     {answer.body?.map((pt: string, i: number) => (
                       <li key={i}>{pt}</li>
                     ))}
                   </ul>
                 </div>
-                <p className="text-sm">
+                <p className="text-sm text-gray-800">
                   <strong>Conclusion:</strong> {answer.conclusion}
                 </p>
               </>
             ) : (
               <div>
                 <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-blue-800">Answer Diagram:</h4>
-                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96" />
+                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-gray-200 rounded-lg p-4 bg-white" />
               </div>
             )}
           </div>

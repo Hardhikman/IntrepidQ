@@ -105,10 +105,9 @@ The answer **must strictly follow this JSON schema only**:
 Notes:
 - Introduction should be informative and directly related to the question.
 - Body should contain **unique** single or two-word broad based keywords (no sentences) in a JSON array format.
-- Each keyword in the body should cover a distinct dimension or aspect of the question.
 - Conclusion should indicate positive or policy-oriented direction.
 - Do NOT include anything outside this JSON structure.
-- Ensure items in the body array covers ALL dimensions of the question.
+- Ensure items in the body array covers all dimensions in the question.
 
 Question: {question}
 """

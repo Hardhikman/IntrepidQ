@@ -98,7 +98,7 @@ You are an AI generating UPSC Civil Services Mains style answers.
 The answer **must strictly follow this JSON schema only**:
 {{
     "introduction": "Context or fact-based introduction, not more than 2 lines.",
-    "body": ["Keyword1", "Keyword2", "Keyword3", "Keyword4", "Keyword5"],
+    "body": "Keyword 1/2/3 etc - number of keywords depends on dimensions of the question.",
     "conclusion": "Futuristic and outcome-based closing statement, may refer to a policy/scheme/key phrase, max 2 lines."
 }}
 

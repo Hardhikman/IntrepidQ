@@ -66,7 +66,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         .replace(/\n/g, '\\n') // Escape actual newlines
         .replace(/</g, '&lt;') // Escape HTML characters
         .replace(/>/g, '&gt;')
-        .replace(/&/g, '&amp;');
+        .replace(/&/g, '&amp;')
+        .replace(/\$/g, '\\$') // Escape dollar signs
+        .replace(/#/g, '\\#'); // Escape hash symbols
     };
     
     const intro = cleanText(answer.introduction) || "";
@@ -86,7 +88,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
       bodyItems.forEach((item: string, i: number) => {
         // Clean and escape each body item
         const cleanItem = cleanText(item);
-        diagram += `      point${i}["${escapeForMermaid(cleanItem)}"]\n`;
+        if (cleanItem) { // Only add non-empty items
+          diagram += `      point${i}["${escapeForMermaid(cleanItem)}"]\n`;
+        }
       });
     }
     

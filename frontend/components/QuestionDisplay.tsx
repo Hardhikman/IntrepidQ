@@ -80,8 +80,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const cleanText = (text: string) => {
       if (!text) return "";
       return text
-        .replace(/\\n/g, " ") // Replace literal "\n" with spaces
-        .replace(/\n/g, " ") // Replace actual newlines with spaces
+        .replace(/\\n/g, " ")
+        .replace(/\n/g, " ") 
+        .replace(/\s+/g, " ") 
         .trim();
     };
     
@@ -89,15 +90,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     const escapeForMermaid = (text: string) => {
       if (!text) return "";
       return text
-        .replace(/"/g, '\\"') // Escape quotes
-        .replace(/\n/g, '\\n') // Escape actual newlines
-        .replace(/</g, '&lt;') // Escape HTML characters
+        .replace(/"/g, '\\"')
+        .replace(/</g, '&lt;') 
         .replace(/>/g, '&gt;')
         .replace(/&/g, '&amp;')
-        .replace(/\$/g, '\\$') // Escape dollar signs
-        .replace(/#/g, '\\#') // Escape hash symbols
-        .replace(/\{/g, '\\{') // Escape curly braces
-        .replace(/\}/g, '\\}'); // Escape curly braces
+        .replace(/\$/g, '\\$') 
+        .replace(/#/g, '\\#') 
+        .replace(/\{/g, '\\{') 
+        .replace(/\}/g, '\\}'); 
     };
     
     const intro = cleanText(answer.introduction) || "";
@@ -109,7 +109,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     diagram += `  root["${escapeForMermaid(question.question)}"]\n`;
     
     if (intro) {
-      diagram += `    intro["Introduction:\\n${escapeForMermaid(intro)}"]\n`;
+      // Added back the "Introduction:" label
+      const formattedIntro = escapeForMermaid(intro);
+      diagram += `    intro["Introduction: ${formattedIntro}"]`;
     }
     
     if (bodyItems.length > 0) {
@@ -118,13 +120,15 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         // Clean and escape each body item
         const cleanItem = cleanText(item);
         if (cleanItem) { // Only add non-empty items
-          diagram += `      point${i}["${escapeForMermaid(cleanItem)}"]\n`;
+          const formattedItem = escapeForMermaid(cleanItem);
+          diagram += `      point${i}["${formattedItem}"]\n`;
         }
       });
     }
     
     if (conclusion) {
-      diagram += `    conclusion["Conclusion:\\n${escapeForMermaid(conclusion)}"]\n`;
+      const formattedConclusion = escapeForMermaid(conclusion);
+      diagram += `    conclusion["Conclusion: ${formattedConclusion}"]`;
     }
     
     return diagram;

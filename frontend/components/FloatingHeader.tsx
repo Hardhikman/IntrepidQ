@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronDown, Menu as MenuIcon } from "lucide-react";
 import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useTheme } from "next-themes";
 
 interface FloatingHeaderProps {
   user: any;
@@ -30,6 +31,7 @@ export default function FloatingHeader({
   signInWithGoogle,
 }: FloatingHeaderProps) {
   const router = useRouter();
+  const { theme } = useTheme();
 
   const handleGoogleSignIn = async () => {
     // Redirect to the dedicated signin page
@@ -38,7 +40,21 @@ export default function FloatingHeader({
 
   return (
     <header className="fixed top-2 z-50 w-full bg-background text-foreground rounded-full max-w-3xl left-1/2 -translate-x-1/2 border border-border shadow-md">
-      {/* Header content */}
+      {/* Circuit Board - Theme Responsive Pattern */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none rounded-full"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(34, 197, 94, 0.15) 19px, rgba(34, 197, 94, 0.15) 20px, transparent 20px, transparent 39px, rgba(34, 197, 94, 0.15) 39px, rgba(34, 197, 94, 0.15) 40px),
+            radial-gradient(circle at 20px 20px, rgba(16, 185, 129, 0.18) 2px, transparent 2px),
+            radial-gradient(circle at 40px 40px, rgba(16, 185, 129, 0.18) 2px, transparent 2px)
+          `,
+          backgroundSize: '40px 40px, 40px 40px, 40px 40px, 40px 40px',
+        }}
+      />
+      
+      {/* Header content with relative positioning to appear above the background */}
       <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-2">
         {/* Logo */}
         <div 

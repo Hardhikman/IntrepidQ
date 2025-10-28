@@ -61,7 +61,7 @@ export function TopicCombobox({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "h-10 w-full justify-between truncate bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800",
+            "h-10 w-full justify-between truncate bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-lg text-sm shadow hover:from-orange-700 hover:to-orange-800",
             value ? "" : "",
             className
           )}
@@ -74,7 +74,7 @@ export function TopicCombobox({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-72 p-0 bg-gradient-to-r from-green-600 to-green-700 border-0 rounded-lg shadow-lg">
+      <PopoverContent className="w-72 p-0 bg-gradient-to-r from-orange-600 to-orange-700 border-0 rounded-lg shadow-lg">
         <Command className="bg-transparent text-white">
           <CommandInput
             placeholder="Search topics..."

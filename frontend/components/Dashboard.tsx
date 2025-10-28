@@ -200,175 +200,201 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigateToGenerator }) =
   }
 
   return (
-    <div className="min-h-screen p-4 space-y-6">
-      {/* Header - Made responsive */}
-      <Card className="max-w-6xl mx-auto">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl sm:text-3xl font-bold">📊 Your Activity Dashboard</CardTitle>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">
-            This dashboard summarizes your question generation activity , progress and recent history.
-          </p>
-        </CardHeader>
-      </Card>
-
-      {/* Daily Limit - Made responsive */}
-      <Card className="max-w-6xl mx-auto">
-        <CardHeader>
-          <CardTitle>Daily Task Limit</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-2">
-            <div className="text-xs sm:text-sm text-gray-600">Resets daily at midnight (UTC)</div>
-            <div className="text-xs sm:text-sm font-medium">{usedToday}/{DAILY_LIMIT} used</div>
-          </div>
-          <Progress value={percentToday} className="h-3 mb-3" />
-          <div className="flex flex-wrap gap-1 mb-1">
-            {Array.from({ length: DAILY_LIMIT }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-2 sm:h-3 w-8 sm:w-10 rounded ${i < usedToday ? "bg-violet-500" : "bg-gray-200"}`}
-              />
-            ))}
-          </div>
-          <div className={`text-xs ${remainingToday <= 0 ? "text-red-600" : "text-gray-600"}`}>
-            {remainingToday <= 0 ? "Daily limit reached" : `${remainingToday} remaining today`}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* KPIs - Made responsive */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Total Generation Card */}
-        <Card className="h-fit">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Total Generations</CardTitle>
+    <div className="min-h-screen w-full bg-background text-foreground relative">
+      {/* Diagonal Grid with Green Glow - only show in dark mode */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none hidden dark:block"
+        style={{
+          backgroundImage: `
+            repeating-linear-gradient(45deg, rgba(0, 255, 128, 0.1) 0, rgba(0, 255, 128, 0.1) 1px, transparent 1px, transparent 20px),
+            repeating-linear-gradient(-45deg, rgba(0, 255, 128, 0.1) 0, rgba(0, 255, 128, 0.1) 1px, transparent 1px, transparent 20px)
+          `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+      
+      {/* Subtle dot pattern for light mode */}
+      <div
+        className="absolute inset-0 z-0 pointer-events-none block dark:hidden"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle, #d1d5db 1px, transparent 1px)
+          `,
+          backgroundSize: "20px 20px",
+        }}
+      />
+      
+      {/* Main Content with relative positioning to appear above the background */}
+      <div className="relative z-0 p-4 space-y-6">
+        {/* Header - Made responsive */}
+        <Card className="max-w-6xl mx-auto">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl sm:text-3xl font-bold">📊 Your Activity Dashboard</CardTitle>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              This dashboard summarizes your question generation activity , progress and recent history.
+            </p>
           </CardHeader>
-          <CardContent className="pt-2">
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">{stats?.total_generations ?? 0}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Questions Generated</div>
+        </Card>
+
+        {/* Daily Limit - Made responsive */}
+        <Card className="max-w-6xl mx-auto">
+          <CardHeader>
+            <CardTitle>Daily Task Limit</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mb-2">
+              <div className="text-xs sm:text-sm text-gray-600">Resets daily at midnight (UTC)</div>
+              <div className="text-xs sm:text-sm font-medium">{usedToday}/{DAILY_LIMIT} used</div>
             </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="text-xs text-gray-500 text-center">
-                {(() => {
-                  const totalGenerations = stats?.total_generations ?? 0;
-                  return totalGenerations >= 100 ? '🏆 Century achiever!' :
-                         totalGenerations >= 50 ? '🥇 Gold level!' :
-                         totalGenerations >= 25 ? '🥈 Silver level!' :
-                         totalGenerations >= 10 ? '🥉 Bronze level!' :
-                         totalGenerations >= 1 ? '⭐ Getting started!' :
-                         '🌟 Ready to begin!';
-                })()}
-              </div>
+            <Progress value={percentToday} className="h-3 mb-3" />
+            <div className="flex flex-wrap gap-1 mb-1">
+              {Array.from({ length: DAILY_LIMIT }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2 sm:h-3 w-8 sm:w-10 rounded ${i < usedToday ? "bg-violet-500" : "bg-gray-200"}`}
+                />
+              ))}
+            </div>
+            <div className={`text-xs ${remainingToday <= 0 ? "text-red-600" : "text-gray-600"}`}>
+              {remainingToday <= 0 ? "Daily limit reached" : `${remainingToday} remaining today`}
             </div>
           </CardContent>
         </Card>
-        
-        {/* Achievement Badges - REMOVED */}
-      </div>
 
-      {/* History - Made responsive */}
-      <Card className="max-w-6xl mx-auto">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <CardTitle>Recent History</CardTitle>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
-            <Select value={selectedSubject || "all"} onValueChange={(value) => setSelectedSubject(value === "all" ? null : value)}>
-              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
-                <SelectValue placeholder="Filter by Subject" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Subjects</SelectItem>
-                {subjects.map((subj) => (
-                  <SelectItem key={subj} value={subj}>{subj}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper" | "keyword"))}>
-              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
-                <SelectValue placeholder="Filter by Mode" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Modes</SelectItem>
-                <SelectItem value="topic">Topic-wise</SelectItem>
-                <SelectItem value="paper">Whole Paper</SelectItem>
-                <SelectItem value="keyword">Keyword-based</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedDateRange || "all"} onValueChange={(value) => setSelectedDateRange(value === "all" ? null : value)}>
-              <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
-                <SelectValue placeholder="Filter by Date" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">Last 7 days</SelectItem>
-                <SelectItem value="fortnight">Last 15 days</SelectItem>
-                <SelectItem value="month">Last 30 days</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setSelectedSubject(null); setSelectedMode(null); setSelectedDateRange(null); }}>
-              Clear
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {filteredHistory.length === 0 ? (
-            <div className="text-sm text-gray-500">No history found for the selected filters.</div>
-          ) : (
-            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
-              {filteredHistory.map((item) => (
-                <div key={item.id} className="p-3 border rounded-lg">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm">
-                      <span className="font-semibold">{item.subject}</span>
-                      <span className="mx-2 text-gray-400">•</span>
-                      <span className="uppercase text-xs tracking-wide px-2 py-0.5 rounded bg-gray-100 border">
-                        {item.mode}
-                      </span>
-                      {item.use_current_affairs && (
-                        <span className="ml-2 text-xs text-orange-700 italic">CA</span>
+        {/* KPIs - Made responsive */}
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Total Generation Card */}
+          <Card className="h-fit">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider">Total Generations</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-2">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-bold text-blue-600 mb-2">{stats?.total_generations ?? 0}</div>
+                <div className="text-xs sm:text-sm text-gray-600">Questions Generated</div>
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="text-xs text-gray-500 text-center">
+                  {(() => {
+                    const totalGenerations = stats?.total_generations ?? 0;
+                    return totalGenerations >= 100 ? '🏆 Century achiever!' :
+                           totalGenerations >= 50 ? '🥇 Gold level!' :
+                           totalGenerations >= 25 ? '🥈 Silver level!' :
+                           totalGenerations >= 10 ? '🥉 Bronze level!' :
+                           totalGenerations >= 1 ? '⭐ Getting started!' :
+                           '🌟 Ready to begin!';
+                  })()}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          {/* Achievement Badges - REMOVED */}
+        </div>
+
+        {/* History - Made responsive */}
+        <Card className="max-w-6xl mx-auto">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <CardTitle>Recent History</CardTitle>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
+              <Select value={selectedSubject || "all"} onValueChange={(value) => setSelectedSubject(value === "all" ? null : value)}>
+                <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
+                  <SelectValue placeholder="Filter by Subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Subjects</SelectItem>
+                  {subjects.map((subj) => (
+                    <SelectItem key={subj} value={subj}>{subj}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={selectedMode || "all"} onValueChange={(value) => setSelectedMode(value === "all" ? null : (value as "topic" | "paper" | "keyword"))}>
+                <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
+                  <SelectValue placeholder="Filter by Mode" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Modes</SelectItem>
+                  <SelectItem value="topic">Topic-wise</SelectItem>
+                  <SelectItem value="paper">Whole Paper</SelectItem>
+                  <SelectItem value="keyword">Keyword-based</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={selectedDateRange || "all"} onValueChange={(value) => setSelectedDateRange(value === "all" ? null : value)}>
+                <SelectTrigger className="w-full sm:w-[120px] md:w-[180px]">
+                  <SelectValue placeholder="Filter by Date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">Last 7 days</SelectItem>
+                  <SelectItem value="fortnight">Last 15 days</SelectItem>
+                  <SelectItem value="month">Last 30 days</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => { setSelectedSubject(null); setSelectedMode(null); setSelectedDateRange(null); }}>
+                Clear
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {filteredHistory.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No history found for the selected filters.</div>
+            ) : (
+              <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-2">
+                {filteredHistory.map((item) => (
+                  <div key={item.id} className="p-3 border rounded-lg border-border bg-card">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="text-sm text-foreground">
+                        <span className="font-semibold">{item.subject}</span>
+                        <span className="mx-2 text-muted-foreground">•</span>
+                        <span className="uppercase text-xs tracking-wide px-2 py-0.5 rounded bg-muted border border-border">
+                          {item.mode}
+                        </span>
+                        {item.use_current_affairs && (
+                          <span className="ml-2 text-xs text-orange-700 dark:text-orange-500 italic">CA</span>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(item.created_at).toLocaleString()}
+                      </div>
+                    </div>
+                    {item.topic && (
+                      <div className="text-xs text-muted-foreground mt-1">
+                        <span className="font-medium">Topic:</span> {item.topic}
+                      </div>
+                    )}
+                    <div className="text-sm mt-2 whitespace-pre-wrap text-foreground">
+                      {expandedId === item.id
+                        ? item.questions
+                        : item.questions.slice(0, 150) + (item.questions.length > 150 ? "..." : "")}
+                      {item.questions.length > 150 && (
+                        <button
+                          className="ml-2 text-blue-600 text-xs"
+                          onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
+                        >
+                          {expandedId === item.id ? "Show Less" : "Show More"}
+                        </button>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(item.created_at).toLocaleString()}
-                    </div>
                   </div>
-                  {item.topic && (
-                    <div className="text-xs text-gray-600 mt-1">
-                      <span className="font-medium">Topic:</span> {item.topic}
-                    </div>
-                  )}
-                  <div className="text-sm mt-2 whitespace-pre-wrap">
-                    {expandedId === item.id
-                      ? item.questions
-                      : item.questions.slice(0, 150) + (item.questions.length > 150 ? "..." : "")}
-                    {item.questions.length > 150 && (
-                      <button
-                        className="ml-2 text-blue-600 text-xs"
-                        onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
-                      >
-                        {expandedId === item.id ? "Show Less" : "Show More"}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Analytics */}
-      <AnalyticsCard stats={stats} />
+        {/* Analytics */}
+        <AnalyticsCard stats={stats} />
 
-      {/* Simple Topic Planner - REMOVED */}
-      {/* <SimpleTopicPlanner /> */}
+        {/* Simple Topic Planner - REMOVED */}
+        {/* <SimpleTopicPlanner /> */}
 
-      {/* Footer - Made responsive */}
-      <div className="max-w-6xl mx-auto flex items-center justify-end">
-        <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto">
-           Back to Generator
-        </Button>
+        {/* Footer - Made responsive */}
+        <div className="max-w-6xl mx-auto flex items-center justify-end">
+          <Button onClick={onNavigateToGenerator} className="bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-700 hover:to-orange-600 text-white w-full sm:w-auto">
+             Back to Generator
+          </Button>
+        </div>
       </div>
     </div>
   );

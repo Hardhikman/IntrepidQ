@@ -12,7 +12,15 @@ let mermaid: any;
 if (typeof window !== "undefined") {
   import("mermaid").then((module) => {
     mermaid = module.default;
-    mermaid.initialize({ startOnLoad: false });
+    mermaid.initialize({ 
+      startOnLoad: false,
+      theme: 'default',
+      themeVariables: {
+        primaryTextColor: '#000000',
+        textColor: '#000000',
+        darkTextColor: '#000000'
+      }
+    });
   });
 }
 
@@ -42,27 +50,48 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const convertToMermaid = (answer: any): string => {
     if (!answer) return "";
     
-    const intro = answer.introduction || "";
+    // Clean text by removing literal "\n" characters
+    const cleanText = (text: string) => {
+      if (!text) return "";
+      return text
+        .replace(/\\n/g, " ") // Replace literal "\n" with spaces
+        .trim();
+    };
+    
+    // Escape text for mermaid syntax
+    const escapeForMermaid = (text: string) => {
+      if (!text) return "";
+      return text
+        .replace(/"/g, '\\"') // Escape quotes
+        .replace(/\n/g, '\\n') // Escape actual newlines
+        .replace(/</g, '&lt;') // Escape HTML characters
+        .replace(/>/g, '&gt;')
+        .replace(/&/g, '&amp;');
+    };
+    
+    const intro = cleanText(answer.introduction) || "";
     const bodyItems = answer.body || [];
-    const conclusion = answer.conclusion || "";
+    const conclusion = cleanText(answer.conclusion) || "";
     
     // Create a mindmap structure
     let diagram = `mindmap\n`;
-    diagram += `  root["${question.question}"]\n`;
+    diagram += `  root["${escapeForMermaid(question.question)}"]\n`;
     
     if (intro) {
-      diagram += `    intro["Introduction:\\n${intro}"]\n`;
+      diagram += `    intro["Introduction:\\n${escapeForMermaid(intro)}"]\n`;
     }
     
     if (bodyItems.length > 0) {
       diagram += `    body["Key Points"]\n`;
       bodyItems.forEach((item: string, i: number) => {
-        diagram += `      point${i}["${item}"]\n`;
+        // Clean and escape each body item
+        const cleanItem = cleanText(item);
+        diagram += `      point${i}["${escapeForMermaid(cleanItem)}"]\n`;
       });
     }
     
     if (conclusion) {
-      diagram += `    conclusion["Conclusion:\\n${conclusion}"]\n`;
+      diagram += `    conclusion["Conclusion:\\n${escapeForMermaid(conclusion)}"]\n`;
     }
     
     return diagram;
@@ -90,12 +119,12 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     }
   };
 
-  // Re-render diagram when view mode or answer changes
+  // Re-render diagram when view mode, answer, or theme changes
   useEffect(() => {
     if (viewMode === "diagram" && answer) {
       renderDiagram();
     }
-  }, [viewMode, answer, index]);
+  }, [viewMode, answer, index, theme]);
 
   return (
     <div className="space-y-4 mb-6">

@@ -116,7 +116,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           >
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-32 sm:w-36 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
+                <SelectTrigger className="h-10 w-32 sm:w-36 bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-lg text-sm shadow hover:from-orange-700 hover:to-orange-800">
                   <SelectValue placeholder="Select GS" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -134,7 +134,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-36 sm:w-44 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
+                <SelectTrigger className="h-10 w-36 sm:w-44 bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-lg text-sm shadow hover:from-orange-700 hover:to-orange-800">
                   <SelectValue placeholder="Model" />
                 </SelectTrigger>
               </TooltipTrigger>
@@ -213,7 +213,7 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             <Select value={newsSource} onValueChange={setNewsSource}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <SelectTrigger className="h-10 w-36 bg-gradient-to-r from-green-600 to-green-700 text-white border-0 rounded-lg text-sm shadow hover:from-green-700 hover:to-green-800">
+                  <SelectTrigger className="h-10 w-36 bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-lg text-sm shadow hover:from-orange-700 hover:to-orange-800">
                     <SelectValue placeholder="News Source" />
                   </SelectTrigger>
                 </TooltipTrigger>
@@ -262,10 +262,10 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
                   dailyLimitReached 
                     ? 'bg-gray-600 cursor-not-allowed' 
                     : mode === "keyword"
-                      ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                      ? 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'
                       : mode === "currentAffairs"
-                        ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
-                        : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800'
+                        ? 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'
+                        : 'bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800'
                 }`}
               >
                 {loading ? (

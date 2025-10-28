@@ -92,8 +92,17 @@ def extract_text_from_response(response) -> str:
     raise ValueError("Gemini response did not contain any text output.")
 
 def build_prompt(question: str) -> str:
+    """
+    Generates a prompt for an AI to answer a UPSC-style question
+    in a specific JSON format.
+    """
     return f"""
 You are an AI generating UPSC Civil Services Mains style answers.
+
+**Internal thought process (Do not include in JSON):**
+1.  First, **analyze the Question** to identify all its distinct subparts (e.g., 'discuss', 'causes', 'challenges', 'measures', 'consequences').
+2.  For **each identified subpart**, brainstorm keywords across multiple dimensions (economical, political, social, technological, legal, environmental).
+3.  Compile all these keywords into a single, flat array for the "body" field.
 
 The answer **must strictly follow this JSON schema only**:
 {{
@@ -107,7 +116,8 @@ Notes:
 - Body should contain **unique** single or two-word broad based keywords (no sentences) in a JSON array format.
 - Conclusion should indicate positive or policy-oriented direction.
 - Do NOT include anything outside this JSON structure.
-- Ensure items in the body array covers all dimensions in the question.
+- The `body` array **must** be comprehensive, covering **all subparts** you identified and **all relevant dimensions** for each subpart.
+- **Tip:** You can combine them like 'Cause: Economic' or 'Challenge: Legal' to ensure clarity and coverage.
 
 Question: {question}
 """

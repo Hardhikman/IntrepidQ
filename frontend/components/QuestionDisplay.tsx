@@ -18,7 +18,33 @@ if (typeof window !== "undefined") {
       themeVariables: {
         primaryTextColor: '#000000',
         textColor: '#000000',
-        darkTextColor: '#000000'
+        darkTextColor: '#000000',
+        lineColor: '#000000',
+        fontSize: 14,
+        nodeFillColor: '#ffffff',
+        nodeBorderColor: '#000000',
+        clusterBkg: '#ffffff',
+        clusterBorder: '#000000',
+        defaultLinkColor: '#000000',
+        titleColor: '#000000',
+        nodeBorder: '#000000',
+        mainBkg: '#ffffff',
+        secondBkg: '#f0f0f0',
+        background: '#ffffff',
+        tertiaryColor: '#ffffff',
+        tertiaryBorderColor: '#000000',
+        noteBkgColor: '#ffffff',
+        noteBorderColor: '#000000',
+        sectionBkgColor: '#ffffff',
+        sectionBorderColor: '#000000'
+      },
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true
+      },
+      mindmap: {
+        useMaxWidth: true,
+        padding: 10
       }
     });
   });
@@ -50,11 +76,12 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const convertToMermaid = (answer: any): string => {
     if (!answer) return "";
     
-    // Clean text by removing literal "\n" characters
+    // Clean text by removing literal "\n" characters and handling actual newlines
     const cleanText = (text: string) => {
       if (!text) return "";
       return text
         .replace(/\\n/g, " ") // Replace literal "\n" with spaces
+        .replace(/\n/g, " ") // Replace actual newlines with spaces
         .trim();
     };
     
@@ -68,7 +95,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         .replace(/>/g, '&gt;')
         .replace(/&/g, '&amp;')
         .replace(/\$/g, '\\$') // Escape dollar signs
-        .replace(/#/g, '\\#'); // Escape hash symbols
+        .replace(/#/g, '\\#') // Escape hash symbols
+        .replace(/\{/g, '\\{') // Escape curly braces
+        .replace(/\}/g, '\\}'); // Escape curly braces
     };
     
     const intro = cleanText(answer.introduction) || "";

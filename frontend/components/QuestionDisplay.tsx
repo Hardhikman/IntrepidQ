@@ -69,14 +69,12 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   const [viewMode, setViewMode] = useState<"text" | "diagram">("text");
   const diagramRef = useRef<HTMLDivElement>(null);
   
-  const isAnyLoading = loadingAnswer !== null;         // true if some answer is generating
-  const isThisLoading = loadingAnswer === index;       // true if THIS question is generating
+  const isAnyLoading = loadingAnswer !== null;      
+  const isThisLoading = loadingAnswer === index;       
 
   // Convert answer to mermaid diagram format
   const convertToMermaid = (answer: any): string => {
     if (!answer) return "";
-    
-    // Clean text by removing literal "\n" characters and handling actual newlines
     const cleanText = (text: string) => {
       if (!text) return "";
       return text
@@ -109,17 +107,15 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     diagram += `  root["${escapeForMermaid(question.question)}"]\n`;
     
     if (intro) {
-      // Added back the "Introduction:" label
       const formattedIntro = escapeForMermaid(intro);
-      diagram += `    intro["Introduction: ${formattedIntro}"]`;
+      diagram += `    intro["Introduction: ${formattedIntro}"]\n`;
     }
     
     if (bodyItems.length > 0) {
       diagram += `    body["Key Points"]\n`;
       bodyItems.forEach((item: string, i: number) => {
-        // Clean and escape each body item
         const cleanItem = cleanText(item);
-        if (cleanItem) { // Only add non-empty items
+        if (cleanItem) { 
           const formattedItem = escapeForMermaid(cleanItem);
           diagram += `      point${i}["${formattedItem}"]\n`;
         }
@@ -128,7 +124,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     
     if (conclusion) {
       const formattedConclusion = escapeForMermaid(conclusion);
-      diagram += `    conclusion["Conclusion: ${formattedConclusion}"]`;
+      diagram += `    conclusion["Conclusion: ${formattedConclusion}"]\n`;
     }
     
     return diagram;

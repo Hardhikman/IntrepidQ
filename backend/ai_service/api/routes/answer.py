@@ -98,13 +98,13 @@ You are an AI generating UPSC Civil Services Mains style answers.
 The answer **must strictly follow this JSON schema only**:
 {{
     "introduction": "Context or fact-based introduction, not more than 2 lines.",
-    "body": "Keyword 1/2/3 etc - number of keywords depends on dimensions of the question.",
+    "body": ["Keyword 1", "Keyword 2", "Keyword 3"],  # Example of proper list format
     "conclusion": "Futuristic and outcome-based closing statement, may refer to a policy/scheme/key phrase, max 2 lines."
 }}
 
 Notes:
 - Introduction should be informative and directly related to the question.
-- Body should contain **unique** single or two-word broad based keywords (no sentences).
+- Body should contain **unique** single or two-word broad based keywords (no sentences) in a JSON array format.
 - Conclusion should indicate positive or policy-oriented direction.
 - Do NOT include anything outside this JSON structure.
 - Ensure items in the body array covers all dimensions in the question.
@@ -145,11 +145,25 @@ async def generate_answer(
             logger.warning("AI did not return valid JSON. Returning raw output.")
             data = {"introduction": f"AI Output (unparsed): {raw_text}", "body": [], "conclusion": ""}
 
+        # Ensure body is always a list, even if AI returns a string
+        body_content = data.get("body", [])
+        if isinstance(body_content, str):
+            # If body is a string, convert it to a list
+            # Split by newlines or common delimiters and clean up
+            body_list = [item.strip() for item in body_content.split('\n') if item.strip()]
+            if not body_list:
+                # Fallback: wrap the string in a list
+                body_list = [body_content] if body_content else []
+            body_content = body_list
+        elif not isinstance(body_content, list):
+            # If body is neither string nor list, default to empty list
+            body_content = []
+
         # No counter increment for answer generation
 
         return AnswerResponse(
             introduction=data.get("introduction", ""),
-            body=data.get("body", []),
+            body=body_content,
             conclusion=data.get("conclusion", "")
         )
 
@@ -195,10 +209,24 @@ async def generate_answers(
                     logger.warning("AI did not return valid JSON for one question. Returning raw output.")
                     data = {"introduction": f"AI Output (unparsed): {raw_text}", "body": [], "conclusion": ""}
 
+                # Ensure body is always a list, even if AI returns a string
+                body_content = data.get("body", [])
+                if isinstance(body_content, str):
+                    # If body is a string, convert it to a list
+                    # Split by newlines or common delimiters and clean up
+                    body_list = [item.strip() for item in body_content.split('\n') if item.strip()]
+                    if not body_list:
+                        # Fallback: wrap the string in a list
+                        body_list = [body_content] if body_content else []
+                    body_content = body_list
+                elif not isinstance(body_content, list):
+                    # If body is neither string nor list, default to empty list
+                    body_content = []
+
                 answers.append(
                     AnswerResponse(
                         introduction=data.get("introduction", ""),
-                        body=data.get("body", []),
+                        body=body_content,
                         conclusion=data.get("conclusion", "")
                     )
                 )

@@ -9,7 +9,6 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
 
   const staticPages = [
     '',
-    '/about',
     '/blog',
     '/privacy-policy',
     '/terms-of-service',
@@ -28,7 +27,18 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
     '/docs/CONTRIBUTING',
     '/docs/CHANGELOG',
     '/dashboard',
-    '/profile'
+    '/profile',
+    '/auth/signin',
+    '/blogs/about-intrepidq',
+    '/blogs/how-intrepidq-enhances-upsc-preparation',
+    '/blogs/how-to-actually-prepare-for-upsc-ethics-paper',
+    '/blogs/how-to-crack-kpsc-kas-prelims',
+    '/blogs/how-to-easily-crack-upsc-csat',
+    '/blogs/how-to-prepare-currentaffairs-for-upsc',
+    '/blogs/how-to-write-a-fantastic-essay-in-upsc-cse-mains',
+    '/blogs/how-to-write-an-awesome-upsc-cse-mains-general-studies-answer',
+    '/blogs/thought-blog',
+    '/blogs/webapp-updates-and-new-features'
   ]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

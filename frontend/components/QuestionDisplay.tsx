@@ -7,47 +7,52 @@ import { Badge } from "./ui/badge";
 import { useState, useEffect, useRef } from "react";
 import { useTheme } from "next-themes";
 
-// Dynamically import mermaid only on client side
-let mermaid: any;
+// Dynamically import mermaid only on client side with error handling
+let mermaid: any = null;
 if (typeof window !== "undefined") {
-  import("mermaid").then((module) => {
-    mermaid = module.default;
-    mermaid.initialize({ 
-      startOnLoad: false,
-      theme: 'default',
-      themeVariables: {
-        primaryTextColor: '#000000',
-        textColor: '#000000',
-        darkTextColor: '#000000',
-        lineColor: '#000000',
-        fontSize: 14,
-        nodeFillColor: '#ffffff',
-        nodeBorderColor: '#000000',
-        clusterBkg: '#ffffff',
-        clusterBorder: '#000000',
-        defaultLinkColor: '#000000',
-        titleColor: '#000000',
-        nodeBorder: '#000000',
-        mainBkg: '#ffffff',
-        secondBkg: '#f0f0f0',
-        background: '#ffffff',
-        tertiaryColor: '#ffffff',
-        tertiaryBorderColor: '#000000',
-        noteBkgColor: '#ffffff',
-        noteBorderColor: '#000000',
-        sectionBkgColor: '#ffffff',
-        sectionBorderColor: '#000000'
-      },
-      flowchart: {
-        useMaxWidth: true,
-        htmlLabels: true
-      },
-      mindmap: {
-        useMaxWidth: true,
-        padding: 10
-      }
+  import("mermaid")
+    .then((module) => {
+      mermaid = module.default;
+      mermaid.initialize({ 
+        startOnLoad: false,
+        theme: 'default',
+        themeVariables: {
+          primaryTextColor: '#000000',
+          textColor: '#000000',
+          darkTextColor: '#000000',
+          lineColor: '#000000',
+          fontSize: 14,
+          nodeFillColor: '#ffffff',
+          nodeBorderColor: '#000000',
+          clusterBkg: '#ffffff',
+          clusterBorder: '#000000',
+          defaultLinkColor: '#000000',
+          titleColor: '#000000',
+          nodeBorder: '#000000',
+          mainBkg: '#ffffff',
+          secondBkg: '#f0f0f0',
+          background: '#ffffff',
+          tertiaryColor: '#ffffff',
+          tertiaryBorderColor: '#000000',
+          noteBkgColor: '#ffffff',
+          noteBorderColor: '#000000',
+          sectionBkgColor: '#ffffff',
+          sectionBorderColor: '#000000'
+        },
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true
+        },
+        mindmap: {
+          useMaxWidth: true,
+          padding: 10
+        }
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to load Mermaid:", error);
+      mermaid = null;
     });
-  });
 }
 
 interface QuestionDisplayProps {
@@ -155,7 +160,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   // Re-render diagram when view mode, answer, or theme changes
   useEffect(() => {
     if (viewMode === "diagram" && answer) {
-      renderDiagram();
+      // Add a small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        renderDiagram();
+      }, 100);
+      return () => clearTimeout(timer);
+    } else if (viewMode === "diagram" && diagramRef.current) {
+      // Clear diagram when there's no answer
+      diagramRef.current.innerHTML = '<div class="text-gray-500 p-4">No answer to display as diagram</div>';
     }
   }, [viewMode, answer, index, theme]);
 
@@ -222,7 +234,16 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
             ) : (
               <div>
                 <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-foreground">Answer Diagram:</h4>
-                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-border rounded-lg p-4 bg-background" />
+                <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-border rounded-lg p-4 bg-background">
+                  {mermaid ? (
+                    <div className="text-gray-500">Loading diagram...</div>
+                  ) : (
+                    <div className="text-yellow-700 p-4">
+                      <p>Mermaid library is not available. Diagram view requires Mermaid to be loaded.</p>
+                      <p className="text-sm mt-2">This might be due to a network issue or ad blocker. Please try refreshing the page.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>

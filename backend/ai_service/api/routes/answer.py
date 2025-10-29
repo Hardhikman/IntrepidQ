@@ -22,10 +22,6 @@ logger = logging.getLogger(__name__)
 DAILY_LIMIT = 5
 GUEST_DAILY_LIMIT = 2
 
-# Google API Key setup
-# The library will automatically look for the GOOGLE_API_KEY environment variable.
-# The 'No API_KEY found' error means this variable isn't set in the environment
-# where the server is running.
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 if not GOOGLE_API_KEY:
     raise RuntimeError("GOOGLE_API_KEY not set in env variables.")
@@ -65,9 +61,6 @@ class BatchAnswerRequest(BaseModel):
 class BatchAnswerResponse(BaseModel):
     answers: List[AnswerResponse]
 
-# These imports would be specific to your project structure
-# from api.auth import get_optional_user
-# from core.supabase_client import supabase_service
 
 # For demonstration, we'll use placeholder functions for dependencies
 async def get_optional_user() -> Optional[Dict[str, Any]]:
@@ -107,7 +100,7 @@ You are an AI generating UPSC Civil Services Mains style answers.
 The answer **must strictly follow this JSON schema only**:
 {{
     "introduction": "Context or fact-based introduction, not more than 2 lines.",
-    "body": ["Keyword 1", "Keyword 2", "Keyword 3"],  # Example of proper list format
+    "body": ["Keyword 1", "Keyword 2", "Keyword 3"],  # Example of proper list format, maximum 15 keywords
     "conclusion": "Futuristic and outcome-based closing statement, may refer to a policy/scheme/key phrase, max 2 lines."
 }}
 

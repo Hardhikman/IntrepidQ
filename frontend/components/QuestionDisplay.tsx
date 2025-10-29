@@ -17,27 +17,27 @@ if (typeof window !== "undefined") {
         startOnLoad: false,
         theme: 'default',
         themeVariables: {
-          primaryTextColor: '#000000',
-          textColor: '#000000',
-          darkTextColor: '#000000',
-          lineColor: '#000000',
-          fontSize: 14,
+          primaryTextColor: '#333333',
+          textColor: '#333333',
+          darkTextColor: '#333333',
+          lineColor: '#666666',
+          fontSize: 12,
           nodeFillColor: '#ffffff',
-          nodeBorderColor: '#000000',
+          nodeBorderColor: '#666666', 
           clusterBkg: '#ffffff',
-          clusterBorder: '#000000',
-          defaultLinkColor: '#000000',
+          clusterBorder: '#666666',
+          defaultLinkColor: '#333333',
           titleColor: '#000000',
-          nodeBorder: '#000000',
+          nodeBorder: '#666666',
           mainBkg: '#ffffff',
-          secondBkg: '#f0f0f0',
+          secondBkg: '#f8f8f8', 
           background: '#ffffff',
           tertiaryColor: '#ffffff',
-          tertiaryBorderColor: '#000000',
-          noteBkgColor: '#ffffff',
-          noteBorderColor: '#000000',
+          tertiaryBorderColor: '#666666',
+          noteBkgColor: '#ffffcc',
+          noteBorderColor: '#666666',
           sectionBkgColor: '#ffffff',
-          sectionBorderColor: '#000000'
+          sectionBorderColor: '#666666'
         },
         flowchart: {
           useMaxWidth: true,
@@ -45,7 +45,9 @@ if (typeof window !== "undefined") {
         },
         mindmap: {
           useMaxWidth: true,
-          padding: 10
+          padding: 30,
+          nodeSpacing: 60,
+          rankSpacing: 70
         }
       });
     })

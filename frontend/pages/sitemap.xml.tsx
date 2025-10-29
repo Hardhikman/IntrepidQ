@@ -26,7 +26,9 @@ export const getServerSideProps: GetServerSideProps = async ({ res, req }) => {
     '/docs/CORE_FEATURES',
     '/docs/DEPLOYMENT_OPERATIONS',
     '/docs/CONTRIBUTING',
-    '/docs/CHANGELOG'
+    '/docs/CHANGELOG',
+    '/dashboard',
+    '/profile'
   ]
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

@@ -817,6 +817,24 @@ export default function UPSCQuestionGenerator() {
           <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+          <script type="application/ld+json">
+{`
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "IntrepidQ AI",
+  "url": "https://intrepidq.xyz",
+  "description": "Generate context-aware UPSC CSE mains questions with AI assistance",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "INR"
+  }
+}
+`}
+</script>
         </Head>
         
         {/* Floating Header */}

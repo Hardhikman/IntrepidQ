@@ -30,7 +30,8 @@
 🔐 **Enterprise Security**: Row-Level Security (RLS) and JWT authentication  
 📊 **Advanced Analytics**: Comprehensive user statistics and feedback tracking  
 🐳 **Docker Ready**: Full containerization for seamless deployment  
-📦 **Intelligent current affairs support**: Generate current affairs with users choice of news source
+📦 **Intelligent current affairs support**: Generate current affairs with users choice of news source  
+🔍 **SEO Optimized**: Improved search engine visibility with structured data and sitemaps  
 
 ## 🎯 Features
 
@@ -70,19 +71,22 @@
 - **Progressive Web App**: Optimized for all devices
 - **Real-time Updates**: Live question generation status
 
+### 🔍 SEO Features
+- **Structured Data**: JSON-LD markup for better search engine understanding
+- **Open Graph Tags**: Enhanced social sharing
+- **Sitemap Generation**: Dynamic sitemap for better crawling
+- **Robots.txt**: Proper crawling instructions for search engines
 
 ### Technology Stack
 
-
 #### 🎨 Frontend
-- **Next.js 14+**: React framework with SSR/SSG capabilities
+- **Next.js 14+**: React framework with SSR/SG capabilities
 - **TypeScript**: Type-safe development
 - **Tailwind CSS**: Utility-first CSS framework
 - **shadcn/ui**: High-quality UI component library
 - **React Hook Form**: Efficient form handling with validation
 - **Recharts**: Beautiful data visualization
 - **Supabase Client**: Real-time database and auth integration
-
 
 #### ⚡ Backend
 - **FastAPI**: High-performance Python web framework
@@ -107,7 +111,6 @@
 - **Docker**: Containerization platform
 - **Vercel**: Frontend deployment platform
 - **Render/Railway**: Backend deployment platform
-
 
 ## 🚀 Quick Start
 
@@ -220,6 +223,21 @@ SET API keys and URL here
 2. **Basic Features**: Question generation without history
 3. **Sign-up Prompts**: Encouraged to create account for full access
 
+## 🔍 SEO Optimization
+
+The IntrepidQ platform includes several SEO improvements to enhance visibility in search engines:
+
+1. **Structured Data Markup**: JSON-LD implementation for WebApplication schema
+2. **Open Graph Tags**: Enhanced social sharing capabilities
+3. **Dynamic Sitemap**: Automatically generated sitemap including key pages
+4. **Robots.txt**: Proper crawling instructions for search engines
+5. **Canonical URLs**: Proper URL normalization to prevent duplicate content issues
+
+To further improve SEO:
+- Ensure all content is unique and valuable
+- Regularly update the blog with relevant UPSC content
+- Build quality backlinks from reputable educational sites
+- Monitor search console for crawl errors and fix them promptly
 
 ## 📈 Performance Monitoring
 
@@ -229,11 +247,9 @@ SET API keys and URL here
 - **Daily Active Users**: Tracked via analytics
 - **Error Rates**: Monitored through custom logging
 
-
 ## 📄 License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-
 
 <div align="center">
   <p><strong>Built with ❤️ for the UPSC Community</strong></p>

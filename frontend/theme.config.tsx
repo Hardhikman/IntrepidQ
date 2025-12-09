@@ -38,6 +38,30 @@ const config = {
   useNextSeoProps() {
     return {
       titleTemplate: '%s – IntrepidQ',
+      defaultTitle: 'IntrepidQ AI - India\'s first NLP and RAG based AI assistant for UPSC CSE preparation',
+      description: 'Generate context-aware UPSC CSE mains questions with AI assistance',
+      canonical: 'https://intrepidq.xyz',
+      openGraph: {
+        type: 'website',
+        locale: 'en_IE',
+        url: 'https://intrepidq.xyz',
+        site_name: 'IntrepidQ AI',
+        title: 'IntrepidQ AI - India\'s first NLP and RAG based AI assistant for UPSC CSE preparation',
+        description: 'Generate context-aware UPSC CSE mains questions with AI assistance',
+        images: [
+          {
+            url: 'https://intrepidq.xyz/og-image.jpg',
+            width: 1200,
+            height: 630,
+            alt: 'IntrepidQ AI - UPSC Preparation Assistant',
+          },
+        ],
+      },
+      twitter: {
+        handle: '@intrepidq',
+        site: '@intrepidq',
+        cardType: 'summary_large_image',
+      },
     }
   },
   head: (
@@ -48,6 +72,24 @@ const config = {
         property="og:description"
         content="Documentation for IntrepidQ - India's first NLP and RAG based AI assistant for UPSC CSE preparation"
       />
+      {/* Added structured data for better indexing */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          "name": "IntrepidQ Documentation",
+          "url": "https://intrepidq.xyz/docs",
+          "description": "Documentation for IntrepidQ - India's first NLP and RAG based AI assistant for UPSC CSE preparation",
+          "publisher": {
+            "@type": "Organization",
+            "name": "IntrepidQ AI",
+            "logo": {
+              "@type": "ImageObject",
+              "url": "https://intrepidq.xyz/logo.png"
+            }
+          }
+        })
+      }} />
     </>
   ),
   sidebar: {

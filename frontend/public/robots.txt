@@ -1,3 +1,20 @@
 User-agent: *
 Allow: /
+
 Sitemap: https://intrepidq.xyz/sitemap.xml
+
+# Specific directives for different types of content
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Prevent indexing of certain paths if needed
+# Disallow: /admin/
+# Disallow: /private/
+
+# Host directive
+Host: https://intrepidq.xyz

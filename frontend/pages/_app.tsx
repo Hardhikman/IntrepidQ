@@ -33,16 +33,6 @@ export default function App({ Component, pageProps }: AppProps) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // Get the canonical URL without query parameters
-  const getCanonicalUrl = () => {
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-      url.search = ""; // Remove all query parameters
-      return url.toString();
-    }
-    return "";
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -71,7 +61,9 @@ export default function App({ Component, pageProps }: AppProps) {
           name="apple-mobile-web-app-status-bar-style"
           content="default"
         />
-        <link rel="canonical" href={getCanonicalUrl()} />
+        {/* Added SEO meta tags to improve indexing */}
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
         <link rel="icon" type="image/x-icon" href="/favicon.ico" />
         <link
           rel="icon"
@@ -104,6 +96,46 @@ export default function App({ Component, pageProps }: AppProps) {
         />
         <link rel="manifest" href="/manifest.json" />
         <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#3b82f6" />
+        {/* Open Graph meta tags for better social sharing and indexing */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="IntrepidQ AI" />
+        <meta property="og:title" content="IntrepidQ AI - UPSC Preparation Assistant" />
+        <meta 
+          property="og:description" 
+          content="India's first NLP and RAG based AI assistant for UPSC CSE preparation. Generate context-aware mains questions with AI assistance." 
+        />
+        <meta property="og:url" content="https://intrepidq.xyz" />
+        <meta property="og:image" content="https://intrepidq.xyz/og-image.jpg" />
+        <meta property="og:image:alt" content="IntrepidQ AI - UPSC Preparation Assistant" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        {/* Twitter Card meta tags */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@intrepidq" />
+        <meta name="twitter:title" content="IntrepidQ AI - UPSC Preparation Assistant" />
+        <meta 
+          name="twitter:description" 
+          content="India's first NLP and RAG based AI assistant for UPSC CSE preparation. Generate context-aware mains questions with AI assistance." 
+        />
+        <meta name="twitter:image" content="https://intrepidq.xyz/og-image.jpg" />
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "IntrepidQ AI",
+            "url": "https://intrepidq.xyz",
+            "description": "India's first NLP and RAG based AI assistant for UPSC CSE preparation. Generate context-aware mains questions with AI assistance.",
+            "publisher": {
+              "@type": "Organization",
+              "name": "IntrepidQ AI",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://intrepidq.xyz/logo.png"
+              }
+            }
+          })
+        }} />
       </Head>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <div className="min-h-screen flex flex-col bg-background text-foreground">

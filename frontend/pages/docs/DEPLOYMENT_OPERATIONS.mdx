@@ -3,6 +3,32 @@ title: Deployment and Operations
 description: Deployment guides and operational procedures for IntrepidQ AI
 ---
 
+import Head from 'next/head'
+
+<Head>
+  <link rel="canonical" href="https://intrepidq.xyz/docs/DEPLOYMENT_OPERATIONS" />
+  <script type="application/ld+json" dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "Deployment and Operations for IntrepidQ AI",
+      "description": "Deployment guides and operational procedures for IntrepidQ AI",
+      "author": {
+        "@type": "Organization",
+        "name": "IntrepidQ AI"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "IntrepidQ AI",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://intrepidq.xyz/logo.png"
+        }
+      }
+    })
+  }} />
+</Head>
+
 # Deployment and Operations
 
 ## Docker Deployment
@@ -10,7 +36,7 @@ description: Deployment guides and operational procedures for IntrepidQ AI
 ### Docker Compose Configuration
 The application uses Docker Compose for multi-container orchestration:
 
-```yaml
+``yaml
 services:
   ai-service:
     build: 

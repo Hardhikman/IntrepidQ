@@ -1,9 +1,40 @@
 ---
 title: How to Write a Fantastic Essay in UPSC CSE Mains
-date: 2025-10-01
-description: Discover the techniques for crafting compelling UPSC Mains essays with engaging introductions, analytical body paragraphs, and powerful conclusions.
+date: 2025-09-19
+description: Tips and strategies for writing excellent essays in the UPSC Civil Services Mains examination
 ---
+
+import Head from 'next/head'
+
+<Head>
+  <link rel="canonical" href="https://intrepidq.xyz/blogs/how-to-write-a-fantastic-essay-in-upsc-cse-mains" />
+  <script type="application/ld+json" dangerouslySetInnerHTML={{
+    __html: JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      "headline": "How to Write a Fantastic Essay in UPSC CSE Mains",
+      "datePublished": "2025-09-19T00:00:00+00:00",
+      "dateModified": "2025-09-19T00:00:00+00:00",
+      "description": "Tips and strategies for writing excellent essays in the UPSC Civil Services Mains examination",
+      "author": {
+        "@type": "Organization",
+        "name": "IntrepidQ AI"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "IntrepidQ AI",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://intrepidq.xyz/logo.png"
+        }
+      }
+    })
+  }} />
+</Head>
+
 # How to Write a Fantastic Essay in UPSC CSE Mains
+
+Writing a good essay in the UPSC Civil Services Mains examination is crucial for scoring well in the optional papers. Here are some tips and strategies to help you write excellent essays.
 
 - ### How should an essay be planned?
 	Start by brainstorming three things: how to begin the introduction, what to say in the body, and how to end the essay well. This keeps ideas focused and linked from start to finish.

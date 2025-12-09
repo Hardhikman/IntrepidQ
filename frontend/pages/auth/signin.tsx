@@ -45,6 +45,23 @@ export default function SignInPage() {
       <Head>
         <title>Sign In - IntrepidQ AI</title>
         <meta name="description" content="Sign in to IntrepidQ for UPSC question generation" />
+        <link rel="canonical" href="https://intrepidq.xyz/auth/signin" />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Sign In - IntrepidQ AI",
+            "description": "Sign in to IntrepidQ for UPSC question generation",
+            "publisher": {
+              "@type": "Organization",
+              "name": "IntrepidQ AI",
+              "logo": {
+                "@type": "ImageObject",
+                "url": "https://intrepidq.xyz/logo.png"
+              }
+            }
+          })
+        }} />
       </Head>
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
         <div className="w-full max-w-md px-6 py-12 flex flex-col items-center">

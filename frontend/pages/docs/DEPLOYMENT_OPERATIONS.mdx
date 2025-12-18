@@ -63,7 +63,9 @@ services:
     restart: unless-stopped
     networks:
       - upsc-network
+```
 
+```yaml
   frontend:
     build:
       context: ./frontend
@@ -79,7 +81,9 @@ services:
     restart: unless-stopped
     networks:
       - upsc-network
+```
 
+```yaml
 networks:
   upsc-network:
     name: upsc-generator-network

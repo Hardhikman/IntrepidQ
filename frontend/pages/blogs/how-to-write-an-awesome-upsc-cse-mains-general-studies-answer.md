@@ -4,34 +4,6 @@ date: 2025-09-19
 description: Expert guidance on crafting high-scoring answers for UPSC Civil Services Mains General Studies papers
 ---
 
-import Head from 'next/head'
-
-<Head>
-  <link rel="canonical" href="https://intrepidq.xyz/blogs/how-to-write-an-awesome-upsc-cse-mains-general-studies-answer" />
-  <script type="application/ld+json" dangerouslySetInnerHTML={{
-    __html: JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "BlogPosting",
-      "headline": "How to Write an Awesome UPSC CSE Mains General Studies Answer",
-      "datePublished": "2025-09-19T00:00:00+00:00",
-      "dateModified": "2025-09-19T00:00:00+00:00",
-      "description": "Expert guidance on crafting high-scoring answers for UPSC Civil Services Mains General Studies papers",
-      "author": {
-        "@type": "Organization",
-        "name": "IntrepidQ AI"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "IntrepidQ AI",
-        "logo": {
-          "@type": "ImageObject",
-          "url": "https://intrepidq.xyz/logo.png"
-        }
-      }
-    })
-  }} />
-</Head>
-
 # How to Write an Awesome UPSC CSE Mains General Studies Answer
 
 Scoring well in the UPSC Civil Services Mains General Studies papers requires more than just knowledge. Here's how to structure and present your answers effectively.

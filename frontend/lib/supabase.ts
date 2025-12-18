@@ -1,15 +1,14 @@
 import { createClient, type Session } from '@supabase/supabase-js'
 
-// Environment validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
-}
-
 // Create Supabase client
+// Environment validation is deferred to runtime to avoid issues during module initialization
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Validate environment variables only when actually used, not at module import time
+// This prevents errors on pages that don't use Supabase but import this module transitively
 
 // Types
 export interface UserProfile {

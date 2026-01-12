@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - VoIQ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --bg-dark: #0F172A;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .date {
+            color: var(--text-secondary);
+            font-style: italic;
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+            margin: 40px 0 20px;
+        }
+
+        p,
+        li {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        strong {
+            color: var(--text-primary);
+        }
+
+        a {
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Privacy Policy for VoIQ</h1>
+        <p class="date">Last Updated: January 9, 2026</p>
+
+        <p>VoIQ: The Vocabulary Intelligent Quest AI system is committed to protecting your privacy.</p>
+
+        <h2>1. Data Storage & Privacy</h2>
+        <p>VoIQ is an offline-first application. All user-generated content, including vocabulary words, categories,
+            attempt history, and scores, is stored strictly on the user's device in a local SQLite (Room) database. VoIQ
+            does not collect, transmit, or store any personal data on external servers.</p>
+
+        <h2>2. Third-Party API Integration</h2>
+        <p>To provide advanced features, the App interacts with external APIs:</p>
+        <ul>
+            <li><strong>Google Gemini AI:</strong> Used to generate clues. Only the relevant vocabulary word is sent to
+                Google's servers. No personal user data or full database content is shared.</li>
+            <li><strong>Dictionary/Datamuse APIs:</strong> Used for "Smart Add" definitions.</li>
+            <li><strong>Google Play services:</strong> Collects basic installation metrics and crash reports for app
+                improvement purposes.</li>
+        </ul>
+
+        <h2>3. API Keys</h2>
+        <p>If a user provides their own Google Gemini API Key, it is stored in an encrypted format on the device using
+            Android's EncryptedSharedPreferences (Keystore) and is never shared, uploaded, or visible to the developers.
+        </p>
+
+        <h2>4. Data Control</h2>
+        <p>Users have absolute control over their data. Deleting the app or clearing its data via Android System
+            Settings will permanently remove all stored vocabulary and history.</p>
+
+        <h2>5. Contact</h2>
+        <p>If you have any questions regarding this privacy policy, you may contact the developer via the official app
+            store support channel.</p>
+
+        <p style="margin-top: 50px; text-align: center;"><a href="index.html">&larr; Back to VoIQ</a></p>
+    </div>
+</body>
+
+</html>

@@ -296,7 +296,7 @@
                     const filtered = kbSections.filter(section =>
                         section.toLowerCase().includes(term)
                     );
-                    renderContent(filtered, term.length > 0);
+                    renderContent(filtered, term);
                 });
 
             } catch (error) {

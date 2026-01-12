@@ -1,9 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoIQ - The Vocabulary Intelligent Quest</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+
+    <!-- Open Graph / Social Sharing -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="VoIQ - The Vocabulary Intelligent Quest">
+    <meta property="og:description"
+        content="Master vocabulary with AI. Privacy-first, offline-ready tutor for deep learning.">
+    <meta property="og:image" content="images/screenshot1.png">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- SEO -->
+    <meta name="description"
+        content="VoIQ is your AI-powered vocabulary tutor. Master SAT, GRE, IELTS words with smart quizzes, clues, and visual progress tracking. 100% offline and private.">
+    <meta name="keywords"
+        content="vocabulary app, AI learning, SAT prep, GRE vocabulary, flashcards, quiz app, offline learning">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -42,6 +61,7 @@
             pointer-events: none;
             z-index: 0;
         }
+
         .bg-glow::before {
             content: '';
             position: absolute;
@@ -53,6 +73,7 @@
             border-radius: 50%;
             animation: float 8s ease-in-out infinite;
         }
+
         .bg-glow::after {
             content: '';
             position: absolute;
@@ -66,8 +87,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-30px) scale(1.05); }
+
+            0%,
+            100% {
+                transform: translateY(0px) scale(1);
+            }
+
+            50% {
+                transform: translateY(-30px) scale(1.05);
+            }
         }
 
         /* Header */
@@ -79,6 +107,7 @@
             justify-content: space-between;
             align-items: center;
         }
+
         .logo {
             font-size: 1.8rem;
             font-weight: 800;
@@ -87,6 +116,7 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
@@ -94,6 +124,7 @@
             font-weight: 500;
             transition: color 0.3s;
         }
+
         .nav-links a:hover {
             color: var(--text-primary);
         }
@@ -105,52 +136,77 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 80vh;
+            min-height: 70vh;
             padding: 60px 40px;
             text-align: center;
         }
+
         .hero-content {
             max-width: 800px;
         }
+
         .hero h1 {
             font-size: 3.5rem;
             font-weight: 800;
             line-height: 1.2;
             margin-bottom: 24px;
         }
+
         .hero h1 span {
             background: linear-gradient(135deg, var(--primary-light), var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .hero p {
             font-size: 1.25rem;
             color: var(--text-secondary);
             margin-bottom: 40px;
             line-height: 1.7;
         }
-        .cta-button {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: white;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.4);
+
+        /* Official Play Store Badge */
+        .play-badge img {
+            height: 60px;
+            transition: transform 0.3s;
         }
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(79, 70, 229, 0.5);
+
+        .play-badge img:hover {
+            transform: scale(1.05);
         }
-        .cta-button svg {
-            width: 24px;
-            height: 24px;
+
+        /* Screenshots Section */
+        .screenshots {
+            position: relative;
+            z-index: 10;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .screenshots h2 {
+            font-size: 2rem;
+            margin-bottom: 40px;
+        }
+
+        .screenshots-grid {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .screenshots-grid img {
+            width: 280px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s;
+        }
+
+        .screenshots-grid img:hover {
+            transform: translateY(-10px);
         }
 
         /* Features Section */
@@ -159,11 +215,13 @@
             z-index: 10;
             padding: 80px 40px;
         }
+
         .features h2 {
             text-align: center;
             font-size: 2.5rem;
             margin-bottom: 60px;
         }
+
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -171,6 +229,7 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+
         .feature-card {
             background: var(--bg-card);
             backdrop-filter: blur(20px);
@@ -179,10 +238,12 @@
             padding: 32px;
             transition: transform 0.3s, border-color 0.3s;
         }
+
         .feature-card:hover {
             transform: translateY(-5px);
             border-color: var(--primary-light);
         }
+
         .feature-icon {
             width: 50px;
             height: 50px;
@@ -194,10 +255,12 @@
             margin-bottom: 20px;
             font-size: 1.5rem;
         }
+
         .feature-card h3 {
             font-size: 1.3rem;
             margin-bottom: 12px;
         }
+
         .feature-card p {
             color: var(--text-secondary);
             line-height: 1.6;
@@ -212,43 +275,79 @@
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
+
         footer a {
             color: var(--primary-light);
             text-decoration: none;
         }
+
         footer a:hover {
             text-decoration: underline;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            header { padding: 15px 20px; }
-            .hero { padding: 40px 20px; }
-            .features { padding: 60px 20px; }
-            .nav-links { display: none; }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            header {
+                padding: 15px 20px;
+            }
+
+            .hero {
+                padding: 40px 20px;
+                min-height: 60vh;
+            }
+
+            .features,
+            .screenshots {
+                padding: 60px 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .screenshots-grid img {
+                width: 90%;
+                max-width: 300px;
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="bg-glow"></div>
 
     <header>
         <div class="logo">VoIQ</div>
         <nav class="nav-links">
+            <a href="#screenshots">Screenshots</a>
             <a href="#features">Features</a>
             <a href="privacy.html">Privacy</a>
+            <a href="mailto:hardhikmgowda@intrepidq.xyz">Contact</a>
         </nav>
     </header>
 
     <section class="hero">
         <div class="hero-content">
             <h1>The <span>Vocabulary Intelligent Quest</span> Starts Here.</h1>
-            <p>Master vocabulary, terminology, and knowledge with the power of AI. VoIQ is your privacy-first, offline-ready tutor designed for deep learning—not rote memorization.</p>
-            <a href="https://play.google.com/store/apps/details?id=com.voiq.app" class="cta-button">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
-                Get it on Google Play
+            <p>Master vocabulary, terminology, and knowledge with the power of AI. VoIQ is your privacy-first,
+                offline-ready tutor designed for deep learning—not rote memorization.</p>
+            <a href="https://play.google.com/store/apps/details?id=com.voiq.app" class="play-badge">
+                <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+                    alt="Get it on Google Play">
             </a>
+        </div>
+    </section>
+
+    <section class="screenshots" id="screenshots">
+        <h2>See VoIQ in Action</h2>
+        <div class="screenshots-grid">
+            <img src="images/screenshot1.png" alt="VoIQ Welcome Screen">
+            <img src="images/screenshot2.png" alt="VoIQ Quiz Setup">
+            <img src="images/screenshot3.png" alt="VoIQ AI Quizzes">
         </div>
     </section>
 
@@ -258,38 +357,51 @@
             <div class="feature-card">
                 <div class="feature-icon">🧠</div>
                 <h3>Universal Tutor Strategy</h3>
-                <p>Master anything from SAT words to professional terminology, quotes, and Q&A. VoIQ is your all-in-one learning hub.</p>
+                <p>Master anything from SAT words to professional terminology, quotes, and Q&A. VoIQ is your all-in-one
+                    learning hub.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">✨</div>
                 <h3>AI-Powered Clues</h3>
-                <p>Never get stuck again. Get context-aware clues—Analogies, Scenarios, and Contrasts—powered by Google Gemini AI.</p>
+                <p>Never get stuck again. Get context-aware clues—Analogies, Scenarios, and Contrasts—powered by Google
+                    Gemini AI.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🎯</div>
                 <h3>Smart Quiz Engine</h3>
-                <p>Choose from MCQ, Dictation, or Learn modes. Our "Finite Flow" ensures you cover your entire selection without infinite loops.</p>
+                <p>Choose from MCQ, Dictation, or Learn modes. Our "Finite Flow" ensures you cover your entire selection
+                    without infinite loops.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🛡️</div>
                 <h3>Privacy & Offline-First</h3>
-                <p>Your data belongs to you. Everything is stored locally. No account, no tracking. Internet only for optional AI clues.</p>
+                <p>Your data belongs to you. Everything is stored locally. No account, no tracking. Internet only for
+                    optional AI clues.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">📈</div>
                 <h3>Visual Growth Tracking</h3>
-                <p>Visualize your progress with the Stats Calendar. Share your "Report Card" and see your journey come to life.</p>
+                <p>Visualize your progress with the Stats Calendar. Share your "Report Card" and see your journey come
+                    to life.</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">🔄</div>
                 <h3>Effortless Backup</h3>
-                <p>Import from Excel or CSV with Smart Header Detection. Export anytime to keep your knowledge portable.</p>
+                <p>Import from Excel or CSV with Smart Header Detection. Export anytime to keep your knowledge portable.
+                </p>
             </div>
         </div>
     </section>
 
     <footer>
-        <p>&copy; 2026 VoIQ. All rights reserved. | <a href="privacy.html">Privacy Policy</a></p>
+        <p>&copy; 2026 VoIQ. All rights reserved.</p>
+        <p style="margin-top: 10px;">
+            <a href="privacy.html">Privacy Policy</a> ·
+            <a href="mailto:hardhikmgowda@intrepidq.xyz">Contact Support</a>
+        </p>
+        <p style="margin-top: 20px; font-size: 0.8rem;">Google Play and the Google Play logo are trademarks of Google
+            LLC.</p>
     </footer>
 </body>
+
 </html>

@@ -149,6 +149,14 @@
             font-size: 1.1rem;
         }
 
+        .highlight {
+            background-color: rgba(79, 70, 229, 0.4);
+            color: white;
+            padding: 0 2px;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
         .kb-content h2 {
             font-size: 1.6rem;
             margin: 20px 0 15px;
@@ -296,7 +304,7 @@
             }
         }
 
-        function renderContent(sections, isSearching = false) {
+        function renderContent(sections, term = "") {
             const contentDiv = document.getElementById('content');
 
             if (sections.length === 0) {
@@ -310,12 +318,19 @@
                 return;
             }
 
-            // If searching, we show the header once and then the matched sections
-            // If not searching, we show full original-like flow
             let html = marked.parse(kbHeader);
 
             sections.forEach(section => {
-                html += `<div class="kb-item">${marked.parse(section)}</div>`;
+                let sectionHtml = marked.parse(section);
+
+                if (term) {
+                    // Highlight term while avoiding matching inside HTML tags
+                    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(`(${escapedTerm})(?![^<]*>)`, 'gi');
+                    sectionHtml = sectionHtml.replace(regex, '<span class="highlight">$1</span>');
+                }
+
+                html += `<div class="kb-item">${sectionHtml}</div>`;
             });
 
             contentDiv.innerHTML = html;

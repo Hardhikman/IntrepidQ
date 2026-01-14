@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { AIntrepidQLogo } from '@/components/aintrepidq-logo';
-import { Youtube, Twitter, Mail } from 'lucide-react';
+import { Youtube, Mail } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 const Footer = () => {
@@ -22,7 +22,7 @@ const Footer = () => {
           backgroundSize: '40px 40px, 40px 40px, 40px 40px, 40px 40px',
         }}
       />
-      
+
       {/* Footer content with relative positioning to appear above the background */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 py-6 rounded-xl border border-border">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -42,50 +42,52 @@ const Footer = () => {
               Contact: <a href="mailto:hardhikmgowda@intrepidq.xyz" className="text-green-500 hover:text-green-600" title="Email"><Mail className="w-3 h-3 inline" /></a>
             </p>
           </div>
-          
+
           <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-6 gap-2">
-            
-            <Link 
-              href="/docs" 
+
+            <Link
+              href="/docs"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors whitespace-nowrap text-center"
             >
               Docs
             </Link>
-            <Link 
-              href="/privacy-policy" 
+            <Link
+              href="/privacy-policy"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors whitespace-nowrap text-center"
             >
               Privacy
             </Link>
-            <Link 
-              href="/terms-of-service" 
+            <Link
+              href="/terms-of-service"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors whitespace-nowrap text-center"
             >
               Terms
             </Link>
-            <Link 
-              href="/blogs" 
+            <Link
+              href="/blogs"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors whitespace-nowrap text-center"
             >
               Blogs
             </Link>
-            <a 
-              href="https://www.youtube.com/@intrepidqai" 
-              target="_blank" 
+            <a
+              href="https://www.youtube.com/@intrepidqai"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors flex items-center justify-center gap-1"
               title="YouTube"
             >
               <Youtube className="w-4 h-4" />
             </a>
-            <a 
-              href="https://x.com/IntrepidQai" 
-              target="_blank" 
+            <a
+              href="https://x.com/IntrepidQai"
+              target="_blank"
               rel="noopener noreferrer"
               className="text-xs sm:text-sm text-muted-foreground hover:text-green-500 transition-colors flex items-center justify-center gap-1"
               title="X (Twitter)"
             >
-              <Twitter className="w-4 h-4" />
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
             </a>
           </div>
         </div>

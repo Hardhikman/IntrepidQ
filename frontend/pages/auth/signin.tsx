@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -10,21 +10,26 @@ import Head from "next/head";
 import { AIntrepidQLogo } from "@/components/aintrepidq-logo";
 
 export default function SignInPage() {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, loading, signInWithGoogle } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
 
   // Redirect authenticated users to the main page
   useEffect(() => {
-    if (user) {
+    if (!loading && user) {
       router.push("/");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
 
-  // If user is already authenticated, show nothing while redirecting
-  if (user) {
-    return null;
+  // Show loading spinner while checking auth or redirecting
+  if (loading || user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+      </div>
+    );
   }
+
 
   const handleGoogleSignIn = async () => {
     try {
@@ -73,7 +78,7 @@ export default function SignInPage() {
               click below to evolve your UPSC preparation
             </p>
           </div>
-          
+
           <button
             onClick={handleGoogleSignIn}
             className="w-full bg-gradient-to-r from-orange-500 to-blue-600 hover:from-orange-600 hover:to-blue-700 text-white py-3 px-4 rounded-lg font-medium flex items-center justify-center transition-colors duration-200 mb-6 shadow-md"
@@ -86,7 +91,7 @@ export default function SignInPage() {
             </svg>
             Continue with Google
           </button>
-          
+
           <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
             By continuing, you agree to our{" "}
             <Link href="/terms-of-service" className="text-orange-500 hover:text-orange-600 hover:underline">

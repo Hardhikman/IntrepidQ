@@ -3,37 +3,22 @@ import Link from 'next/link'
 
 const config = {
   logo: (
-    <Link href="/" style={{ textDecoration: 'none' }}>
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        gap: '0.5rem',
-        backgroundColor: '#0f0f0f',
-        color: '#22c55e',
-        padding: '0.5rem 0.75rem',
-        borderRadius: '0.375rem',
-        fontWeight: '600',
-        fontSize: '0.75rem',
-        cursor: 'pointer',
-        border: '1px solid #3f3f3f',
-        transition: 'all 0.2s ease-in-out',
-        whiteSpace: 'nowrap',
-        width: '100%',
-        boxSizing: 'border-box'
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.backgroundColor = '#1a1a1a';
-        e.currentTarget.style.borderColor = '#525252';
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.backgroundColor = '#0f0f0f';
-        e.currentTarget.style.borderColor = '#3f3f3f';
-      }}>
+    <Link href="/" className="no-underline">
+      <div className="
+        flex items-center justify-center gap-2 
+        px-3 py-2 rounded-md font-semibold text-xs 
+        cursor-pointer w-full box-border whitespace-nowrap
+        transition-all duration-200
+        bg-gray-100 text-gray-700 border border-gray-300
+        hover:bg-gray-200 hover:border-gray-400
+        dark:bg-neutral-900 dark:text-green-500 dark:border-neutral-700
+        dark:hover:bg-neutral-800 dark:hover:border-neutral-500
+      ">
         <span>Back to IntrepidQ AI</span>
       </div>
     </Link>
   ),
+
   // Removed project property to eliminate GitHub link
   useNextSeoProps() {
     return {

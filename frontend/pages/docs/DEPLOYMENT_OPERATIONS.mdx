@@ -36,7 +36,7 @@ import Head from 'next/head'
 ### Docker Compose Configuration
 The application uses Docker Compose for multi-container orchestration:
 
-``yaml
+```yaml
 services:
   ai-service:
     build: 
@@ -45,27 +45,25 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      - NEWSAPI_KEY=${NEWSAPI_KEY}
+      - SUPABASE_URL={'${SUPABASE_URL}'}
+      - SUPABASE_ANON_KEY={'${SUPABASE_ANON_KEY}'}
+      - SUPABASE_SERVICE_KEY={'${SUPABASE_SERVICE_KEY}'}
+      - GROQ_API_KEY={'${GROQ_API_KEY}'}
+      - GOOGLE_API_KEY={'${GOOGLE_API_KEY}'}
+      - NEWSAPI_KEY={'${NEWSAPI_KEY}'}
       # Upstash Search Configuration
-      - UPSTASH_SEARCH_REST_URL=${UPSTASH_SEARCH_REST_URL}
-      - UPSTASH_SEARCH_REST_TOKEN=${UPSTASH_SEARCH_REST_TOKEN}
-      - UPSTASH_SEARCH_INDEX=${UPSTASH_SEARCH_INDEX}
+      - UPSTASH_SEARCH_REST_URL={'${UPSTASH_SEARCH_REST_URL}'}
+      - UPSTASH_SEARCH_REST_TOKEN={'${UPSTASH_SEARCH_REST_TOKEN}'}
+      - UPSTASH_SEARCH_INDEX={'${UPSTASH_SEARCH_INDEX}'}
       # Upstash Redis Configuration
-      - REDIS_URL=${REDIS_URL}
+      - REDIS_URL={'${REDIS_URL}'}
     volumes:
       - ./backend/ai_service/data:/app/data
       - ./backend/ai_service/pyq_data:/app/pyq_data
     restart: unless-stopped
     networks:
       - upsc-network
-```
 
-```yaml
   frontend:
     build:
       context: ./frontend
@@ -73,8 +71,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_SUPABASE_URL=${SUPABASE_URL}
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_SUPABASE_URL={'${SUPABASE_URL}'}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY={'${SUPABASE_ANON_KEY}'}
       - NEXT_PUBLIC_API_URL=http://ai-service:8000
     depends_on:
       - ai-service

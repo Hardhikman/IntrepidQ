@@ -802,7 +802,9 @@ export default function UPSCQuestionGenerator() {
         <Head>
           <title>IntrepidQ AI - India's first NLP and RAG based AI assistant for UPSC CSE preparation</title>
           <meta name="description" content="Generate context-aware UPSC CSE mains questions with AI assistance. Prepare for the Indian civil services exam with our AI-powered question generator." />
+          <meta name="keywords" content="UPSC, CSE, IAS, mains questions, AI, question generator, civil services, Indian Administrative Service, GS paper, current affairs, UPSC preparation" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link rel="canonical" href="https://intrepidq.xyz/" />
           <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
           <script type="application/ld+json">
             {`
@@ -847,9 +849,10 @@ export default function UPSCQuestionGenerator() {
             <iframe
               className="w-full h-full"
               src="https://www.youtube.com/embed/L_sTf2JZlJc?autoplay=0"
-              title="IntrepidQ AI Introduction"
+              title="IntrepidQ AI Tutorial - How to Generate UPSC Mains Questions with AI"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
+              loading="lazy"
             ></iframe>
           </div>
         </section>
@@ -860,7 +863,7 @@ export default function UPSCQuestionGenerator() {
           <section className="max-w-4xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6 md:p-8">
             <div className="text-center mb-8">
               <h1 className="text-3xl font-extrabold text-foreground mb-4 tracking-wide">
-                The Modern Solution for UPSC Aspirants in the AI Age
+                UPSC Mains Question Generator - The Modern Solution for Aspirants in the AI Age
               </h1>
               <p className="text-muted-foreground text-lg max-w-3xl mx-auto leading-relaxed font-medium">
                 IntrepidQ AI empowers fearless aspirants to transform their preparation and cut short their UPSC cycle. Unlike complex AI tools,

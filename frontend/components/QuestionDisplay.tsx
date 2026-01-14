@@ -4,65 +4,15 @@ import { GeneratedQuestion } from "@/lib/supabase";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "next-themes";
-
-// Dynamically import mermaid only on client side with error handling
-let mermaid: any = null;
-if (typeof window !== "undefined") {
-  import("mermaid")
-    .then((module) => {
-      mermaid = module.default;
-      mermaid.initialize({ 
-        startOnLoad: false,
-        theme: 'default',
-        themeVariables: {
-          primaryTextColor: '#333333',
-          textColor: '#333333',
-          darkTextColor: '#333333',
-          lineColor: '#666666',
-          fontSize: 12,
-          nodeFillColor: '#ffffff',
-          nodeBorderColor: '#666666', 
-          clusterBkg: '#ffffff',
-          clusterBorder: '#666666',
-          defaultLinkColor: '#333333',
-          titleColor: '#000000',
-          nodeBorder: '#666666',
-          mainBkg: '#ffffff',
-          secondBkg: '#f8f8f8', 
-          background: '#ffffff',
-          tertiaryColor: '#ffffff',
-          tertiaryBorderColor: '#666666',
-          noteBkgColor: '#ffffcc',
-          noteBorderColor: '#666666',
-          sectionBkgColor: '#ffffff',
-          sectionBorderColor: '#666666'
-        },
-        flowchart: {
-          useMaxWidth: true,
-          htmlLabels: true
-        },
-        mindmap: {
-          useMaxWidth: true,
-          padding: 30,
-          nodeSpacing: 60,
-          rankSpacing: 70
-        }
-      });
-    })
-    .catch((error) => {
-      console.error("Failed to load Mermaid:", error);
-      mermaid = null;
-    });
-}
 
 interface QuestionDisplayProps {
   question: GeneratedQuestion;
   answer: any;
   index: number;
   onGenerateAnswer?: (index: number, question: string) => void;
-  loadingAnswer?: number | null;  // ✅ becomes index or null
+  loadingAnswer?: number | null;
 }
 
 export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
@@ -72,106 +22,165 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
   onGenerateAnswer,
   loadingAnswer,
 }) => {
-  const { theme } = useTheme();
+  const { theme, resolvedTheme } = useTheme();
   const [viewMode, setViewMode] = useState<"text" | "diagram">("text");
   const diagramRef = useRef<HTMLDivElement>(null);
-  
-  const isAnyLoading = loadingAnswer !== null;      
-  const isThisLoading = loadingAnswer === index;       
+  const [mermaidLoaded, setMermaidLoaded] = useState(false);
+  const [mermaidError, setMermaidError] = useState<string | null>(null);
+  const mermaidRef = useRef<any>(null);
+  const renderIdRef = useRef(0);
 
-  // Convert answer to mermaid diagram format
-  const convertToMermaid = (answer: any): string => {
-    if (!answer) return "";
-    const cleanText = (text: string) => {
-      if (!text) return "";
-      return text
-        .replace(/\\n/g, " ")
-        .replace(/\n/g, " ") 
-        .replace(/\s+/g, " ") 
-        .trim();
+  const isAnyLoading = loadingAnswer !== null;
+  const isThisLoading = loadingAnswer === index;
+
+  // Initialize mermaid on mount
+  useEffect(() => {
+    const loadMermaid = async () => {
+      try {
+        const module = await import("mermaid");
+        mermaidRef.current = module.default;
+        setMermaidLoaded(true);
+      } catch (error) {
+        console.error("Failed to load Mermaid:", error);
+        setMermaidError("Failed to load diagram library");
+      }
     };
-    
-    // Escape text for mermaid syntax
-    const escapeForMermaid = (text: string) => {
-      if (!text) return "";
-      return text
-        .replace(/"/g, '\\"')
-        .replace(/</g, '&lt;') 
-        .replace(/>/g, '&gt;')
-        .replace(/&/g, '&amp;')
-        .replace(/\$/g, '\\$') 
-        .replace(/#/g, '\\#') 
-        .replace(/\{/g, '\\{') 
-        .replace(/\}/g, '\\}'); 
-    };
-    
-    const intro = cleanText(answer.introduction) || "";
-    const bodyItems = answer.body || [];
-    const conclusion = cleanText(answer.conclusion) || "";
-    
-    // Create a mindmap structure
-    let diagram = `mindmap\n`;
-    diagram += `  root["${escapeForMermaid(question.question)}"]\n`;
-    
-    if (intro) {
-      const formattedIntro = escapeForMermaid(intro);
-      diagram += `    intro["Introduction: ${formattedIntro}"]\n`;
+
+    if (typeof window !== "undefined" && !mermaidRef.current) {
+      loadMermaid();
     }
-    
-    if (bodyItems.length > 0) {
-      diagram += `    body["Key Points"]\n`;
-      bodyItems.forEach((item: string, i: number) => {
-        const cleanItem = cleanText(item);
-        if (cleanItem) { 
-          const formattedItem = escapeForMermaid(cleanItem);
-          diagram += `      point${i}["${formattedItem}"]\n`;
+  }, []);
+
+  // Configure mermaid when theme changes
+  useEffect(() => {
+    if (mermaidRef.current && mermaidLoaded) {
+      const isDark = resolvedTheme === 'dark';
+      mermaidRef.current.initialize({
+        startOnLoad: false,
+        theme: isDark ? 'dark' : 'default',
+        themeVariables: isDark ? {
+          primaryTextColor: '#e5e5e5',
+          textColor: '#e5e5e5',
+          lineColor: '#888888',
+          fontSize: '14px',
+          nodeBkg: '#1e1e1e',
+          nodeBorder: '#444444',
+          mainBkg: '#1e1e1e',
+          background: '#0a0a0a',
+        } : {
+          primaryTextColor: '#333333',
+          textColor: '#333333',
+          lineColor: '#666666',
+          fontSize: '14px',
+          nodeBkg: '#ffffff',
+          nodeBorder: '#666666',
+          mainBkg: '#ffffff',
+          background: '#ffffff',
+        },
+        mindmap: {
+          useMaxWidth: true,
+          padding: 20,
         }
       });
     }
-    
-    if (conclusion) {
-      const formattedConclusion = escapeForMermaid(conclusion);
-      diagram += `    conclusion["Conclusion: ${formattedConclusion}"]\n`;
-    }
-    
-    return diagram;
+  }, [resolvedTheme, mermaidLoaded]);
+
+  // Truncate text for diagram nodes
+  const truncateText = (text: string, maxLen: number = 80): string => {
+    if (!text) return "";
+    const clean = text.replace(/[\n\r]+/g, " ").replace(/\s+/g, " ").trim();
+    return clean.length > maxLen ? clean.substring(0, maxLen) + "..." : clean;
   };
 
+  // Escape text for mermaid syntax
+  const escapeForMermaid = (text: string): string => {
+    if (!text) return "";
+    return text
+      .replace(/"/g, "'")
+      .replace(/[<>]/g, "")
+      .replace(/[{}]/g, "")
+      .replace(/[#$]/g, "")
+      .replace(/[\[\]]/g, "")
+      .replace(/[()]/g, "");
+  };
+
+  // Convert answer to mermaid diagram format
+  const convertToMermaid = useCallback((answer: any): string => {
+    if (!answer) return "";
+
+    const questionText = truncateText(escapeForMermaid(question.question), 50);
+    const intro = truncateText(escapeForMermaid(answer.introduction), 60);
+    const bodyItems = answer.body || [];
+    const conclusion = truncateText(escapeForMermaid(answer.conclusion), 60);
+
+    // Use flowchart for better compatibility
+    let diagram = `flowchart TD\n`;
+    diagram += `  Q["${questionText}"]\n`;
+
+    if (intro) {
+      diagram += `  I["Intro: ${intro}"]\n`;
+      diagram += `  Q --> I\n`;
+    }
+
+    if (bodyItems.length > 0) {
+      diagram += `  B["Key Points"]\n`;
+      diagram += `  ${intro ? 'I' : 'Q'} --> B\n`;
+
+      bodyItems.slice(0, 5).forEach((item: string, i: number) => {
+        const cleanItem = truncateText(escapeForMermaid(item), 50);
+        if (cleanItem) {
+          diagram += `  P${i}["${i + 1}. ${cleanItem}"]\n`;
+          diagram += `  B --> P${i}\n`;
+        }
+      });
+    }
+
+    if (conclusion) {
+      diagram += `  C["Conclusion: ${conclusion}"]\n`;
+      diagram += `  ${bodyItems.length > 0 ? 'B' : (intro ? 'I' : 'Q')} --> C\n`;
+    }
+
+    return diagram;
+  }, [question.question]);
+
   // Render mermaid diagram
-  const renderDiagram = async () => {
-    if (viewMode === "diagram" && diagramRef.current && mermaid && answer) {
-      try {
-        const diagramDefinition = convertToMermaid(answer);
-        const { svg, bindFunctions } = await mermaid.render(
-          `mermaid-diagram-${index}`,
-          diagramDefinition
-        );
-        if (diagramRef.current) {
-          diagramRef.current.innerHTML = svg;
-          if (bindFunctions) bindFunctions(diagramRef.current);
-        }
-      } catch (error) {
-        console.error("Error rendering Mermaid diagram:", error);
-        if (diagramRef.current) {
-          diagramRef.current.innerHTML = `<p>Error rendering diagram</p>`;
-        }
+  const renderDiagram = useCallback(async () => {
+    if (!diagramRef.current || !mermaidRef.current || !answer) return;
+
+    try {
+      renderIdRef.current += 1;
+      const diagramDefinition = convertToMermaid(answer);
+      const uniqueId = `mermaid-${index}-${Date.now()}-${renderIdRef.current}`;
+
+      const { svg } = await mermaidRef.current.render(uniqueId, diagramDefinition);
+
+      if (diagramRef.current) {
+        diagramRef.current.innerHTML = svg;
+      }
+    } catch (error: any) {
+      console.error("Error rendering Mermaid diagram:", error);
+      if (diagramRef.current) {
+        diagramRef.current.innerHTML = `<div class="text-red-500 p-4">
+          <p class="font-bold">Diagram rendering failed</p>
+          <p class="text-sm mt-2">The answer content may contain characters that cannot be displayed in diagram form.</p>
+        </div>`;
       }
     }
-  };
+  }, [answer, index, convertToMermaid]);
 
   // Re-render diagram when view mode, answer, or theme changes
   useEffect(() => {
-    if (viewMode === "diagram" && answer) {
+    if (viewMode === "diagram" && answer && mermaidLoaded) {
       // Add a small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         renderDiagram();
       }, 100);
       return () => clearTimeout(timer);
-    } else if (viewMode === "diagram" && diagramRef.current) {
+    } else if (viewMode === "diagram" && diagramRef.current && !answer) {
       // Clear diagram when there's no answer
       diagramRef.current.innerHTML = '<div class="text-gray-500 p-4">No answer to display as diagram</div>';
     }
-  }, [viewMode, answer, index, theme]);
+  }, [viewMode, answer, index, resolvedTheme, mermaidLoaded, renderDiagram]);
 
   return (
     <div className="space-y-4 mb-6">
@@ -237,13 +246,15 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
               <div>
                 <h4 className="font-bold mb-1 sm:mb-2 text-sm sm:text-base text-foreground">Answer Diagram:</h4>
                 <div ref={diagramRef} className="mermaid-diagram-container overflow-auto max-h-96 border border-border rounded-lg p-4 bg-background">
-                  {mermaid ? (
+                  {mermaidLoaded ? (
                     <div className="text-gray-500">Loading diagram...</div>
-                  ) : (
+                  ) : mermaidError ? (
                     <div className="text-yellow-700 p-4">
-                      <p>Mermaid library is not available. Diagram view requires Mermaid to be loaded.</p>
-                      <p className="text-sm mt-2">This might be due to a network issue or ad blocker. Please try refreshing the page.</p>
+                      <p>Mermaid library failed to load.</p>
+                      <p className="text-sm mt-2">{mermaidError}</p>
                     </div>
+                  ) : (
+                    <div className="text-gray-500">Initializing diagram library...</div>
                   )}
                 </div>
               </div>

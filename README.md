@@ -37,7 +37,7 @@
 
 ### 🤖 AI-Powered Question Generation
 - **Multi-Model Support**: Leverage Groq models and Google Gemini
-- **Contextual Awareness**: Vector similarity search using FAISS and pgvector
+- **Contextual Awareness**: Vector similarity search using Supabase pgvector
 - **Adaptive Performance**: Automatic model selection based on speed and reliability
 - **Topic-Specific**: Generate questions for specific GS1-GS4 topics
 - **Whole Paper Mode**: Create complete practice papers
@@ -98,9 +98,7 @@
 #### 🤖 AI & ML
 - **Groq**: Ultra-fast LLM inference
 - **Google Gemini**: Advanced language understanding
-- **Sentence Transformers**: Text embedding generation
-- **FAISS**: Efficient similarity search
-- **PyTorch**: Machine learning computations
+- **HuggingFace Inference API**: High-performance embedding generation
 - **Tavily search**:  News API for effective search
 
 #### 🗃️ Database & Infrastructure
@@ -120,7 +118,7 @@
 - **Node.js 16+** with npm
 - **Docker** (optional, recommended)
 - **Supabase Account** (free tier available)
-- **API Keys**: Groq, Google Gemini (optional)
+- **API Keys**: Groq, Google Gemini (optional), HuggingFace (required)
 
 ### 🐳 Docker Setup (Recommended)
 
@@ -182,7 +180,11 @@ npm run dev
 
 #### Backend (.env)
 ```env
-SET API keys here
+GROQ_API_KEY=your_groq_key
+GOOGLE_API_KEY=your_gemini_key
+HUGGINGFACE_API_KEY=hf_your_huggingface_token
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_key
 ```
 
 #### Frontend (.env.local)

@@ -3,7 +3,7 @@ FROM python:3.11-slim
 # Set a working directory
 WORKDIR /app
 
-# Install system dependencies for FAISS, Torch, Pillow, etc.
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -20,9 +20,9 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Copy requirements first (better layer caching)
 COPY requirements.txt .
 
-# Install Python dependencies (CPU-only torch to avoid CUDA bloat)
+# Install Python dependencies
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code AFTER installing dependencies
 COPY . .

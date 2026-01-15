@@ -23,11 +23,13 @@ from typing import Dict, List, Optional
 
 from diskcache import Cache
 from langchain_core.prompts import PromptTemplate
-from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_core.documents import Document
 from langchain_core.utils import convert_to_secret_str
 from langchain_groq import ChatGroq
 from supabase import Client
+
+# Import our lightweight embedding client
+from core.embedding_client import get_embedding_client
 
 # Optional providers
 try:
@@ -44,7 +46,7 @@ class QuestionGenerator:
         self,
         groq_api_key: str,
         google_api_key: Optional[str],
-        vectorstore: Optional[SupabaseVectorStore],
+        vectorstore,  # LightweightVectorStore or None
         supabase_client: Optional[Client],
         cache_dir: str = "news_cache"
     ):
@@ -656,13 +658,14 @@ Now return ONLY the JSON array:"""
         return sampled_docs[:n_samples]
 
     def _get_relevant_documents_with_fallback(self, query: str, k: int = 5, topic: Optional[str] = None, subject_filter: Optional[str] = None) -> List[Document]:
-        if not self.vectorstore or not self.supabase_client or not hasattr(self.vectorstore, 'embeddings'):
+        if not self.vectorstore or not self.supabase_client:
             logger.warning("Vectorstore/Supabase not available. Using fallback method.")
             return self._get_documents_current_method(query, k, topic, subject_filter)
 
         try:
             logger.info(f"Executing vector search: K={k}, Topic='{topic}'")
-            query_embedding = self.vectorstore.embeddings.embed_query(query)
+            # Use the embedding client from vectorstore
+            query_embedding = self.vectorstore.embedding_client.embed_query(query)
             doc_filter = {'topic': topic} if topic and topic.strip() else {}
 
             response = self.supabase_client.rpc("match_documents", {"filter": doc_filter, "match_count": k, "query_embedding": query_embedding}).execute()
@@ -675,9 +678,9 @@ Now return ONLY the JSON array:"""
             return self._get_documents_current_method(query, k, topic, subject_filter)
 
     def _get_relevant_documents_without_filter(self, query: str, k: int = 5) -> List[str]:
-        if not self.supabase_client or not self.vectorstore or not hasattr(self.vectorstore, 'embeddings'): return []
+        if not self.supabase_client or not self.vectorstore: return []
         try:
-            query_embedding = self.vectorstore.embeddings.embed_query(query)
+            query_embedding = self.vectorstore.embedding_client.embed_query(query)
             response = self.supabase_client.rpc("match_documents", {"filter": {}, "query_embedding": query_embedding, "match_count": k}).execute()
             return [item["content"] for item in response.data] if response.data else []
         except Exception as e:
@@ -786,10 +789,10 @@ Now return ONLY the JSON array:"""
 
     def _get_relevant_documents_without_filter_full(self, query: str, k: int = 5) -> List[Document]:
         """Get full Document objects without filter for keyword-based generation"""
-        if not self.supabase_client or not self.vectorstore or not hasattr(self.vectorstore, 'embeddings'):
+        if not self.supabase_client or not self.vectorstore:
             return []
         try:
-            query_embedding = self.vectorstore.embeddings.embed_query(query)
+            query_embedding = self.vectorstore.embedding_client.embed_query(query)
             response = self.supabase_client.rpc("match_documents", {"filter": {}, "query_embedding": query_embedding, "match_count": k}).execute()
             return [Document(page_content=item.get("content", ""), metadata=item.get("metadata", {})) for item in response.data] if response.data else []
         except Exception as e:

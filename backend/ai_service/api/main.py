@@ -70,10 +70,10 @@ async def lifespan(app: FastAPI):
         supabase_service = get_supabase_service()
         supabase_client = supabase_service._ensure_client()
 
-        # Load Supabase vector store
+        # Load lightweight vector store (uses HuggingFace API for embeddings, no local model)
         try:
             vectorstore = load_index()
-            logger.info("Supabase vectorstore loaded successfully")
+            logger.info("Lightweight vectorstore loaded successfully (HuggingFace API)")
         except Exception as e:
             logger.error(f"Supabase vectorstore load failed: {e}")
             vectorstore = None

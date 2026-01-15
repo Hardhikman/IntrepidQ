@@ -1,34 +1,42 @@
 """
-Vector indexing functionality(from old gradio indexing file)
+Vector indexing functionality - Lightweight version using HuggingFace API
+
+This version uses the HuggingFace Inference API instead of local sentence-transformers
+to avoid OOM issues on memory-constrained deployments like Render free tier.
 """
 import json
+import logging
 import os
-from typing import List
+from typing import List, Optional
 
 from langchain_core.documents import Document
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import SupabaseVectorStore
-from langchain_huggingface import HuggingFaceEmbeddings
 
+from core.embedding_client import get_embedding_client
 from core.supabase_client import get_supabase_service
+
+logger = logging.getLogger(__name__)
 
 
 class VectorIndexer:
-    def __init__(self, embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"):
-        self.embedding_model = embedding_model
-        self.embeddings = HuggingFaceEmbeddings(model_name=embedding_model)
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=50,
-            length_function=len,
-        )
-
+    """
+    Lightweight vector indexer using HuggingFace API for embeddings.
+    Compatible with existing Supabase vector store.
+    """
+    
+    def __init__(self):
+        self.embedding_client = get_embedding_client()
+        logger.info("VectorIndexer initialized with HuggingFace API embeddings")
+    
+    def embed_query(self, text: str) -> List[float]:
+        """Generate embedding for a query using HuggingFace API."""
+        return self.embedding_client.embed_query(text)
+    
     def load_documents_from_organized_chunks(self, organized_chunks_path: str) -> List[Document]:
         """Load documents from organized chunks JSON"""
         if not os.path.exists(organized_chunks_path):
             raise FileNotFoundError(f"Organized chunks file not found: {organized_chunks_path}")
 
-        print("Loading from organized chunks...")
+        logger.info("Loading from organized chunks...")
         with open(organized_chunks_path, "r", encoding="utf-8") as f:
             organized_data = json.load(f)
 
@@ -52,9 +60,21 @@ class VectorIndexer:
 
         return documents
 
-    def load_documents_from_flat_chunks(self, flat_chunks_path: str) -> List[Document]:
+    def load_documents(self, data_dir: str = "data") -> List[Document]:
+        """Load documents from available chunk files"""
+        organized_chunks_path = os.path.join(data_dir, "chunks_organized.json")
+        flat_chunks_path = os.path.join(data_dir, "chunks.json")
+
+        if os.path.exists(organized_chunks_path):
+            return self.load_documents_from_organized_chunks(organized_chunks_path)
+        elif os.path.exists(flat_chunks_path):
+            return self._load_documents_from_flat_chunks(flat_chunks_path)
+        else:
+            raise FileNotFoundError("No chunks file found. Please run PDF parsing first.")
+    
+    def _load_documents_from_flat_chunks(self, flat_chunks_path: str) -> List[Document]:
         """Load documents from flat chunks JSON (fallback)"""
-        print("Loading from flat chunks (fallback)...")
+        logger.info("Loading from flat chunks (fallback)...")
         with open(flat_chunks_path, "r", encoding="utf-8") as f:
             chunks = json.load(f)
 
@@ -63,8 +83,7 @@ class VectorIndexer:
             topic = chunk["topic"]
             questions = chunk["questions"]
 
-            # Determine GS paper from topic name
-            gs_paper = "GS1"  # default
+            gs_paper = "GS1"
             for gs_num in ["GS1", "GS2", "GS3", "GS4"]:
                 if topic.startswith(gs_num):
                     gs_paper = gs_num
@@ -83,99 +102,74 @@ class VectorIndexer:
 
         return documents
 
-    def load_documents(self, data_dir: str = "data") -> List[Document]:
-        """Load documents from available chunk files"""
-        organized_chunks_path = os.path.join(data_dir, "chunks_organized.json")
-        flat_chunks_path = os.path.join(data_dir, "chunks.json")
 
-        if os.path.exists(organized_chunks_path):
-            return self.load_documents_from_organized_chunks(organized_chunks_path)
-        elif os.path.exists(flat_chunks_path):
-            return self.load_documents_from_flat_chunks(flat_chunks_path)
-        else:
-            raise FileNotFoundError("No chunks file found. Please run PDF parsing first.")
-
-    def split_documents(self, documents: List[Document]) -> List[Document]:
-        """Split long documents into smaller chunks"""
-        split_docs = []
-        for doc in documents:
-            if len(doc.page_content) > 500:
-                splits = self.text_splitter.split_documents([doc])
-                split_docs.extend(splits)
-            else:
-                split_docs.append(doc)
-        return split_docs
-
-    def create_vector_store(self, documents: List[Document]) -> SupabaseVectorStore:
-        """Create Supabase vector store from documents"""
-        print(f"Creating Supabase vector store with {len(documents)} documents")
-
-        # Split documents if needed
-        split_docs = self.split_documents(documents)
-        print(f"After splitting: {len(split_docs)} document chunks")
-
-        # Get Supabase client
-        supabase_service = get_supabase_service()
-        supabase_client = supabase_service._ensure_client()
-
-        # Create Supabase vector store
-        vectorstore = SupabaseVectorStore.from_documents(
-            documents=split_docs,
-            embedding=self.embeddings,
-            client=supabase_client,
-            table_name="documents",
-            query_name="match_documents"
-        )
-
-        print("Supabase vector store created and documents upserted.")
-
-        # Print statistics
-        self._print_statistics(split_docs)
-
-        return vectorstore
-
-    def load_vector_store(self) -> SupabaseVectorStore:
-        """Load existing Supabase vector store"""
-        print("Loading Supabase vector store...")
-
-        # Get Supabase client
-        supabase_service = get_supabase_service()
-        supabase_client = supabase_service._ensure_client()
-
-        vectorstore = SupabaseVectorStore(
-            client=supabase_client,
-            embedding=self.embeddings,
-            table_name="documents",
-            query_name="match_documents"
-        )
-        print("Supabase vector store loaded.")
-        return vectorstore
-
-    def _print_statistics(self, documents: List[Document]):
-        """Print document statistics by GS paper"""
-        gs_stats = {}
-        for doc in documents:
-            gs_paper = doc.metadata.get("gs_paper", "Unknown")
-            gs_stats[gs_paper] = gs_stats.get(gs_paper, 0) + 1
-
-        print("\nDocument distribution by GS paper:")
-        for gs_paper, count in sorted(gs_stats.items()):
-            print(f"  {gs_paper}: {count} documents")
+class LightweightVectorStore:
+    """
+    Wrapper around Supabase vector store that uses HuggingFace API for embeddings.
+    Provides the same interface as the old SupabaseVectorStore but without local model.
+    """
+    
+    def __init__(self, supabase_client, embedding_client):
+        self.client = supabase_client
+        self.embedding_client = embedding_client
+        logger.info("LightweightVectorStore initialized")
+    
+    def similarity_search(self, query: str, k: int = 5, filter: Optional[dict] = None) -> List[Document]:
+        """
+        Perform similarity search using Supabase RPC.
+        """
+        try:
+            query_embedding = self.embedding_client.embed_query(query)
+            
+            response = self.client.rpc("match_documents", {
+                "query_embedding": query_embedding,
+                "match_count": k,
+                "filter": filter or {}
+            }).execute()
+            
+            documents = []
+            for item in response.data or []:
+                doc = Document(
+                    page_content=item.get("content", ""),
+                    metadata=item.get("metadata", {})
+                )
+                documents.append(doc)
+            
+            return documents
+            
+        except Exception as e:
+            logger.error(f"Similarity search failed: {e}")
+            return []
 
 
-# Factory functions
-def create_vector_indexer(embedding_model: str | None = None) -> VectorIndexer:
+# Global instance
+_vectorstore: Optional[LightweightVectorStore] = None
+
+
+def create_vector_indexer() -> VectorIndexer:
     """Factory function to create vector indexer"""
-    model = embedding_model or os.getenv("EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
-    return VectorIndexer(model)
+    return VectorIndexer()
 
-def create_index(data_dir: str = "data") -> SupabaseVectorStore:
-    """Create Supabase vector store from data directory"""
-    indexer = create_vector_indexer()
-    documents = indexer.load_documents(data_dir)
-    return indexer.create_vector_store(documents)
 
-def load_index() -> SupabaseVectorStore:
-    """Load existing Supabase vector store"""
-    indexer = create_vector_indexer()
-    return indexer.load_vector_store()
+def load_index() -> Optional[LightweightVectorStore]:
+    """
+    Load the lightweight vector store.
+    Returns a LightweightVectorStore that uses HuggingFace API for embeddings.
+    """
+    global _vectorstore
+    
+    if _vectorstore is not None:
+        return _vectorstore
+    
+    try:
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+        embedding_client = get_embedding_client()
+        
+        _vectorstore = LightweightVectorStore(supabase_client, embedding_client)
+        logger.info("LightweightVectorStore loaded successfully")
+        return _vectorstore
+        
+    except Exception as e:
+        logger.error(f"Failed to load vector store: {e}")
+        return None

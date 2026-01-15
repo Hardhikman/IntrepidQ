@@ -7,7 +7,7 @@
   <img src="https://img.shields.io/badge/status-production-green.svg" alt="Production Ready">
   <img src="https://img.shields.io/badge/Python-3.8+-blue.svg" alt="Python">
   <img src="https://img.shields.io/badge/Node.js-16+-green.svg" alt="Node.js">
-  <img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue" alt="License">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="License">
 </div>
 
 <p align="center">
@@ -249,7 +249,7 @@ To further improve SEO:
 
 ## 📄 License
 
-This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 <div align="center">
   <p><strong>Built with ❤️ for the UPSC Community</strong></p>

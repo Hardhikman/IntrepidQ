@@ -22,7 +22,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from diskcache import Cache
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from langchain_community.vectorstores import SupabaseVectorStore
 from langchain_core.documents import Document
 from langchain_core.utils import convert_to_secret_str

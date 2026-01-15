@@ -19,9 +19,9 @@
 
     <!-- SEO -->
     <meta name="description"
-        content="VoIQ is your AI-powered vocabulary tutor. Master SAT, GRE, IELTS words with smart quizzes, clues, and visual progress tracking. 100% offline and private.">
+        content="VoIQ is the best VoCat alternative - an AI-powered vocabulary tutor. Master SAT, GRE, IELTS words with smart quizzes, clues, and visual progress tracking. 100% offline and private.">
     <meta name="keywords"
-        content="vocabulary app, AI learning, SAT prep, GRE vocabulary, flashcards, quiz app, offline learning">
+        content="VoCat alternative, vocabulary app, AI learning, SAT prep, GRE vocabulary, flashcards, quiz app, offline learning, VoCat replacement">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -162,8 +162,46 @@
         .hero p {
             font-size: 1.25rem;
             color: var(--text-secondary);
-            margin-bottom: 40px;
+            margin-bottom: 20px;
             line-height: 1.7;
+        }
+
+        .alternative-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), #16A34A);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .alternative-text {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px 24px;
+            margin-bottom: 30px;
+        }
+
+        .alternative-text strong {
+            color: var(--accent);
         }
 
         /* Official Play Store Badge */
@@ -333,9 +371,14 @@
 
     <section class="hero">
         <div class="hero-content">
+            <div class="alternative-badge">🏆 Best VoCat Alternative</div>
             <h1>The <span>Vocabulary Intelligent Quest</span> Starts Here.</h1>
             <p>Master vocabulary, terminology, and knowledge with the power of AI. VoIQ is your privacy-first,
                 offline-ready tutor designed for deep learning—not rote memorization.</p>
+            <p class="alternative-text">Looking for a <strong>VoCat alternative</strong>? VoIQ offers the same powerful
+                vocabulary learning
+                with AI-powered clues, spaced repetition, and progress tracking—all while keeping your data 100% private
+                and offline.</p>
             <a href="https://play.google.com/store/apps/details?id=com.voiq.app" class="play-badge">
                 <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
                     alt="Get it on Google Play">

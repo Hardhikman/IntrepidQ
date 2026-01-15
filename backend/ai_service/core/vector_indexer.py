@@ -173,3 +173,52 @@ def load_index() -> Optional[LightweightVectorStore]:
     except Exception as e:
         logger.error(f"Failed to load vector store: {e}")
         return None
+
+
+def create_index(data_dir: str = "data") -> None:
+    """
+    Create/update the Supabase vector store from documents.
+    Uses HuggingFace API for embedding generation.
+    
+    Note: This is a batch operation for re-indexing documents.
+    """
+    logger.info("Starting index creation with HuggingFace API embeddings...")
+    
+    try:
+        # Load documents
+        indexer = create_vector_indexer()
+        documents = indexer.load_documents(data_dir)
+        logger.info(f"Loaded {len(documents)} documents")
+        
+        # Get clients
+        supabase_service = get_supabase_service()
+        supabase_client = supabase_service._ensure_client()
+        embedding_client = get_embedding_client()
+        
+        # Batch process documents
+        batch_size = 20  # HF API can handle batches
+        for i in range(0, len(documents), batch_size):
+            batch = documents[i:i + batch_size]
+            texts = [doc.page_content for doc in batch]
+            
+            # Generate embeddings via API
+            embeddings = embedding_client.embed_documents(texts)
+            
+            # Upsert to Supabase
+            for j, (doc, embedding) in enumerate(zip(batch, embeddings)):
+                try:
+                    supabase_client.table("documents").upsert({
+                        "content": doc.page_content,
+                        "metadata": doc.metadata,
+                        "embedding": embedding
+                    }).execute()
+                except Exception as e:
+                    logger.warning(f"Failed to upsert document: {e}")
+            
+            logger.info(f"Processed {min(i + batch_size, len(documents))}/{len(documents)} documents")
+        
+        logger.info("Index creation completed successfully")
+        
+    except Exception as e:
+        logger.error(f"Index creation failed: {e}")
+        raise

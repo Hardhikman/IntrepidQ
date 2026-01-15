@@ -33,7 +33,7 @@ const Footer = () => {
               </Link>
             </div>
             <p className="text-sm text-green-500 font-medium text-center md:text-left">
-              born for the aspirants who are fearless to change
+              find best questions similar to PYQ with the power of AI
             </p>
             <p className="text-xs text-muted-foreground mt-1 text-center md:text-left">
               © {new Date().getFullYear()} IntrepidQ AI. All rights reserved.

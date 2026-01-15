@@ -46,9 +46,11 @@ class HuggingFaceEmbeddingClient:
             
             # HF returns nested list for single input
             if isinstance(embedding, list) and len(embedding) > 0:
-                if isinstance(embedding[0], list):
-                    return embedding[0]  # [[384 floats]] -> [384 floats]
-                return embedding  # Already flat
+                logger.info(f"Successfully generated embedding for query (dim: {len(embedding[0]) if isinstance(embedding[0], list) else len(embedding)})")
+                return embedding[0]  # [[384 floats]] -> [384 floats]
+            
+            logger.info(f"Successfully generated embedding for query (dim: {len(embedding)})")
+            return embedding  # Already flat
             
             raise ValueError(f"Unexpected embedding format: {type(embedding)}")
             
@@ -71,6 +73,7 @@ class HuggingFaceEmbeddingClient:
             embeddings = response.json()
             
             if isinstance(embeddings, list):
+                logger.info(f"Successfully generated embeddings for {len(texts)} documents")
                 return embeddings
             
             raise ValueError(f"Unexpected embeddings format: {type(embeddings)}")

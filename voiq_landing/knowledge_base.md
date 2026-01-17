@@ -127,13 +127,12 @@ After setup, you can review a summary and start the quiz.
 *   Green: > 50% time remaining.
 *   Yellow: 50% to 10% time remaining.
 *   Red: < 10% time remaining.
-The timer also triggers the auto-reveal of AI clues at the halfway mark.
 **Source**: README.md (VoIQ Android App), Quiz_Feature.md
 
 ---
 
 ## Question: What are AI Clues and how are they delivered?
-**Answer**: AI Clues are automatically generated hints (etymology, mnemonics, and semantic hints) powered by Gemini AI. They appear as a floating ClueCard that slides down at the halfway point of the quiz timer, providing contextual intelligence to aid retention.
+**Answer**: AI Clues are automatically generated hints (etymology, mnemonics, and semantic hints) powered by Gemini AI. When enabled, they appear as a floating ClueCard that slides down **as soon as they are ready** (typically 1-3 seconds after the question appears), providing contextual intelligence to aid retention.
 **Source**: README.md, README.md (VoIQ Android App), usage.md, Quiz_Feature.md
 
 ---

@@ -19,7 +19,7 @@ const getFileModifiedDate = (filePath) => {
 
 const staticPages = [
   { path: '', file: path.join(pagesPath, 'index.tsx') },
-  { path: '/blog', file: path.join(pagesPath, 'blogs', 'index.mdx') },
+  { path: '/blogs', file: path.join(pagesPath, 'blogs', 'index.mdx') },
   { path: '/privacy-policy', file: path.join(pagesPath, 'privacy-policy.tsx') },
   { path: '/terms-of-service', file: path.join(pagesPath, 'terms-of-service.tsx') },
   { path: '/acceptable-use-policy', file: path.join(pagesPath, 'acceptable-use-policy.tsx') },

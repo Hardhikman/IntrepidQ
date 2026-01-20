@@ -1,3 +1,9 @@
+---
+title: Thoughts Collection - 30 Days of Consistent Writing
+date: 2025-10-08
+description: A collection of 26 thought-provoking essays on technology, urbanization, education, climate change, AI, and societal challenges for UPSC CSE Mains aspirants.
+---
+
 # Thoughts Collection by consistently writing for 30 days
 
 ## Thought #1: Tech is Evolving. Are We Losing Ourselves?

@@ -27,6 +27,7 @@ description: Overview of the technologies used in the IntrepidQ AI system
 - **OpenRouter**: Multi-model API access
 - **HuggingFace Inference API**: High-performance embedding generation
 - **Supabase pgvector**: Efficient similarity search
+- **DuckDuckGo Search (DDGS)**: Free news and web retrieval for current affairs
 
 ## Database & Infrastructure
 - **Supabase**: Backend-as-a-Service platform
@@ -62,3 +63,9 @@ Several database improvements have been implemented:
 - Added `model` column to track which AI model was used for question generation
 - Added `feedback_type` column to categorize user feedback
 - Extended `mode` field to support keyword-based and current affairs question generation
+
+### News Retrieval Migration
+The system has transitioned from Tavily to DuckDuckGo Search (DDGS):
+- **Cost Efficiency**: Moved to a completely free, no-API-key-required solution.
+- **Reliability**: Implemented intelligent fallback logic (News Headlines → General Web Search).
+- **Rate Handling**: Added exponential backoff to handle search throttling gracefully.

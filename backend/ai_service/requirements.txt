@@ -20,6 +20,6 @@ hiredis>=2.2.3
 google-generativeai>=0.4.0
 locust>=2.0.0
 upstash-search>=0.1.1
-tavily-python>=0.7.10
+ddgs>=4.0.0
 ruff>=0.14.0
 requests>=2.31.0

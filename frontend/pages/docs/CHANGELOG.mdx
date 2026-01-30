@@ -31,6 +31,14 @@ import Head from 'next/head'
 
 # Changelog
 
+## [2.1.0] - 2026-01-30
+
+### Changed
+- Replaced Tavily with DuckDuckGo Search (DDGS) for free news retrieval in Current Affairs mode.
+- Implemented intelligent fallback from news headlines to general web search.
+- Added exponential backoff retry logic for search reliability.
+- Updated documentation and requirements to reflect news service transition.
+
 ## [2.0.0] - 2025-10-18
 
 ### Added
@@ -114,7 +122,8 @@ import Head from 'next/head'
 ### Current Affairs Mode
 - Added a new generation mode that incorporates current affairs
 - New current affairs mode in the UI
-- Integration with news APIs for up-to-date content
+- Integration with DuckDuckGo Search (DDGS) for free, reliable current affairs content
+- Intelligent fallback from headlines to general web search
 - Configurable time windows for current affairs inclusion
 
 ### Hybrid Technology Stack Migration

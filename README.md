@@ -99,7 +99,7 @@
 - **Groq**: Ultra-fast LLM inference
 - **Google Gemini**: Advanced language understanding
 - **HuggingFace Inference API**: High-performance embedding generation
-- **Tavily search**:  News API for effective search
+- **DuckDuckGo Search (DDGS)**: Free news and web retrieval for current affairs
 
 #### 🗃️ Database & Infrastructure
 - **Supabase**: Backend-as-a-Service platform for authentication and database

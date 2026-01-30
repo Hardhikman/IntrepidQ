@@ -16,7 +16,7 @@ The system supports multiple AI providers for question generation:
 
 ### Context-Aware Generation
 - Uses vector similarity search to retrieve relevant context from previous years' questions using pgvector
-- Integrates current affairs data for up-to-date questions
+- Integrates latest current affairs via DuckDuckGo Search (DDGS)
 - Supports stratified sampling to ensure diverse example selection
 - Caches generated questions for improved performance using Upstash Redis
 
@@ -72,10 +72,10 @@ The system supports multiple AI providers for question generation:
 
 ## Current Affairs Integration
 
-### News Source Integration
-- Integrates with multiple news sources
-- Supports different news categories
-- Allows users to select preferred sources
+### DuckDuckGo News Integration
+- Leverages DuckDuckGo Search (DDGS) for free, real-time news retrieval
+- Supports targeting specific reliable sources (e.g., *Indian Express*, *The Hindu*)
+- Built-in fallback system: News Headlines → General Web Search for 100% reliability
 
 ### Time-Based Filtering
 - Filters news by date range
@@ -123,7 +123,7 @@ The system supports multiple AI providers for question generation:
 ### Current Affairs Mode
 - New generation mode incorporating recent news and events
 - Configurable time windows for current affairs inclusion
-- Integration with news APIs for up-to-date content
+- Integration with DuckDuckGo Search (DDGS) for real-time reliable content
 - Seamless UI integration with topic selection
 
 ### Model Performance Improvements

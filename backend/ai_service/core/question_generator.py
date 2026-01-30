@@ -14,12 +14,14 @@ Features:
 import hashlib
 import json
 import logging
+import math
 import os
 import random
 import re
 import time
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+from urllib.parse import urlparse
 
 from diskcache import Cache
 from langchain_core.prompts import PromptTemplate
@@ -440,40 +442,85 @@ Now return ONLY the JSON array:"""
 
     def fetch_recent_news(self, topic: str, months: int = 6, news_source: str = "all") -> str:
         logger.info(f"--- Fetching News for '{topic}' ---")
-        return self._fetch_with_tavily(topic, months, news_source)
+        return self._fetch_with_ddgs(topic, months, news_source)
 
-    def _fetch_with_tavily(self, search_topic: str, months: int = 6, news_source: str = "all") -> str:
+    def _extract_domain(self, url: str) -> str:
+        """Extract website domain from URL."""
+        if not url: return "unknown"
         try:
-            from tavily import TavilyClient
-            end_date, start_date = datetime.utcnow().date(), (datetime.utcnow().date() - timedelta(days=30 * months))
-            client = TavilyClient(os.getenv("TAVILY_API_KEY"))
-            include_domains = ["https://indianexpress.com"] if news_source == "indianexpress" else ["https://thehindu.com"] if news_source == "thehindu" else []
-            # Use markdown format for better structured content
-            search_params = {"query": search_topic, "search_depth": "advanced", "start_date": start_date.isoformat(), "end_date": end_date.isoformat(), "include_raw_content": "markdown", "max_results": 3, "chunks_per_source": 2}
-            if include_domains: search_params["include_domains"] = include_domains
-            logger.info(f"Fetching news from source: {news_source}")
-            response = client.search(**search_params)
-            articles = response.get("results", [])
-            # Process the content to extract more relevant main information while preserving markdown
+            domain = urlparse(url).netloc
+            return domain.replace('www.', '') if domain else "unknown"
+        except Exception:
+            return "unknown"
+
+    def _fetch_with_ddgs(self, search_topic: str, months: int = 6, news_source: str = "all") -> str:
+        try:
+            from ddgs import DDGS
+            
+            # Construct query with site restriction if needed
+            query = search_topic
+            if news_source == "indianexpress":
+                query += " site:indianexpress.com"
+            elif news_source == "thehindu":
+                query += " site:thehindu.com"
+            
+            # Map months to DDGS timelimit if possible ('d', 'w', 'm')
+            # For simplicity, we use 'm' if months is small, otherwise let relevance handle it
+            timelimit = 'm' if months <= 1 else None
+            
+            logger.info(f"Fetching news from DDGS source: {news_source} with query: {query}")
+            
             news_items = []
-            for article in articles:
-                content = article.get('content', 'No content').strip()
-                # Extract title and URL for better context
-                title = article.get('title', 'Untitled')
-                url = article.get('url', '#')
+            max_retries = 2
+            
+            for attempt in range(max_retries + 1):
+                try:
+                    with DDGS() as ddgs:
+                        # Use news() for current affairs
+                        results = list(ddgs.news(query, timelimit=timelimit, max_results=3))
+                        
+                        if not results and timelimit:
+                            # Fallback: try without timelimit if no news found in last month
+                            results = list(ddgs.news(query, max_results=3))
+                        
+                        if not results:
+                            # Fallback: try general text search if news() returns nothing
+                            results = list(ddgs.text(query, max_results=3))
+                    
+                    if results:
+                        for r in results:
+                            title = r.get('title', 'Untitled')
+                            # 'body' in news/text, 'snippet' in some others; check both
+                            content = (r.get('body') or r.get('snippet') or 'No content').strip()
+                            url = r.get('href') or r.get('url') or '#'
+                            
+                            # Clean excessive whitespace
+                            content = '\n'.join(line.strip() for line in content.split('\n') if line.strip())
+                            
+                            # Consistent with existing Tavily logic: 500 chars limit
+                            if len(content) > 500:
+                                content = content[:500] + "..."
+                            
+                            news_items.append(f"### {title}\n{content}\n[Source: {url}]\n")
+                        break
+                    else:
+                        break # No results found
+                        
+                except Exception as e:
+                    if "Ratelimit" in str(e) or "403" in str(e):
+                        if attempt < max_retries:
+                            wait_time = (attempt + 1) * 2
+                            logger.warning(f"DDGS rate limit hit, retrying in {wait_time}s...")
+                            time.sleep(wait_time)
+                            continue
+                    raise e
 
-                # Preserve markdown formatting but clean excessive whitespace
-                content = '\n'.join(line.strip() for line in content.split('\n') if line.strip())
-
-                # Extract first 800 characters instead of 300 to capture more main information
-                if len(content) > 500:
-                    content = content[:500] + "..."
-                news_items.append(f"### {title}\n{content}\n[Source: {url}]\n")
             news = "\n".join(news_items)
-            logger.info(f"Tavily fetch successful. Found {len(articles)} articles from {news_source}.")
+            logger.info(f"DDGS fetch successful. Found {len(news_items)} articles from {news_source}.")
             return news if news else "No news articles found."
+            
         except Exception as e:
-            logger.error(f"Tavily fetch failed for source {news_source}: {e}")
+            logger.error(f"DDGS fetch failed for source {news_source}: {e}")
             return f"Error fetching news: {e}"
 
     def safe_parse_questions(self, output: str, num: Optional[int] = None) -> List[dict]:

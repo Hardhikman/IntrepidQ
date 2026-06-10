@@ -130,24 +130,6 @@ export const QuestionGenerator: React.FC<QuestionGeneratorProps> = ({
             </SelectContent>
           </Select>
 
-          {/* AI Model Selector - Made responsive */}
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <SelectTrigger className="h-10 w-36 sm:w-44 bg-gradient-to-r from-orange-600 to-orange-700 text-white border-0 rounded-lg text-sm shadow hover:from-orange-700 hover:to-orange-800">
-                  <SelectValue placeholder="Model" />
-                </SelectTrigger>
-              </TooltipTrigger>
-              <TooltipContent><p>AI Model</p></TooltipContent>
-            </Tooltip>
-            <SelectContent>
-              {models.map((model) => (
-                <SelectItem key={model.id} value={model.id}>
-                  {model.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
           {/* Topic Combobox - Made responsive - only shown when in topic mode */}
           {(mode === "topic" || mode === "currentAffairs") && (

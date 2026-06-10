@@ -68,11 +68,10 @@ export default function UPSCQuestionGenerator() {
   const [answers, setAnswers] = useState<Record<number, any>>({});
   const [generatingAllAnswers, setGeneratingAllAnswers] = useState(false);
   const [subjectsLoading, setSubjectsLoading] = useState(true);
-  const [selectedModel, setSelectedModel] = useState("moonshot-k2");
+  const [selectedModel, setSelectedModel] = useState("qwen3-32b");
   const [answerLoadingIndex, setAnswerLoadingIndex] = useState<number | null>(null);
   // Add models state
   const [models, setModels] = useState<{ id: string; name: string }[]>([
-    { id: "moonshot-k2", name: "Moonshot (K2)" },
     { id: "qwen3-32b", name: "Qwen3 (32B)" },
   ]);
 

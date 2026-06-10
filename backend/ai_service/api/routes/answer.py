@@ -3,13 +3,11 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
-# Fixed import approach for Google Generative AI
+# Fixed import approach for Google Gen AI
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException, Request
-from google.generativeai.generative_models import GenerativeModel
-
-# Import required types for safety settings
-from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from google import genai
+from google.genai import types
 from pydantic import BaseModel
 
 # Load environment variables
@@ -28,6 +26,9 @@ if not GOOGLE_API_KEY:
 
 # Model selection
 MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
+
+# Initialize Gemini client
+client = genai.Client(api_key=GOOGLE_API_KEY)
 
 
 def get_client_ip(request: Request) -> str:
@@ -74,14 +75,14 @@ def extract_text_from_response(response) -> str:
     """
     if hasattr(response, "text") and response.text:
         return response.text
-    if hasattr(response, "candidates") and response.candidates:
-        try:
-            # Access the first part of the first candidate's content
-            parts = response.candidates[0].content.parts
-            if parts and hasattr(parts[0], "text"):
-                return parts[0].text
-        except (IndexError, AttributeError):
-            pass  # Let it fall through to the ValueError
+    
+    # Try to access text via parts (handling different SDK versions/structures)
+    try:
+        if response.candidates and response.candidates[0].content.parts:
+            return response.candidates[0].content.parts[0].text
+    except (IndexError, AttributeError):
+        pass
+        
     raise ValueError("Gemini response did not contain any text output.")
 
 def build_prompt(question: str) -> str:
@@ -127,19 +128,22 @@ async def generate_answer(
 
         logger.info(f"Generating answer for question: {request.question}")
 
-        # The library implicitly uses the GOOGLE_API_KEY from the environment.
-        model = GenerativeModel(
-            model_name=MODEL_NAME,
-            generation_config={"response_mime_type": "application/json"},
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            }
+        # Safety settings and generation config for the new SDK
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            safety_settings=[
+                types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
+            ]
         )
 
-        response = model.generate_content(build_prompt(request.question))
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=build_prompt(request.question),
+            config=config
+        )
         raw_text = extract_text_from_response(response)
 
         try:
@@ -188,22 +192,25 @@ async def generate_answers(
         if not request.questions:
             raise HTTPException(status_code=400, detail="No questions provided")
 
-        # The library implicitly uses the GOOGLE_API_KEY from the environment.
-        model = GenerativeModel(
-            model_name=MODEL_NAME,
-            generation_config={"response_mime_type": "application/json"},
-            safety_settings={
-                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-            }
+        # Reuse common config
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            safety_settings=[
+                types.SafetySetting(category="HARM_CATEGORY_HARASSMENT", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_HATE_SPEECH", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="BLOCK_NONE"),
+                types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="BLOCK_NONE"),
+            ]
         )
 
         answers: List[AnswerResponse] = []
         for q in request.questions:
             try:
-                response = model.generate_content(build_prompt(q))
+                response = client.models.generate_content(
+                    model=MODEL_NAME,
+                    contents=build_prompt(q),
+                    config=config
+                )
                 raw_text = extract_text_from_response(response)
 
                 try:

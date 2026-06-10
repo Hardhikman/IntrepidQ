@@ -16,12 +16,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 sys.path.append('.')
 
 from api.models import HealthResponse
-from api.routes.answer import router as answer_router
-from api.routes.cleanup import router as cleanup_router
-from api.routes.feedback import router as feedback_router
-from api.routes.model_performance import router as performance_router
-from api.routes.questions import router as questions_router
-from api.routes.subjects import router as subjects_router
+from api.routes.auth import router as auth_router
+
 from core.question_generator import create_question_generator
 from core.rate_limiter import RateLimitMiddleware
 from core.supabase_client import get_supabase_service
@@ -172,13 +168,8 @@ app.add_middleware(
     redis_url=redis_url
 )
 
-# Routers
-app.include_router(questions_router, prefix="/api", tags=["questions"])
-app.include_router(subjects_router, prefix="/api", tags=["subjects"])
-app.include_router(answer_router, prefix="/api", tags=["answer"])
-app.include_router(performance_router, prefix="/api", tags=["performance"])
-app.include_router(cleanup_router, prefix="/api/admin", tags=["cleanup"])
-app.include_router(feedback_router, prefix="/api", tags=["feedback"])
+# Auth router
+app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
 
 
 @app.get("/")

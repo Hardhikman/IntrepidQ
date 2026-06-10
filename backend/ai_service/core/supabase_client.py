@@ -72,13 +72,33 @@ class SupabaseService:
             # Don't re-raise the exception to avoid breaking the main application flow
 
     # Auth
-    def verify_user(self, token: str) -> Optional[Dict[str, Any]]:
+    def verify_user(self, token: str, provider: str = "supabase") -> Optional[Dict[str, Any]]:
         try:
             client = self._ensure_client()
             response = client.auth.get_user(token)
             # Fix: Add proper null check for response and response.user before accessing
             if response and hasattr(response, 'user') and response.user:
-                return response.user.model_dump()
+                user_data = response.user.model_dump()
+                
+                # NEW: Check if user's email is verified
+                email_confirmed = response.user.email_confirmed_at is not None
+                
+                # NEW: Check authentication provider
+                if hasattr(response.user, 'app_metadata') and 'provider' in response.user.app_metadata:
+                    user_data['auth_provider'] = response.user.app_metadata['provider']
+                
+                # Add email verification status to user data
+                user_data['email_confirmed_at'] = response.user.email_confirmed_at
+                user_data['email_verified'] = email_confirmed
+                
+                # Log authentication details for debugging
+                logger.info(
+                    f"User {user_data.get('id', 'unknown')} authentication: provider={user_data.get('auth_provider', provider)}, "
+                    f"email_verified={email_confirmed}, "
+                    f"confirmed_at={response.user.email_confirmed_at}"
+                )
+                
+                return user_data
             return None
         except Exception as e:
             logger.error(f"Token verification failed: {e}")

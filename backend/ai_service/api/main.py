@@ -17,6 +17,9 @@ sys.path.append('.')
 
 from api.models import HealthResponse
 from api.routes.auth import router as auth_router
+from api.routes.subjects import router as subjects_router
+from api.routes.questions import router as questions_router
+from api.routes.answer import router as answer_router
 
 from core.question_generator import create_question_generator
 from core.rate_limiter import RateLimitMiddleware
@@ -170,6 +173,11 @@ app.add_middleware(
 
 # Auth router
 app.include_router(auth_router, prefix="/api/auth", tags=["auth"])
+
+# Core API routers
+app.include_router(subjects_router, prefix="/api", tags=["subjects"])
+app.include_router(questions_router, prefix="/api", tags=["questions"])
+app.include_router(answer_router, prefix="/api", tags=["answers"])
 
 
 @app.get("/")

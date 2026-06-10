@@ -10,6 +10,11 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel
 
+import sys
+sys.path.append('.')
+
+from api.auth import get_optional_user
+
 # Load environment variables
 load_dotenv()
 
@@ -63,9 +68,7 @@ class BatchAnswerResponse(BaseModel):
     answers: List[AnswerResponse]
 
 
-# For demonstration, we'll use placeholder functions for dependencies
-async def get_optional_user() -> Optional[Dict[str, Any]]:
-    return None
+
 
 #Helpers
 

@@ -106,25 +106,6 @@ export function useAuth() {
     })
   }
 
-  // Add the missing authentication functions
-  const signInWithEmail = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { data, error }
-  }
-
-  const signUpWithEmail = async (email: string, password: string, options?: any) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: options // This will include full_name
-      }
-    })
-    return { data, error }
-  }
 
   // Google OAuth sign-in (used for signup flow)
   const signInWithGoogle = async () => {
@@ -175,8 +156,6 @@ export function useAuth() {
     loading,
     refreshProfile,
     applyLocalGenerationIncrement,
-    signInWithEmail,
-    signUpWithEmail,
     signInWithGoogle,
     signOut,
   }

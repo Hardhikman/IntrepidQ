@@ -16,8 +16,6 @@ from core.supabase_client import supabase_service
 logger = logging.getLogger(__name__)
 security = HTTPBearer()
 
-from api.models import SignUpRequest, SignInRequest, AuthResponse
-
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """

@@ -136,23 +136,6 @@ class ErrorResponse(BaseModel):
     status_code: int = Field(..., description="HTTP status code")
     detail: Optional[str] = Field(None, description="Detailed error information")
 
-# Authentication models
-class SignUpRequest(BaseModel):
-    """Request model for user signup"""
-    email: str = Field(..., description="User email")
-    password: str = Field(..., min_length=6, description="User password")
-    full_name: Optional[str] = Field(None, description="User's full name")
-
-class SignInRequest(BaseModel):
-    """Request model for user signin"""
-    email: str = Field(..., description="User email")
-    password: str = Field(..., description="User password")
-
-class AuthResponse(BaseModel):
-    """Response model for authentication"""
-    access_token: str = Field(..., description="JWT access token")
-    token_type: str = Field(default="bearer", description="Token type")
-    user: Dict[str, Any] = Field(..., description="User information")
 
 # Statistics models
 class ModeBreakdown(BaseModel):
